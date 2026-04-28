@@ -1,0 +1,238 @@
+{
+  "game": {
+    "title": "Remote Command",
+    "version": "1.0.0",
+    "maxPlayers": 6,
+    "landMine": { "radius": 38, "damage": 28, "triggerRadius": 12, "armDelayMs": 600, "color": "#ffaa44" }
+  },
+  "physics": {
+    "gravity": 0.3,
+    "windMin": -6,
+    "windMax": 6,
+    "windEffect": 0.015,
+    "velocityMultiplier": 0.74
+  },
+  "ai": {
+    "easy": {
+      "aimError": 15,
+      "powerError": 25,
+      "thinkTime": 2000
+    },
+    "medium": {
+      "aimError": 8,
+      "powerError": 15,
+      "thinkTime": 1500
+    },
+    "hard": {
+      "aimError": 3,
+      "powerError": 8,
+      "thinkTime": 1000
+    }
+  },
+  "tank": {
+    "maxHealth": 100,
+    "fuelCapacity": 200,
+    "fuelConsumptionRate": 2,
+    "moveSpeed": 2,
+    "maxMoveDistance": 50
+  },
+  "weapons": {
+    "missile": {
+      "name": "Missile",
+      "radius": 40,
+      "damage": 30,
+      "color": "#ff6600"
+    },
+    "heavy": {
+      "name": "Heavy Shell",
+      "radius": 60,
+      "damage": 50,
+      "color": "#ff0000"
+    },
+    "nuke": {
+      "name": "Nuclear Bomb",
+      "radius": 120,
+      "damage": 80,
+      "color": "#00ff00"
+    },
+    "mirv": {
+      "name": "MIRV",
+      "radius": 50,
+      "damage": 35,
+      "color": "#ffff00",
+      "submunitions": 5
+    },
+    "funky": {
+      "name": "Funky Bomb",
+      "radius": 45,
+      "damage": 25,
+      "color": "#ff00ff",
+      "submunitions": 8
+    },
+    "drill": {
+      "name": "Ground Remover",
+      "radius": 15,
+      "damage": 0,
+      "color": "#00ffff",
+      "drillRadius": 8
+    },
+    "flare": {
+      "name": "Flare",
+      "radius": 220,
+      "damage": 0,
+      "color": "#fff6b0",
+      "durationMs": 6000
+    },
+    "parachute_flare": {
+      "name": "Parachute Flare",
+      "radius": 200,
+      "damage": 0,
+      "color": "#fff2a0",
+      "durationMs": 8000,
+      "driftWindFactor": 0.02,
+      "descentAccel": 0.004,
+      "vyMax": 0.6
+    }
+  },
+  "graphics": {
+    "starCount": 150,
+    "terrainColor": "#2a4d2a",
+    "skyColor": "#000814",
+    "sky": {
+      "ceilingFactor": 3,
+      "sunSpeed": 1.5,
+      "moonSpeed": 8,
+      "sunRadius": 26,
+      "moonRadius": 24,
+      "stars": {
+        "count": 200,
+        "brightnessScale": 1.0,
+        "twinkleScale": 1.0
+      },
+      "nebulaAlphaScale": 1.0,
+      "celestial": {
+        "enabled": true,
+        "cycleSeconds": 180,
+        "moonCycleSeconds": 600,
+        "blending": { "threshold": 0.7, "duskBoost": 0.5 }
+      }
+    },
+    "skyObjects": {
+      "spawnCooldownMs": 4200,
+      "maxConcurrent": 1,
+      "perTypeMax": { "meteor": 1, "satellite": 0, "ufo": 1 },
+      "probabilities": {
+        "meteor": { "day": 0.08, "dusk": 0.14, "night": 0.20 }
+      },
+      "ufo": {
+        "chance": 0.015,
+        "minIntervalMs": 120000
+      },
+      "meteor": {
+        "speed": { "min": 6, "max": 11.5 },
+        "entryHeightFrac": { "min": 0.0, "max": 0.35 },
+        "bolideChance": 0.12,
+        "clusterSpread": 120,
+        "burst": {
+          "chance": { "day": 0.0, "dusk": 0.0, "night": 0.0 },
+          "countRange": [1, 1],
+          "gapMsRange": [800, 1200]
+        },
+        "burn": {
+          "gravityVyPerFrame": 0.01,
+          "atmosphere": { "day": 1.35, "dusk": 1.15, "night": 0.85 },
+          "sizeShrinkBase": 0.003,
+          "sizeShrinkSpeedFactor": 0.0009,
+          "burnUpSizeThreshold": 0.8,
+          "burnUpHeightMin": 40,
+          "burnUpProb": { "day": 0.75, "dusk": 0.6, "night": 0.35 }
+        }
+      }
+    },
+    "backgrounds": {
+      "defaults": {
+        "day":   { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": false, "earth": false, "planets": false },
+        "dusk":  { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": true,  "earth": false, "planets": false },
+        "night": { "stars": true,  "clouds": false, "nebula": true,  "sun": false, "moon": true,  "earth": false, "planets": true }
+      },
+      "overrides": {
+        "moon": {
+          "force": { "moon": false },
+          "day":   { "stars": true,  "clouds": false, "nebula": false, "sun": true,  "moon": false, "earth": true,  "planets": true },
+          "dusk":  { "stars": true,  "clouds": false, "nebula": false, "sun": true,  "moon": false, "earth": true,  "planets": true },
+          "night": { "stars": true,  "clouds": false, "nebula": false, "sun": false, "moon": false, "earth": true,  "planets": true }
+        },
+        "cave": {
+          "day":   { "stars": false, "clouds": false, "nebula": false, "sun": false, "moon": false, "earth": false, "planets": false, "skyObjects": false },
+          "dusk":  { "stars": false, "clouds": false, "nebula": false, "sun": false, "moon": false, "earth": false, "planets": false, "skyObjects": false },
+          "night": { "stars": false, "clouds": false, "nebula": false, "sun": false, "moon": false, "earth": false, "planets": false, "skyObjects": false }
+        },
+        "desert": {
+          "day":   { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": false, "earth": false, "planets": false },
+          "dusk":  { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": true,  "earth": false, "planets": false },
+          "night": { "stars": true,  "clouds": false, "nebula": true,  "sun": false, "moon": true,  "earth": false, "planets": true }
+        },
+        "canyon": {
+          "day":   { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": false, "earth": false, "planets": false },
+          "dusk":  { "stars": false, "clouds": true,  "nebula": false, "sun": true,  "moon": true,  "earth": false, "planets": false },
+          "night": { "stars": true,  "clouds": false, "nebula": true,  "sun": false, "moon": true,  "earth": false, "planets": true }
+        }
+      },
+      "knobs": {
+        "moon": {
+          "dusk": { "sunRadius": 30 }
+        }
+      }
+    },
+    "cave": {
+      "maskAlpha": 0.55,
+      "ambientAlpha": 0.16,
+      "ambientRadiusFrac": 0.3,
+      "rimAlpha": 0.06,
+      "rimHeight": 24
+    },
+    "dust": {
+      "desert": {
+        "enabled": true,
+        "ambientEvery": 10,
+        "ambientChance": 0.25,
+        "nearTankChance": 0.7,
+        "count": 6,
+        "sizeScale": 1.0,
+        "lifetimeScale": 1.0,
+        "gravityDelta": 0.0
+      },
+      "moon": {
+        "enabled": true,
+        "ambientEvery": 10,
+        "nearTankChance": 0.5,
+        "count": 5,
+        "sizeScale": 1.0,
+        "lifetimeScale": 1.1,
+        "gravity": 0.02
+      },
+      "mars": {
+        "enabled": true,
+        "ambientEvery": 12,
+        "ambientChance": 0.2,
+        "count": 4,
+        "sizeScale": 1.0,
+        "lifetimeScale": 1.0,
+        "gravity": 0.05
+      }
+    }
+  },
+  "ui": {
+    "windBar": {
+      "enabled": true,
+      "position": "top", 
+      "width": 260
+    },
+    "windFlag": {
+      "enabled": true,
+      "mode": "terrain",
+      "x": 50,
+      "poleHeight": 90
+    }
+  }
+}

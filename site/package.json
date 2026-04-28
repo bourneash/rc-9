@@ -1,0 +1,51 @@
+{
+  "name": "rc-9",
+  "version": "1.0.0",
+  "description": "Remote Command — browser artillery game (rc-9.com).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint js/**/*.js",
+    "lint:fix": "eslint js/**/*.js --fix",
+    "format": "prettier --write js/**/*.js",
+    "security:audit": "npm audit --audit-level=high",
+    "security:audit:prod": "npm audit --omit=dev --audit-level=high",
+    "ci:verify": "npm run security:audit && npm run build",
+    "test:smoke": "playwright test -c playwright.smoke.config.js",
+    "build:prod": "npm run security:audit:prod && npm run build && node scripts/check-bundle-size.js",
+    "check:bundle-size": "node scripts/check-bundle-size.js",
+    "lighthouse": "npx lighthouse http://localhost:5600 --output html --output-path ./lighthouse-report.html --chrome-flags='--headless'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-bourneash:bourneash/rc-9.git"
+  },
+  "keywords": [
+    "game",
+    "artillery",
+    "remote-command",
+    "rc-9",
+    "canvas"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.58.2",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "prettier": "^3.7.3",
+    "terser": "^5.44.0",
+    "vite": "^7.1.12",
+    "vite-plugin-compression": "^0.5.1"
+  },
+  "dependencies": {
+    "gsap": "^3.13.0",
+    "howler": "^2.2.4",
+    "pixi-filters": "^6.1.4",
+    "pixi.js": "^8.14.0"
+  }
+}

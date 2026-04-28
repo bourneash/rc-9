@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>How to Play — Remote Command</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .help { max-width: 900px; margin: 40px auto; padding: 0 16px; }
+    .help h1 { font-size: 40px; margin-bottom: 8px; }
+    .help h2 { margin-top: 28px; color: #00f5ff; }
+    .kbd { padding: 2px 6px; border: 1px solid #777; border-bottom-width: 2px; border-radius: 4px; background: #111; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .card { background: rgba(255,255,255,0.04); border: 1px solid rgba(0,255,255,0.15); border-radius: 10px; padding: 12px; }
+    .muted { color: #aaa; }
+    a { color: #00f5ff; }
+  </style>
+</head>
+<body>
+  <div class="help">
+    <h1>How to Play</h1>
+    <p class="muted">Turn-based artillery with deformable terrain, wind, and multiple modes.</p>
+
+    <h2>Objective</h2>
+    <p>In Classic, eliminate all opponents. In Teams, eliminate the opposing team. In Solo (Target Practice), hit the pop-up targets to score points.</p>
+
+    <h2>Controls</h2>
+    <ul>
+      <li>Angle: slider in sidebar (reversed mapping for intuitive left/right) or <span class="kbd">←</span>/<span class="kbd">→</span> arrows</li>
+      <li>Power: slider or <span class="kbd">↑</span>/<span class="kbd">↓</span> arrows</li>
+      <li>Fire: <span class="kbd">Space</span> or <span class="kbd">Enter</span></li>
+      <li>Drive mode: toggle in sidebar; then use <span class="kbd">←</span>/<span class="kbd">→</span> to move</li>
+      <li>Pause: Pause button in sidebar (opens menu)</li>
+    </ul>
+
+    <h2>Game Modes</h2>
+    <ul>
+      <li><strong>Classic</strong>: Free-for-all. Last tank standing wins.</li>
+      <li><strong>Teams</strong>: Two teams (A/B), up to 4 per team. Ends when a team is eliminated.</li>
+      <li><strong>Solo (Target Practice)</strong>: Single player score attack: hit targets that appear on the terrain.</li>
+    </ul>
+
+    <h2>Wind</h2>
+    <p>Wind influences projectile trajectories; choose None, Low, High, or Random per turn in New Game setup. A wind bar and flag show direction and strength.</p>
+
+    <h2>Weapons</h2>
+    <div class="grid">
+      <div class="card"><strong>Missile</strong><br/>Reliable, moderate damage. Slightly buffed compared to early builds.</div>
+      <div class="card"><strong>Heavy Shell</strong><br/>Heavier impact and crater.</div>
+      <div class="card"><strong>Nuke</strong><br/>High damage and large radius; iconic mushroom-cloud effect and a mild shockwave push.</div>
+      <div class="card"><strong>Laser</strong><br/>Straight-flying, unaffected by gravity (still drifts with wind). Precise shots.</div>
+      <div class="card"><strong>Cluster</strong><br/>Breaks into several bomblets on impact, spreading damage over an area.</div>
+      <div class="card"><strong>Bunker Buster</strong><br/>Penetrates into the ground before detonating, damaging tanks above.</div>
+      <div class="card"><strong>MIRV</strong><br/>Splits into multiple bomblets in air.</div>
+      <div class="card"><strong>Funky Bomb</strong><br/>Explodes into many smaller explosives with chaotic spread.</div>
+      <div class="card"><strong>Drill</strong><br/>Digs through terrain while traveling, removing ground.</div>
+      <div class="card"><strong>Land Mine</strong><br/>Place a small explosive on the ground that arms after a short delay and detonates when an enemy drives over it. Persists until triggered or the match ends.</div>
+    </div>
+
+    <h2>Cheats & Debug</h2>
+    <ul>
+      <li>Trajectory guide: shows projected arc and likely impact point.</li>
+      <li>Infinite health: zeroes damage taken.</li>
+      <li>Wind/Gravity overrides, damage multiplier, debris settings, theme/time rerolls.</li>
+    </ul>
+
+    <h2>Tips</h2>
+    <ul>
+      <li>Compensate for wind; consider easing power for arcing shots.</li>
+      <li>Use terrain deformation to your advantage (cover or trap enemies).</li>
+      <li>In Teams, coordinate target focus; avoid friendly fire.</li>
+    </ul>
+
+    <p class="muted">Return to the <a href="./index.html">game</a>.</p>
+  </div>
+
+  <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

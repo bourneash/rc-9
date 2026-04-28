@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote Command</title>
+
+    <!-- Security headers are now set via CloudFlare Pages _headers file -->
+    <meta name="referrer" content="no-referrer-when-downgrade" />
+
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="description" content="Browser-based artillery tank game inspired by the classic DOS game. Destructible terrain, realistic physics, AI opponents.">
+    <meta property="og:title" content="Scorched Earth">
+    <meta property="og:description" content="Classic artillery tank combat in your browser">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#0a0e27">
+    <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+                <!-- Post FX overlay (PixiJS renders here on top of the canvas) -->
+                <div id="fx-overlay" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></div>
+                <!-- HUD overlay controls (desktop + mobile responsive) -->
+                <div id="hud-overlay" aria-label="On-screen Controls" style="position:fixed; inset:0; pointer-events:none; z-index:1050;">
+                    <!-- Angle dial for touch (hidden on desktop) -->
+                    <div id="angle-dial" aria-label="Angle Dial">
+                        <div class="dial-face"></div>
+                        <div class="dial-knob"></div>
+                        <!-- Hidden input for accessibility; updated as dial moves -->
+                        <input type="range" id="angle-dial-input" min="0" max="359" value="45" aria-label="Angle Dial" />
+                    </div>
+                    <!-- Bottom controls bar (weapon, angle slider for desktop, power, drive, fire) -->
+                    <div id="bottom-controls" class="controls-bar">
+                        <!-- Compact stats moved from sidebar -->
+                        <div id="bottom-stats" class="stats-group" aria-label="Health, Fuel, and Wind">
+                            <div class="stat health-stat" title="Health">
+                                <span class="icon" aria-hidden="true">❤️</span>
+                                <span class="sr-only">Health: </span>
+                                <span id="player-health">100</span>
+                            </div>
+                            <div class="stat fuel-stat" title="Fuel">
+                                <span class="icon" aria-hidden="true">⛽</span>
+                                <span class="sr-only">Fuel: </span>
+                                <span id="fuel-value">100</span>%
+                            </div>
+                            <div class="stat wind-stat" title="Wind">
+                                <span class="icon" aria-hidden="true">🌬️</span>
+                                <span id="wind-arrow" aria-hidden="true"></span>
+                                <span class="sr-only">Wind: </span>
+                                <span id="wind-value">0 mph</span>
+                            </div>
+                        </div>
+                        <label class="angle-slider-wrap">
+                            <span class="label">Angle</span>
+                            <input type="range" id="angle-input" min="0" max="359" value="45" />
+                            <span id="angle-value">45°</span>
+                        </label>
+                        <label class="power-slider-wrap">
+                            <span class="label">Power</span>
+                            <input type="range" id="power-input" min="0" max="100" value="50" />
+                            <span id="power-value">50%</span>
+                        </label>
+                        <label class="rotation-slider-wrap" style="display: none;">
+                            <span class="label">Rotation</span>
+                            <input type="range" id="rotation-input" min="0" max="359" value="0" />
+                            <span id="rotation-value">0°</span>
+                        </label>
+                        <button id="drive-toggle" class="secondary">Drive Mode: OFF</button>
+                        <fieldset class="weapon-chooser" aria-label="Select Weapon" style="border: none; padding: 0; margin: 0;">
+                            <legend class="sr-only">Weapon</legend>
+                            <button id="weapon-grid-toggle" class="weapon-grid-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Select weapon" title="Select weapon">
+                                <span id="weapon-current-icon" class="weapon-current-icon" aria-hidden="true">🛰️</span>
+                                <span id="weapon-current-name" class="weapon-current-name">Missile</span>
+                                <span class="caret" aria-hidden="true">⌄</span>
+                            </button>
+                            <span id="ammo-badge" class="ammo-badge" title="Ammo remaining">∞</span>
+                        </fieldset>
+                        <button id="fire-button" class="primary">FIRE!</button>
+                    </div>
+                    <!-- Weapon menu - positioned fixed relative to viewport, outside of bottom-controls -->
+                    <div id="weapon-menu" class="weapon-menu hidden" role="menu" aria-label="Weapon menu"></div>
+                    <!-- Left joystick for touch drive mode (hidden on desktop) -->
+                    <div id="joystick" aria-label="Move joystick">
+                        <div class="stick"></div>
+                    </div>
+                    <!-- Floating FIRE button for touch on the right -->
+                    <button id="mobile-fire" class="primary" aria-label="Fire Weapon">FIRE</button>
+                </div>
+                <!-- Hidden staging container (holds content that modals move into place) -->
+                <div id="ui-staging" style="display:none" aria-hidden="true"></div>
+                <!-- Left edge tabs: Game Options, Debug, Game Log, Volume, Restart -->
+                <div id="options-tab" class="edge-tab" title="Open Game Options" role="button" tabindex="0" aria-label="Open game options">▸ Game Options</div>
+                <div id="debug-tab" class="edge-tab secondary" title="Open Debug / Cheats" role="button" tabindex="0" aria-label="Open debug and cheats">Debug</div>
+                <div id="log-tab" class="edge-tab secondary" title="Open Game Log" role="button" tabindex="0" aria-label="Open game log">Game Log</div>
+                <div id="volume-tab" class="edge-tab secondary" title="Open Volume Controls" role="button" tabindex="0" aria-label="Open volume controls">🔊 Volume</div>
+                <div id="restart-tab" class="edge-tab secondary" title="Restart Game Options" role="button" tabindex="0" aria-label="Open restart options">↻ Restart</div>
+                <a href="help.html" id="help-link" style="position:fixed; right:14px; bottom:14px; z-index:1100; text-decoration:none;">
+                    <button title="Help / How to Play">Help</button>
+                </a>
+    </div>
+
+    <dialog id="game-over-modal" class="modal hidden" aria-labelledby="winner-text">
+        <div class="modal-content">
+            <button id="game-over-close" class="modal-close" title="Close" aria-label="Close">✖</button>
+            <h2 id="winner-text">Player X Wins!</h2>
+            <div id="game-over-stats" aria-live="polite"></div>
+            <button id="new-game-button">New Game</button>
+        </div>
+    </dialog>
+
+
+    <!-- Debug modal (container for existing #debug-menu content) -->
+    <dialog id="debug-modal" class="modal hidden" aria-labelledby="debug-title">
+        <div class="modal-content">
+            <button id="debug-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
+            <h2 id="debug-title">Debug / Cheats</h2>
+            <div id="debug-modal-body"></div>
+            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <button id="copy-error-report" style="font-size: 0.85em; padding: 6px 12px; cursor: pointer;">Copy Error Report</button>
+                <span id="copy-report-status" style="margin-left: 8px; font-size: 0.8em; opacity: 0.7;"></span>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Game Log modal (moves existing #game-log into this body on open) -->
+    <dialog id="log-modal" class="modal hidden" aria-labelledby="log-title">
+        <div class="modal-content">
+            <button id="log-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
+            <h2 id="log-title">Game Log</h2>
+            <div id="log-modal-body"></div>
+        </div>
+    </dialog>
+
+    <!-- Volume modal (proper audio controls) -->
+    <dialog id="volume-modal" class="modal hidden" aria-labelledby="volume-title">
+        <div class="modal-content">
+            <h2 id="volume-title">Volume & Audio</h2>
+            <button id="volume-modal-close" class="modal-close-inline" title="Close" aria-label="Close">✖</button>
+            <div id="volume-modal-body">
+                <div class="volume-controls">
+                    <div class="volume-section">
+                        <label for="master-volume-slider">
+                            <span class="volume-icon">🔊</span>
+                            <span>Master Volume</span>
+                        </label>
+                        <div class="volume-slider-group">
+                            <input type="range" id="master-volume-slider" min="0" max="100" value="70" step="1" />
+                            <span id="master-volume-value">70%</span>
+                        </div>
+                    </div>
+
+                    <div class="volume-section">
+                        <label for="sfx-volume-slider">
+                            <span class="volume-icon">💥</span>
+                            <span>Sound Effects</span>
+                        </label>
+                        <div class="volume-slider-group">
+                            <input type="range" id="sfx-volume-slider" min="0" max="100" value="70" step="1" />
+                            <span id="sfx-volume-value">70%</span>
+                        </div>
+                        <button id="test-sound-btn" class="secondary">🔈 Test Sound</button>
+                    </div>
+
+                    <div class="volume-section">
+                        <label for="music-volume-slider">
+                            <span class="volume-icon">🎵</span>
+                            <span>Music</span>
+                        </label>
+                        <div class="volume-slider-group">
+                            <input type="range" id="music-volume-slider" min="0" max="100" value="50" step="1" />
+                            <span id="music-volume-value">50%</span>
+                        </div>
+                        <button id="music-toggle-new" class="secondary">Music: ON</button>
+                    </div>
+
+                    <div class="volume-section">
+                        <div class="volume-actions">
+                            <button id="mute-all-btn" class="secondary">🔇 Mute All</button>
+                            <button id="unmute-all-btn" class="secondary">🔊 Unmute All</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Auto-restart countdown modal -->
+    <dialog id="auto-restart-modal" class="modal hidden" aria-labelledby="auto-restart-title">
+        <div class="modal-content">
+            <h2 id="auto-restart-title">Game Restarting</h2>
+            <p>The game will automatically restart in:</p>
+            <div id="auto-restart-countdown">5</div>
+            <button id="cancel-auto-restart" class="secondary">Cancel Auto-Restart</button>
+        </div>
+    </dialog>
+
+    <!-- Restart modal -->
+    <dialog id="restart-modal" class="modal hidden" aria-labelledby="restart-title">
+        <div class="modal-content">
+            <button id="restart-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
+            <h2 id="restart-title">Restart Game</h2>
+            <div id="restart-modal-body">
+                <div class="restart-options">
+                    <button id="restart-now-button" class="primary">Restart Now</button>
+                    <div class="auto-restart-section">
+                        <label for="auto-restart-checkbox" title="Automatically restart the game after it ends">
+                            <input type="checkbox" id="auto-restart-checkbox" />
+                            <span>Auto-restart after game ends (5s countdown)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Game Options modal (migrated from Remote Command sidebar) -->
+    <dialog id="options-modal" class="modal hidden" aria-labelledby="options-title">
+        <div class="modal-content">
+            <button id="options-close" class="modal-close" title="Close" aria-label="Close">✖</button>
+            <h2 id="options-title">Game Options</h2>
+            <div id="options-modal-body">
+                <!-- Populated by moving the existing sidebar Game Options row controls here at open time -->
+                <div class="options-grid">
+                    <button id="open-setup" class="secondary">New Game…</button>
+                    <button id="restart-button" class="secondary">Restart Game</button>
+                    <button id="resume-saved-button" class="secondary">Resume Last Game</button>
+                    <button id="clear-saved-button" class="secondary">Clear Saved Game</button>
+                </div>
+                <div class="auto-restart-section">
+                    <label for="auto-restart-toggle" title="Automatically restart the game after it ends">
+                        <input type="checkbox" id="auto-restart-toggle" />
+                        <span>Auto-restart after game ends (5s countdown)</span>
+                    </label>
+                </div>
+                <div class="auto-restore-section" style="margin-top:12px;">
+                    <label for="restore-state-toggle" title="On launch, return to what you were doing last time (resume game, keep Options open, or open New Game setup)">
+                        <input type="checkbox" id="restore-state-toggle" />
+                        <span>Restore last session on launch</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
+    
+
+        <!-- New Game setup modal -->
+        <dialog id="new-game-modal" class="modal hidden" aria-labelledby="new-game-title">
+            <div class="modal-content setup">
+                <h2 id="new-game-title">New Game Setup</h2>
+                <div class="setup-grid">
+                    <div class="setup-section">
+                        <h3>Mode</h3>
+                        <label><input type="radio" name="mode" value="classic" checked> Classic</label>
+                        <label><input type="radio" name="mode" value="solo"> Solo (Target Practice)</label>
+                        <label><input type="radio" name="mode" value="teams"> Teams (2×4)</label>
+                        <label><input type="radio" name="mode" value="realtime"> Realtime (No Turns)</label>
+                    </div>
+                    <div class="setup-section">
+                        <h3>Environment</h3>
+                        <label>
+                            Environment Preset:
+                            <select id="setup-environment">
+                                <option value="random">🎲 Random</option>
+                                <optgroup label="Earth">
+                                    <option value="forest">🌲 Forest (Hilly, Day)</option>
+                                    <option value="desert">🏜️ Desert (Flat, Day)</option>
+                                    <option value="canyon">🏜️ Canyon (Canyon, Dusk)</option>
+                                    <option value="arctic">❄️ Arctic (Hilly, Day)</option>
+                                    <option value="ocean">🌊 Ocean (Underwater, Day)</option>
+                                </optgroup>
+                                <optgroup label="Underground">
+                                    <option value="cave">🕳️ Cave (Mountain, Dark)</option>
+                                </optgroup>
+                                <optgroup label="Space">
+                                    <option value="moon">🌙 Moon (Hilly, Night)</option>
+                                    <option value="mars">🔴 Mars (Mountain, Dusk)</option>
+                                </optgroup>
+                                <optgroup label="Sci-Fi">
+                                    <option value="futuristic">🚀 Futuristic (Flat, Night)</option>
+                                </optgroup>
+                                <optgroup label="Custom">
+                                    <option value="custom">⚙️ Custom (Advanced)</option>
+                                </optgroup>
+                            </select>
+                        </label>
+
+                        <!-- Advanced options (hidden by default) -->
+                        <div id="advanced-environment" style="display:none;">
+                            <label style="margin-top:12px;">
+                                Terrain Type:
+                                <select id="setup-terrain">
+                                    <option value="random">Random</option>
+                                    <option value="flat">Flat</option>
+                                    <option value="hilly">Hilly</option>
+                                    <option value="mountain">Mountain</option>
+                                    <option value="valley">Valley</option>
+                                    <option value="ocean">Ocean (Underwater)</option>
+                                </select>
+                            </label>
+                            <label>
+                                Theme:
+                                <select id="setup-theme">
+                                    <option value="random">Random</option>
+                                    <option value="forest">Forest</option>
+                                    <option value="desert">Desert</option>
+                                    <option value="cave">Cave</option>
+                                    <option value="moon">Moon</option>
+                                    <option value="mars">Mars</option>
+                                    <option value="arctic">Arctic</option>
+                                    <option value="ocean">Ocean</option>
+                                    <option value="canyon">Desert Canyon</option>
+                                    <option value="futuristic">Futuristic</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <label style="margin-top:12px;">
+                            <input type="checkbox" id="setup-static-time" />
+                            Static Time (no day/night cycle)
+                        </label>
+                        <label id="time-select-wrap">
+                            Time of Day:
+                            <select id="setup-time">
+                                <option value="auto">Auto/Random</option>
+                                <option value="day">Day</option>
+                                <option value="dusk">Dusk</option>
+                                <option value="night">Night</option>
+                            </select>
+                        </label>
+
+                    </div>
+                    <div class="setup-section">
+                        <h3>Players</h3>
+                        <label>
+                            Total Players:
+                            <input id="setup-total-players" type="number" min="1" max="8" value="2" />
+                        </label>
+
+                        
+                        <label id="solo-rounds-wrap" style="display:none">
+                            Solo Targets:
+                            <input id="setup-solo-targets" type="number" min="1" max="50" value="10" />
+                        </label>
+                        <label id="solo-shots-wrap" style="display:none">
+                            Solo Shots:
+                            <select id="setup-solo-shots">
+                                <option value="10" selected>10 shots</option>
+                                <option value="20">20 shots</option>
+                                <option value="unlimited">Unlimited</option>
+                            </select>
+                        </label>
+                                    <div id="setup-roster" class="roster"></div>
+                                    <div id="setup-slots" class="slots"></div>
+                    </div>
+                                            <div class="setup-section" id="setup-teams-section" style="display:none;">
+                                                <h3>Teams (A/B)</h3>
+                                                <div class="debug-sublabel">Assign each slot to Team A or Team B. Max 4 per team.</div>
+                                                <div id="setup-teams" class="teams"></div>
+                                            </div>
+                    <div class="setup-section">
+                        <h3>Wind</h3>
+                        <label><input type="radio" name="wind" value="none"> No Wind</label>
+                        <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
+                        <label><input type="radio" name="wind" value="high"> High Wind</label>
+                        <label><input type="radio" name="wind" value="random-per-turn"> Random Each Turn</label>
+                    </div>
+
+                    <div class="setup-section">
+                        <h3>Tank Health</h3>
+                        <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
+                        <label><input type="radio" name="health" value="150"> Increased (150%)</label>
+                        <label><input type="radio" name="health" value="200"> High (200%)</label>
+                        <label><input type="radio" name="health" value="300"> Very High (300%)</label>
+                    </div>
+
+                    <div class="setup-section" id="setup-display-section">
+                        <h3>Display</h3>
+                        <label title="Hide name tags for all other tanks. Only your own tank's label is shown.">
+                            <input id="setup-disable-names" type="checkbox" /> Hide other players' names (streamer mode)
+                        </label>
+                    </div>
+
+                    <div class="setup-section" id="setup-gameplay-section">
+                        <h3>Gameplay</h3>
+                        <label title="Allow all players to drive their tanks even when it's not their turn. Only the current player can fire.">
+                            <input id="setup-allow-drive-anytime" type="checkbox" /> Allow driving during other players' turns
+                        </label>
+                    </div>
+
+                    <div class="setup-section" id="setup-ammo-section">
+                        <h3>Ammo</h3>
+                        <label>
+                            Ammo Mode:
+                            <select id="setup-ammo-mode">
+                                <option value="unlimited" selected>Unlimited</option>
+                                <option value="standard">Standard</option>
+                                <option value="no-heavy">No Heavy Weapons</option>
+                                <option value="missile-only">Missile Only</option>
+                                <option value="laser-only">Laser Only</option>
+                                <option value="explosive-only">Explosives Only</option>
+                                <option value="marker-only">Markers Only</option>
+                                <option value="basic-weapons">Basic Weapons (Missile, Homing, Cluster)</option>
+                                <option value="custom">Custom…</option>
+                            </select>
+                        </label>
+                        <div id="setup-ammo-custom" style="display:none; margin-top:8px;">
+                            <div class="debug-sublabel">Per-weapon counts (leave blank for 0)</div>
+                            <div class="ammo-grid">
+                                <label>Missile <input type="number" id="ammo-missile" min="0" value="" placeholder="∞" /></label>
+                                <label>Homing <input type="number" id="ammo-homing" min="0" value="" /></label>
+                                <label>Heavy <input type="number" id="ammo-heavy" min="0" value="" /></label>
+                                <label>Nuke <input type="number" id="ammo-nuke" min="0" value="" /></label>
+                                <label>EMP <input type="number" id="ammo-emp" min="0" value="" /></label>
+                                <label>Laser <input type="number" id="ammo-laser" min="0" value="" /></label>
+                                <label>Cluster <input type="number" id="ammo-cluster" min="0" value="" /></label>
+                                <label>Bunker <input type="number" id="ammo-bunker" min="0" value="" /></label>
+                                <label>MIRV <input type="number" id="ammo-mirv" min="0" value="" /></label>
+                                <label>Funky <input type="number" id="ammo-funky" min="0" value="" /></label>
+                                <label>Drill <input type="number" id="ammo-drill" min="0" value="" /></label>
+                                <label>Acid <input type="number" id="ammo-acid" min="0" value="" /></label>
+                                <label>Napalm <input type="number" id="ammo-napalm" min="0" value="" /></label>
+                                <label>Tracer Round <input type="number" id="ammo-tracer" min="0" value="" /></label>
+                                <label>Smoke Bomb <input type="number" id="ammo-smoke_bomb" min="0" value="" /></label>
+                                <label>Flare <input type="number" id="ammo-flare" min="0" value="" /></label>
+                                <label>Parachute Flare <input type="number" id="ammo-parachute_flare" min="0" value="" /></label>
+                                <label>Marker: Paratroopers <input type="number" id="ammo-marker_attack" min="0" value="" /></label>
+                                <label>Marker: Medics <input type="number" id="ammo-marker_medic" min="0" value="" /></label>
+                                <label>Marker: Airstrike <input type="number" id="ammo-marker_airstrike" min="0" value="" /></label>
+                                <label>Marker: Air Nukes <input type="number" id="ammo-marker_airnukes" min="0" value="" /></label>
+                                <label>Bouncing Bomb <input type="number" id="ammo-bouncing_bomb" min="0" value="" /></label>
+                                <label>Supply Crate <input type="number" id="ammo-supply_crate" min="0" value="" /></label>
+                                <label>Shield <input type="number" id="ammo-shield" min="0" value="" /></label>
+                                <label>Land Mine <input type="number" id="ammo-land_mine" min="0" value="" /></label>
+                                <label>Toxic Gas <input type="number" id="ammo-toxic_gas" min="0" value="" /></label>
+                            </div>
+                        </div>
+                    </div>
+
+                        <!-- Skip modal when no humans remain -->
+                        <div id="skip-modal" class="modal hidden" aria-labelledby="skip-title" aria-modal="true">
+                            <div class="modal-content">
+                                <h2 id="skip-title">All human players are eliminated</h2>
+                                <p>Do you want to skip the remaining AI-only turns and see the result now?</p>
+                                <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
+                                    <button id="skip-continue">Keep Watching</button>
+                                    <button id="skip-to-result" class="primary">Skip to Result</button>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+                <div class="setup-actions">
+                    <button id="setup-reset" class="danger">Reset All</button>
+                    <div class="setup-actions-right">
+                        <button id="setup-cancel">Cancel</button>
+                        <button id="setup-start" class="primary">Start Game</button>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+
+    <!-- Load init module which handles all dependencies and main game -->
+    <script type="module" src="/js/init.js"></script>
+
+    <div id="version-display" style="position: fixed; bottom: 4px; right: 8px; font-size: 10px; opacity: 0.3; color: #888; pointer-events: none; z-index: 999; font-family: monospace;"></div>
+
+    <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>
