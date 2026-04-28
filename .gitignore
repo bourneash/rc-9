@@ -1,0 +1,9 @@
+CREDENTIALS.md
+CREDENTIALS_NEEDED.md
+.env
+.env.local
+node_modules/
+dist/
+
+.playwright-mcp/
+.claude/
