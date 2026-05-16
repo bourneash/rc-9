@@ -56,7 +56,7 @@ zip -r ../../portal-submissions/builds/gamedistribution-v1.0.0.zip ./*
 
 ## Build Artifacts Location
 
-All portal ZIPs saved to: `/home/jesse/projects/domains/rc-9.com/portal-submissions/builds/`
+All portal ZIPs saved to: `/home/jesse/projects/domains/sites/rc-9.com/portal-submissions/builds/`
 
 ---
 

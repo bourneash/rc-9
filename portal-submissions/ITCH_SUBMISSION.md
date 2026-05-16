@@ -42,7 +42,7 @@ Select: **$0 or donate** → Recommended price: `$0` (leave donations open for v
 
 ### Uploads
 1. Click **Upload files**
-2. Select: `/home/jesse/projects/domains/rc-9.com/portal-submissions/builds/itch-remote-command-v1.0.0.zip`
+2. Select: `/home/jesse/projects/domains/sites/rc-9.com/portal-submissions/builds/itch-remote-command-v1.0.0.zip`
 3. After upload, check the box: **☑ This file will be played in the browser**
 
 ### Embed options (appears after checking browser play)
@@ -194,5 +194,5 @@ Drop me the URL — I'll:
 
 ## File to Upload
 
-**Path:** `/home/jesse/projects/domains/rc-9.com/portal-submissions/builds/itch-remote-command-v1.0.0.zip`
+**Path:** `/home/jesse/projects/domains/sites/rc-9.com/portal-submissions/builds/itch-remote-command-v1.0.0.zip`
 **Size:** 1.1MB
