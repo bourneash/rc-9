@@ -1,5 +1,4 @@
-CREDENTIALS.md
-CREDENTIALS_NEEDED.md
+*.local.md
 .env
 .env.local
 node_modules/
