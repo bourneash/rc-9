@@ -18,6 +18,11 @@ import {
   showVictoryToast as _showVictoryToast,
 } from './game-victory.js';
 import { drawTrajectoryGuide as _drawTrajectoryGuide } from './game-physics.js';
+import {
+  HEAVY_WEAPONS,
+  WATER_ONLY_WEAPONS,
+  LAND_ONLY_WEAPONS,
+} from './game-state.js';
 
 export class Game {
   constructor(canvas, ctx) {
@@ -80,38 +85,10 @@ export class Game {
     this.aiDifficulty = 'medium';
     // Ammo/modes
     this.ammoMode = 'unlimited'; // 'unlimited' | 'standard' | 'no-heavy' | 'missile-only' | 'custom'
-    this.heavyWeapons = new Set([
-      'heavy',
-      'nuke',
-      'mirv',
-      'bunker',
-      'funky',
-      'cluster',
-      'laser',
-      'drill',
-      'napalm',
-      'emp',
-    ]);
-    // Weapons that only make sense on underwater (ocean) maps
-    this.waterOnlyWeapons = new Set([
-      'torpedo',
-      'homing_torpedo',
-      'depth_charge',
-      'underwater_mine',
-      'navy_seal',
-      'sonar_pulse',
-    ]);
-    // Weapons that don't work underwater (air-based or fire-based)
-    this.landOnlyWeapons = new Set([
-      'marker_airstrike',
-      'marker_airnukes',
-      'marker_attack',
-      'marker_medic',
-      'parachute_flare',
-      'napalm',
-      'smoke_bomb',
-      'flare',
-    ]);
+    // Weapon-category Sets are shared module constants (see game-state.js).
+    this.heavyWeapons = HEAVY_WEAPONS;
+    this.waterOnlyWeapons = WATER_ONLY_WEAPONS;
+    this.landOnlyWeapons = LAND_ONLY_WEAPONS;
     // Tracer is not heavy
     this.tracerPreview = null; // optional visual guide from last tracer impact
 
