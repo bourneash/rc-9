@@ -1,7 +1,11 @@
 # rc-9.com — Code Cleanup & Security Design
 
 **Date:** 2026-05-17
-**Status:** Approved (pending user review of this written spec)
+**Status:** Approved + amended at execution time — Task 1 scope reduced (see "Execution-time amendments" below)
+
+## Execution-time amendments
+
+- **2026-05-17 — Task 1 swapped to lightweight CI scanning.** Original Wave 1 task was "Install Security Dashboard V2" (full Docker Compose stack: PostgreSQL + Redis + Sonarqube + 5+ containers, ~5GB disk). On discovery that another project already runs a vitae-v2 instance on the user's machine (running for 9 days), the user opted to swap this task for gitleaks + Semgrep added as non-blocking GitHub Actions jobs. Heavier dashboard scanning is deferred to a higher-level decision later. No coupling to the other project's installation existed in rc-9, so "decoupling" reduced to a no-op (only spec/plan docs needed updating).
 **Author:** Jesse (with Claude)
 **Repo:** `bourneash/rc-9` (private), deployed via Cloudflare Workers + static-assets
 

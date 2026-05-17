@@ -14,6 +14,9 @@
 - `site/js/av.js:575-654` already implements thorough Howler cleanup (`stop()` + `unload()` on every sound/loop/music, plus Web Audio node disconnect). **Spec's Howler-cleanup task dropped.**
 - `window.mainGame` does not exist in code — `grep` shows 0 references. It's only mentioned in `site/CLAUDE.md` as a documented gotcha. **Task simplifies to fixing the doc.**
 
+**Scope correction at execution time (2026-05-17):**
+- Task 1 originally specified installing Security Dashboard V2 — a full Docker Compose stack (~5GB disk, 5+ containers). On the user's call we swapped this for **lightweight CI scanning only**: gitleaks (secret detection) and Semgrep (SAST) added as non-blocking jobs in `.github/workflows/security-and-build.yml`. Heavier scanning (the dashboard, schedules, etc.) is deferred to a higher-level decision at another time.
+
 ---
 
 ## File Structure
@@ -96,64 +99,78 @@ Low-risk changes. No behavior changes to the game. Goal: install automated scann
 
 ---
 
-## Task 1: Install Security Dashboard V2
+## Task 1: Add Lightweight CI Scanning (gitleaks + Semgrep)
 
 **Files:**
-- Modify: working directory (scanner adds its own config files)
 - Modify: `.github/workflows/security-and-build.yml`
 
-- [ ] **Step 1: Invoke the install skill**
+Scope: add two non-blocking CI jobs that surface security issues on every PR and main push, without standing up a local dashboard stack.
 
-In the Claude session, invoke `skill-security_v2-install` with the repo root as the target. From the user's shell that means running the slash command or letting the agent invoke the skill via the Skill tool. The skill will:
-- detect the JS stack
-- clone/install the Security Dashboard V2 scanner
-- configure scanners for JavaScript
-- kick off an initial scan
+- [ ] **Step 1: Add `secret-scan` job using gitleaks**
 
-Working dir for the skill: `/home/jesse/projects/domains/sites/rc-9.com`
-
-- [ ] **Step 2: Review what the skill installed**
-
-```bash
-cd /home/jesse/projects/domains/sites/rc-9.com
-git status --short
-```
-
-Expected: scanner config files staged or untracked. Inspect each new file — confirm none contain secrets or PII.
-
-- [ ] **Step 3: Run the first scan and review output**
-
-Run whatever scan command the skill documents (e.g., `security-dashboard scan` or similar). Save the baseline output to `docs/superpowers/security-baseline-2026-05-17.txt` for reference.
-
-```bash
-cd /home/jesse/projects/domains/sites/rc-9.com
-# example — replace with actual command the skill provides
-security-dashboard scan --output docs/superpowers/security-baseline-2026-05-17.txt
-```
-
-If the scanner exits non-zero on the baseline, that's expected (it's reporting findings). Do NOT block on findings here — Wave 1's job is to install scanning, not address every finding. Triage in follow-up.
-
-- [ ] **Step 4: Add scanner step to CI (non-blocking)**
-
-Open `.github/workflows/security-and-build.yml` and add a step after `npm run security:audit` (around line 30, after the existing audit step). The exact command depends on what the skill installed — use what the skill documents. Example shape:
+In `.github/workflows/security-and-build.yml`, add a new top-level job below the existing `verify` job:
 
 ```yaml
-      - name: Security Dashboard scan
-        run: security-dashboard scan
-        continue-on-error: true   # non-blocking until findings are triaged
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # gitleaks needs full history
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true   # non-blocking
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The `continue-on-error: true` is intentional: we want signal in CI without blocking PRs while baseline findings are being triaged.
+- [ ] **Step 2: Add `sast` job using Semgrep**
 
-- [ ] **Step 5: Commit**
+Append a `sast` job below the secret-scan one. Semgrep runs from the repo root, so override the workflow-level `working-directory: site` default:
+
+```yaml
+  sast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: semgrep/semgrep
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Semgrep scan
+        run: semgrep ci --config p/security-audit --config p/javascript --error
+        continue-on-error: true   # non-blocking
+```
+
+`--error` makes Semgrep exit non-zero on findings (so they show up in step logs), while `continue-on-error: true` at the step level keeps the workflow green. We'll triage findings in a follow-up; the goal here is signal, not gating.
+
+- [ ] **Step 3: Validate YAML syntax locally**
 
 ```bash
 cd /home/jesse/projects/domains/sites/rc-9.com
-git add .
-git status
-# verify NO CREDENTIALS*.md files are staged before committing
-git commit -m "chore(security): install Security Dashboard V2 + baseline scan"
+python3 -c "import yaml; yaml.safe_load(open('.github/workflows/security-and-build.yml'))" && echo "YAML valid"
 ```
+
+Expected: `YAML valid`.
+
+- [ ] **Step 4: Commit**
+
+```bash
+cd /home/jesse/projects/domains/sites/rc-9.com
+git add .github/workflows/security-and-build.yml docs/superpowers/plans/2026-05-17-rc-9-cleanup-and-security.md docs/superpowers/specs/2026-05-17-rc-9-cleanup-and-security-design.md
+git commit -m "feat(ci): add gitleaks + semgrep as non-blocking security scans"
+```
+
+The scans run on every PR and on push to main. Findings appear in the workflow run UI but do not block merges (yet).
 
 ---
 
