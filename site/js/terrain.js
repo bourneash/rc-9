@@ -313,46 +313,51 @@ export class Terrain {
 
   /**
    * Check if movement from currentX to newX is allowed based on terrain boundaries
-   * This includes canyon restrictions and cliff boundaries
+   * This includes canyon restrictions and cliff boundaries.
+   *
+   * Note: canyon collision is intentionally LOGICAL (uses stored X bands), not
+   * heightmap-based. Explosions can erode the visible cliffs but tanks still
+   * cannot cross the canyon X-band — by design.
    */
   canMoveTo(currentX, newX) {
-    // Basic boundary check
-    if (newX < 20 || newX > this.width - 20) {
+    // Basic boundary check (use stored bounds if present, else default margins)
+    const minX = this._movementMinX != null ? this._movementMinX : 20;
+    const maxX = this._movementMaxX != null ? this._movementMaxX : this.width - 20;
+    if (newX < minX || newX > maxX) {
       return false;
     }
 
     // Canyon-specific movement restrictions
     if (this.profile === 'canyon' && this._canyonLeftCliffStart && this._canyonRightCliffStart) {
-      const leftCliff = this._canyonLeftCliffStart;
-      const rightCliff = this._canyonRightCliffStart;
-      const leftSafe = this._canyonLeftSafeZone || leftCliff - 10;
-      const rightSafe = this._canyonRightSafeZone || rightCliff + 10;
+      const leftEdge = this._canyonLeftCliffStart; // top of left cliff
+      const rightEdge = this._canyonRightCliffStart; // top of right cliff
 
-      // Determine which side the tank is currently on
-      const isOnLeftSide = currentX < leftCliff;
-      const isOnRightSide = currentX > rightCliff;
-      const isInCanyon = currentX >= leftCliff && currentX <= rightCliff;
+      // Forbidden band is (leftEdge, rightEdge) exclusive — the canyon interior.
+      const newInForbidden = newX > leftEdge && newX < rightEdge;
+      const currInForbidden = currentX > leftEdge && currentX < rightEdge;
 
-      // If on left side, can't cross into canyon
-      if (isOnLeftSide && newX > leftSafe) {
+      // Block ANY step that lands in the forbidden band.
+      if (newInForbidden) {
         return false;
       }
 
-      // If on right side, can't cross into canyon
-      if (isOnRightSide && newX < rightSafe) {
+      // Block crossing the band entirely (e.g. teleport from leftEdge-1 to rightEdge+1).
+      if (
+        !currInForbidden &&
+        ((currentX <= leftEdge && newX >= rightEdge) ||
+          (currentX >= rightEdge && newX <= leftEdge))
+      ) {
         return false;
       }
 
-      // If somehow in the canyon (shouldn't happen), restrict to canyon
-      if (isInCanyon) {
-        // Can move within canyon but not up the cliffs
-        if (newX < leftCliff || newX > rightCliff) {
-          // Check if slope is too steep (cliff)
-          const slope = Math.abs(this.getHeight(newX) - this.getHeight(currentX));
-          if (slope > 50) {
-            // Cliff threshold
-            return false;
-          }
+      // If a tank was somehow placed inside the band, only allow it to escape
+      // out the nearer side; never let it cross the midpoint.
+      if (currInForbidden) {
+        const mid = (leftEdge + rightEdge) / 2;
+        const escapingLeft = newX <= leftEdge && currentX < mid;
+        const escapingRight = newX >= rightEdge && currentX > mid;
+        if (!(escapingLeft || escapingRight)) {
+          return false;
         }
       }
     }

@@ -44,6 +44,6 @@ Sound does not work on this site so far, not so if it is my brower, or the setup
 ---------------
 
 Canyon Map - This still does not work, there are no boundries being set inside the map, the tanks and traverse the entire map including the canyon walls. Please fix this so that the tanks cannot go in to the canyon walls:
-The canyon map is a little weird, as in, it is not really a canyon. The way I envisioned it was a deep canyon with restricted space, meaning, it forces the players to stay apart since they could not cross the canyon. There should be zones where the players cannot go, like steep cliffs on either side of the canyon.
+The canyon map is a little weird, as in, it is not really a canyon. The way I envisioned it was a deep canyon with restricted space, meaning, it forces the players to stay apart since they could not cross the canyon. There should be zones where the players cannot go, like steep cliffs on either side of the canyon. FIXED 2026-05-17 - Canyon collision now uses a hard X-band in Terrain.canMoveTo() (single source of truth); tanks spawn on alternating plateaus and cannot cross the canyon interior. Visual destruction still erodes cliffs, but logical collision stays intact by design.
 
 ---------------

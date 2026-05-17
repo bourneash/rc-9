@@ -1064,12 +1064,32 @@ export class Game {
 
     for (let i = 0; i < count; i++) {
       let x = xs[i];
-      // Clamp to canyon bounds if present
+      // Clamp to canyon plateaus if present — tanks must spawn outside the
+      // canyon band (which is impassable). Distribute alternately so each
+      // side has at least one tank. Design choice: split by index parity
+      // (even -> left plateau, odd -> right plateau). This works for 2-tank
+      // and 4-tank games and keeps team modes balanced when teams alternate.
       const bounds = this.terrain?.getMovementBounds?.();
       if (bounds && this.themeName === 'canyon') {
         const [minX, maxX] = bounds;
-        const pad = 12;
-        x = Math.max(minX + pad, Math.min(maxX - pad, x));
+        const leftCliff = this.terrain?._canyonLeftCliffStart;
+        const rightCliff = this.terrain?._canyonRightCliffStart;
+        const pad = 30;
+        if (leftCliff != null && rightCliff != null) {
+          const leftLo = minX + pad;
+          const leftHi = Math.max(leftLo, leftCliff - pad);
+          const rightLo = Math.min(maxX - pad, rightCliff + pad);
+          const rightHi = maxX - pad;
+          const useLeft = i % 2 === 0;
+          if (useLeft) {
+            x = Math.max(leftLo, Math.min(leftHi, x));
+          } else {
+            x = Math.max(rightLo, Math.min(rightHi, x));
+          }
+        } else {
+          // Fallback: at least keep tanks inside global bounds with extra pad
+          x = Math.max(minX + pad, Math.min(maxX - pad, x));
+        }
       }
       let y = this.terrain.getHeight(x);
       const isAI = i > 0;
@@ -7072,7 +7092,6 @@ export class Game {
       let remaining = plan.steps;
       const dir = plan.dir;
       const delay = plan.delay;
-      const canyonBounds = this.terrain?.getMovementBounds?.();
       const step = () => {
         if (this.gameOver || remaining <= 0 || aiTank.health <= 0) {
           try {
@@ -7080,17 +7099,9 @@ export class Game {
           } catch {}
           return;
         }
-        // Respect canyon movement bounds if present
-        if (canyonBounds && this.themeName === 'canyon') {
-          const [minX, maxX] = canyonBounds;
-          if ((dir < 0 && aiTank.x <= minX + 2) || (dir > 0 && aiTank.x >= maxX - 2)) {
-            remaining = 0;
-            try {
-              onDone?.();
-            } catch {}
-            return;
-          }
-        }
+        // Movement bounds (including canyon walls) are enforced by
+        // terrain.canMoveTo() inside aiTank.move(). If it returns false the
+        // step block below bails and we stop the move loop.
         const moved = aiTank.move(dir, this.terrain);
         if (moved) {
           // Occasional dust for flavor on dusty themes
@@ -7684,87 +7695,53 @@ export class Game {
     const currentTank = this.tanks[this.currentTankIndex];
     if (currentTank.isAI) return;
 
-    // Enforce canyon traversal limits - prevent crossing the canyon
-    if (this.themeName === 'canyon' && this.terrain) {
-      const leftSafe = this.terrain._canyonLeftSafeZone;
-      const rightSafe = this.terrain._canyonRightSafeZone;
-      const leftCliff = this.terrain._canyonLeftCliffStart;
-      const rightCliff = this.terrain._canyonRightCliffStart;
-
-      if (leftSafe != null && rightSafe != null) {
-        // Determine which side of canyon the tank is on
-        const isOnLeftSide = currentTank.x < (leftCliff + rightCliff) / 2;
-
-        // Prevent movement into restricted zones
-        if (isOnLeftSide) {
-          // Tank on left side - cannot go past left safe zone
-          if (direction > 0 && currentTank.x >= leftSafe) {
-            this.spawnCanyonDust(currentTank.x, currentTank.y - 3, 12);
-            this.addLog('Cannot cross the canyon!', 'warning');
-            return;
-          }
-        } else {
-          // Tank on right side - cannot go before right safe zone
-          if (direction < 0 && currentTank.x <= rightSafe) {
-            this.spawnCanyonDust(currentTank.x, currentTank.y - 3, 12);
-            this.addLog('Cannot cross the canyon!', 'warning');
-            return;
-          }
-        }
-
-        // Also enforce global bounds
-        const bounds = this.terrain?.getMovementBounds?.();
-        if (bounds) {
-          const [minX, maxX] = bounds;
-          if (
-            (direction < 0 && currentTank.x <= minX) ||
-            (direction > 0 && currentTank.x >= maxX)
-          ) {
-            this.spawnCanyonDust(currentTank.x, currentTank.y - 3, 8);
-            return;
-          }
-        }
+    // Canyon traversal is enforced in Terrain.canMoveTo() (single source of
+    // truth). Here we only add UX feedback when a canyon move is denied.
+    const moved = currentTank.move(direction, this.terrain);
+    if (!moved) {
+      if (this.themeName === 'canyon' && this.terrain) {
+        this.spawnCanyonDust(currentTank.x, currentTank.y - 3, 12);
+        this.addLog('Cannot cross the canyon!', 'warning');
       }
+      return;
     }
 
-    if (currentTank.move(direction, this.terrain)) {
-      this.updateUI();
-      try {
-        document.dispatchEvent(new CustomEvent('game:engine-ping'));
-      } catch {}
-      if (this.themeName === 'canyon') {
-        this._canyonDustTick = (this._canyonDustTick || 0) + 1;
-        if (this._canyonDustTick % 2 === 0) {
-          this.spawnCanyonDust(currentTank.x - direction * 6, currentTank.y - 2, 10);
-        }
-      } else if (
-        this.themeName === 'desert' ||
-        this.themeName === 'moon' ||
-        this.themeName === 'mars'
-      ) {
-        const themeCfg = this.config?.graphics?.dust?.[this.themeName] || {};
-        const dustEnabled =
-          this.dustOverrideEnabled !== null ? this.dustOverrideEnabled : !!themeCfg.enabled;
-        if (!dustEnabled) return;
-        const cadence = Math.max(1, themeCfg.moveEvery ?? (this.themeName === 'moon' ? 3 : 2));
-        const baseCount = Math.max(1, themeCfg.count ?? (this.themeName === 'moon' ? 8 : 10));
-        const count = Math.max(1, Math.round(baseCount * (this.dustAmountMultiplier || 1)));
-        const options = {
-          sizeScale: (themeCfg.sizeScale ?? 1) * (this.dustSizeScale || 1),
-          lifetimeScale: (themeCfg.lifetimeScale ?? 1) * (this.dustLifetimeScale || 1),
-          gravity: themeCfg.gravity,
-          gravityDelta: themeCfg.gravityDelta,
-        };
-        this._canyonDustTick = (this._canyonDustTick || 0) + 1;
-        if (this._canyonDustTick % cadence === 0) {
-          this.spawnDustForTheme(
-            this.themeName,
-            currentTank.x - direction * 6,
-            currentTank.y - 2,
-            count,
-            options
-          );
-        }
+    this.updateUI();
+    try {
+      document.dispatchEvent(new CustomEvent('game:engine-ping'));
+    } catch {}
+    if (this.themeName === 'canyon') {
+      this._canyonDustTick = (this._canyonDustTick || 0) + 1;
+      if (this._canyonDustTick % 2 === 0) {
+        this.spawnCanyonDust(currentTank.x - direction * 6, currentTank.y - 2, 10);
+      }
+    } else if (
+      this.themeName === 'desert' ||
+      this.themeName === 'moon' ||
+      this.themeName === 'mars'
+    ) {
+      const themeCfg = this.config?.graphics?.dust?.[this.themeName] || {};
+      const dustEnabled =
+        this.dustOverrideEnabled !== null ? this.dustOverrideEnabled : !!themeCfg.enabled;
+      if (!dustEnabled) return;
+      const cadence = Math.max(1, themeCfg.moveEvery ?? (this.themeName === 'moon' ? 3 : 2));
+      const baseCount = Math.max(1, themeCfg.count ?? (this.themeName === 'moon' ? 8 : 10));
+      const count = Math.max(1, Math.round(baseCount * (this.dustAmountMultiplier || 1)));
+      const options = {
+        sizeScale: (themeCfg.sizeScale ?? 1) * (this.dustSizeScale || 1),
+        lifetimeScale: (themeCfg.lifetimeScale ?? 1) * (this.dustLifetimeScale || 1),
+        gravity: themeCfg.gravity,
+        gravityDelta: themeCfg.gravityDelta,
+      };
+      this._canyonDustTick = (this._canyonDustTick || 0) + 1;
+      if (this._canyonDustTick % cadence === 0) {
+        this.spawnDustForTheme(
+          this.themeName,
+          currentTank.x - direction * 6,
+          currentTank.y - 2,
+          count,
+          options
+        );
       }
     }
   }
