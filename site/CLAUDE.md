@@ -25,7 +25,11 @@
 ├── styles.css              # Global styles, modal styles, UI components
 ├── js/
 │   ├── main.js            # Entry point, UI controls, game setup
-│   ├── game.js            # Main game loop, turn management, victory logic
+│   ├── game.js            # Game class: render loop, turn management, terrain orchestration, fire/projectile dispatch
+│   ├── game-victory.js    # Victory detection + game-over / victory toast rendering
+│   ├── game-physics.js    # Trajectory guide simulation (air + underwater physics)
+│   ├── game-state.js      # Weapon-restriction Sets (LAND_ONLY / WATER_ONLY / HEAVY) + shared state constants
+│   ├── game-ai.js         # AI turn loop, weapon selection, movement planning, shot calculation
 │   ├── terrain.js         # Terrain generation and rendering
 │   ├── tank.js            # Tank class, movement, health, weapons
 │   ├── projectile.js      # Projectile physics, trajectories, explosions
@@ -226,12 +230,13 @@ const isUnderwater = isOceanMode && waterSurfaceY != null && y > waterSurfaceY;
 **Note:** `y` increases downward in canvas coordinates.
 
 ### 3. Game Object Access
-**Problem:** Game instance stored in different global variables.
+The game instance is exposed as `globalThis.__SE_GAME__` (set in `js/main.js`). Older docs mentioned `window.game` / `window.mainGame` fallbacks — neither alias is actually set; use `__SE_GAME__`.
 
-**Solution:** Check both:
 ```javascript
-const game = window.game || window.mainGame;
+const game = globalThis.__SE_GAME__;
 ```
+
+(The smoke tests at `tests/smoke/gameplay.smoke.spec.js` still check `__SE_GAME__ || window.game || window.mainGame` defensively — that fallback chain can be simplified to just `__SE_GAME__` in a future cleanup.)
 
 ### 4. Weapon Filtering
 **Problem:** Need to filter weapons in multiple places (AI, UI, firing).
@@ -285,22 +290,22 @@ const game = window.game || window.mainGame;
 ### Game Logic
 - **Main game loop**: `js/game.js:update()`, `js/game.js:render()`
 - **Turn management**: `js/game.js:nextTurn()`, `js/game.js:endTurn()`
-- **Victory checking**: `js/game.js:checkGameOver()`, `js/game.js:showGameOver()`
-- **AI logic**: `js/game.js:chooseAIWeapon()`, `js/game.js:performAITurn()`
+- **Victory checking**: `js/game-victory.js:checkGameOver()`, `js/game-victory.js:showGameOver()`
+- **AI logic**: `js/game-ai.js:chooseAIWeapon()`, `js/game-ai.js:performAITurn()`
 
 ### Physics
 - **Projectile physics**: `js/projectile.js:update()`
 - **Underwater physics**: `js/projectile.js:323-346`
-- **Trajectory simulation**: `js/game.js:drawTrajectoryGuide()`
+- **Trajectory simulation**: `js/game-physics.js:drawTrajectoryGuide()`
 
 ### UI Components
 - **Weapon menu**: `js/main.js:renderWeaponMenu()`
 - **Weapon filtering**: `js/main.js:isAllowedWeapon()`
 - **Setup modal**: `index.html:setup-modal`
-- **Victory toast**: `js/game.js:showVictoryToast()`
+- **Victory toast**: `js/game-victory.js:showVictoryToast()`
 
 ### Configuration
-- **Weapon sets**: `js/game.js:73-78` (landOnlyWeapons), weapon-meta.js (all weapons)
+- **Weapon sets**: `js/game-state.js` defines `LAND_ONLY_WEAPONS` / `WATER_ONLY_WEAPONS` / `HEAVY_WEAPONS` constants; assigned onto Game as `game.landOnlyWeapons` / `game.waterOnlyWeapons` in the constructor. `weapon-meta.js` defines all weapons.
 - **Environment presets**: `js/main.js:954-990`
 - **Game constants**: `js/constants.js`
 
@@ -321,7 +326,7 @@ npm run dev  # Starts dev server on localhost:5600
 
 ### Debugging Tips
 - Use browser DevTools console for errors
-- `game` object accessible in console: `window.game` or `window.mainGame`
+- `game` object accessible in console: `globalThis.__SE_GAME__` (or just `__SE_GAME__`)
 - Tank array: `game.tanks`
 - Current tank: `game.getCurrentTank()`
 - Check ocean mode: `game.terrain._isOceanTerrain`

@@ -32,9 +32,9 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@playwright/test": "^1.58.2",
-    "eslint": "^9.39.1",
+    "@eslint/js": "^9.39.4",
+    "@playwright/test": "^1.60.0",
+    "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-import": "^2.32.0",
     "prettier": "^3.7.3",
@@ -43,9 +43,9 @@
     "vite-plugin-compression": "^0.5.1"
   },
   "dependencies": {
-    "gsap": "^3.13.0",
+    "gsap": "^3.15.0",
     "howler": "^2.2.4",
-    "pixi-filters": "^6.1.4",
-    "pixi.js": "^8.14.0"
+    "pixi-filters": "^6.1.5",
+    "pixi.js": "^8.18.1"
   }
 }
