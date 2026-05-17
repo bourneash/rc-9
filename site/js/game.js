@@ -379,6 +379,26 @@ export class Game {
     };
   }
 
+  showFetchErrorToast(message) {
+    // Lightweight transient toast for non-fatal fetch failures.
+    // Uses textContent (not innerHTML) for the message — never interpolate raw errors as HTML.
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(180, 30, 30, 0.95); color: #fff;
+      padding: 10px 16px; border-radius: 6px; font-size: 14px;
+      font-family: system-ui, sans-serif; z-index: 9999;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.4); max-width: 80vw;
+    `;
+    const label = document.createElement('span');
+    label.textContent = message;
+    toast.appendChild(label);
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      try { toast.remove(); } catch {}
+    }, 6000);
+  }
+
   async init() {
     // Load config
     try {
@@ -531,6 +551,7 @@ export class Game {
       }
     } catch (error) {
       console.error('Failed to load config:', error);
+      this.showFetchErrorToast('Could not load game config — using defaults.');
       this.config = { ai: { medium: { aimError: 8, powerError: 15, thinkTime: 1500 } } };
     }
 
