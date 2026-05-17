@@ -32,7 +32,7 @@ export const TERRAIN = {
 
   CANYON_BUFFER: 8, // Pixels from valley edges
   OCEAN_WATER_SURFACE: 0.3, // 30% from top
-  OCEAN_FLOOR_BASE: 0.80, // 80% from top
+  OCEAN_FLOOR_BASE: 0.8, // 80% from top
 };
 
 export const DISPLAY = {

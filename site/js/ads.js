@@ -33,10 +33,10 @@ const AdAPI = {
     // GameDistribution SDK bootstrap
     window.GD_OPTIONS = {
       gameId: GAME_ID,
-      onEvent: (event) => {
+      onEvent: event => {
         if (event.name === 'SDK_READY') this._ready = true;
         if (event.name === 'SDK_ERROR') console.warn('[ads]', event);
-      }
+      },
     };
     const s = document.createElement('script');
     s.src = 'https://html5.api.gamedistribution.com/main.min.js';
@@ -54,7 +54,10 @@ const AdAPI = {
 
   // Show rewarded ad; callback fires only if user completed the ad
   async showRewarded(onReward) {
-    if (!this._enabled) { onReward?.(); return; } // dev → just grant reward
+    if (!this._enabled) {
+      onReward?.();
+      return;
+    } // dev → just grant reward
     if (this._sessionAdsShown >= this._maxPerSession) {
       console.info('[ads] session cap reached, granting reward without ad');
       onReward?.();
@@ -75,12 +78,13 @@ const AdAPI = {
       if (!window.gdsdk?.showAd) {
         return reject(new Error('SDK not ready'));
       }
-      const adType = type === 'rewarded'
-        ? window.gdsdk.AdType?.Rewarded || 'rewarded'
-        : window.gdsdk.AdType?.Interstitial || 'interstitial';
+      const adType =
+        type === 'rewarded'
+          ? window.gdsdk.AdType?.Rewarded || 'rewarded'
+          : window.gdsdk.AdType?.Interstitial || 'interstitial';
       window.gdsdk.showAd(adType).then(resolve).catch(reject);
     });
-  }
+  },
 };
 
 // Expose globally for game integration
