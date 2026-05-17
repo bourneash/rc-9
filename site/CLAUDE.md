@@ -226,12 +226,13 @@ const isUnderwater = isOceanMode && waterSurfaceY != null && y > waterSurfaceY;
 **Note:** `y` increases downward in canvas coordinates.
 
 ### 3. Game Object Access
-**Problem:** Game instance stored in different global variables.
+The game instance is exposed as `globalThis.__SE_GAME__` (set in `js/main.js`). Older docs mentioned `window.game` / `window.mainGame` fallbacks — neither alias is actually set; use `__SE_GAME__`.
 
-**Solution:** Check both:
 ```javascript
-const game = window.game || window.mainGame;
+const game = globalThis.__SE_GAME__;
 ```
+
+(The smoke tests at `tests/smoke/gameplay.smoke.spec.js` still check `__SE_GAME__ || window.game || window.mainGame` defensively — that fallback chain can be simplified to just `__SE_GAME__` in a future cleanup.)
 
 ### 4. Weapon Filtering
 **Problem:** Need to filter weapons in multiple places (AI, UI, firing).
@@ -321,7 +322,7 @@ npm run dev  # Starts dev server on localhost:5600
 
 ### Debugging Tips
 - Use browser DevTools console for errors
-- `game` object accessible in console: `window.game` or `window.mainGame`
+- `game` object accessible in console: `globalThis.__SE_GAME__` (or just `__SE_GAME__`)
 - Tank array: `game.tanks`
 - Current tank: `game.getCurrentTank()`
 - Check ocean mode: `game.terrain._isOceanTerrain`
