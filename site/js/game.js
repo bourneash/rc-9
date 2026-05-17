@@ -11,7 +11,6 @@ import {
   toSnapshot as snapshotSerialize,
   loadSnapshotIntoGame as snapshotLoad,
 } from './snapshot.js';
-import { VictoryMessages } from './victory-messages.js';
 import {
   checkGameOver as _checkGameOver,
   showGameOver as _showGameOver,
@@ -6600,14 +6599,6 @@ export class Game {
 
   getCurrentTank() {
     return this.tanks[this.currentTankIndex];
-  }
-
-  selectMidRangeWeapon() {
-    const weaponChoice = Math.random();
-    if (weaponChoice < 0.3) return 'heavy';
-    if (weaponChoice < 0.5) return 'mirv';
-    if (weaponChoice < 0.7) return 'funky';
-    return 'missile';
   }
 
   updateUI() {
