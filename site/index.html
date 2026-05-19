@@ -3,21 +3,110 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Remote Command</title>
+    <title>Remote Command — Free Online Artillery Tank Game with Destructible Terrain</title>
 
     <!-- Security headers are now set via CloudFlare Pages _headers file -->
     <meta name="referrer" content="no-referrer-when-downgrade" />
     <meta name="google-site-verification" content="llV2Gj2sVlK6BIr0_pDzkxUyVsCBVmc5RahQgOxL1TQ" />
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <meta name="description" content="Browser-based artillery tank game inspired by the classic DOS game. Destructible terrain, realistic physics, AI opponents.">
-    <meta property="og:title" content="Scorched Earth">
-    <meta property="og:description" content="Classic artillery tank combat in your browser">
-    <meta property="og:type" content="website">
-    <meta name="theme-color" content="#0a0e27">
+    <link rel="canonical" href="https://rc-9.com/" />
+
+    <meta name="description" content="Remote Command is a free online artillery tank game with destructible terrain, wind physics, and AI opponents. Play 10+ environments, 25+ weapons, solo or hot-seat — right in your browser, no download." />
+    <meta name="keywords" content="remote command, artillery tank game, destructible terrain game, free browser tank game, online tank game, artillery game, turn-based tank game" />
+    <meta name="author" content="Remote Command" />
+    <meta name="theme-color" content="#0a0e27" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Remote Command" />
+    <meta property="og:url" content="https://rc-9.com/" />
+    <meta property="og:title" content="Remote Command — Free Online Artillery Tank Game" />
+    <meta property="og:description" content="Free browser artillery tank game with destructible terrain, wind physics, and AI opponents. 10+ environments, 25+ weapons. No download." />
+    <meta property="og:image" content="https://rc-9.com/og-image.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="720" />
+    <meta property="og:image:alt" content="Remote Command gameplay — tank firing across destructible terrain" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Remote Command — Free Online Artillery Tank Game" />
+    <meta name="twitter:description" content="Free browser artillery tank game with destructible terrain, wind physics, and AI opponents. No download." />
+    <meta name="twitter:image" content="https://rc-9.com/og-image.png" />
+    <meta name="twitter:image:alt" content="Remote Command gameplay — tank firing across destructible terrain" />
+
     <link rel="stylesheet" href="/styles.css" />
+
+    <!-- Structured data: VideoGame schema for Google rich results -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "Remote Command",
+      "alternateName": "Remote Command — Artillery Tank Game",
+      "url": "https://rc-9.com/",
+      "image": "https://rc-9.com/og-image.png",
+      "description": "Free online artillery tank game with destructible terrain, wind physics, and AI opponents. Inspired by the classic DOS-era artillery genre, playable in any modern browser with no download.",
+      "genre": ["Artillery", "Strategy", "Turn-based"],
+      "gamePlatform": ["Web Browser", "HTML5"],
+      "operatingSystem": ["Any (browser-based)"],
+      "applicationCategory": "Game",
+      "playMode": ["SinglePlayer", "MultiPlayer"],
+      "inLanguage": "en",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
 </head>
 <body>
+    <header class="sr-only">
+        <h1>Remote Command — Free Online Artillery Tank Game</h1>
+        <p>
+            Remote Command is a browser-based artillery tank game in the tradition of Scorched Earth and the
+            classic DOS-era artillery genre. Aim with angle and power, account for wind, and blast craters out of
+            destructible terrain. No download, no install — playable directly in any modern browser.
+        </p>
+        <h2>Game modes</h2>
+        <ul>
+            <li><strong>Classic free-for-all:</strong> last tank standing wins.</li>
+            <li><strong>Teams (2 × 4):</strong> two teams of up to four tanks each.</li>
+            <li><strong>Solo target practice:</strong> single-player score attack against pop-up targets.</li>
+            <li><strong>Realtime mode:</strong> no turns — fire continuously with reload cooldowns.</li>
+        </ul>
+        <h2>Weapons and environments</h2>
+        <p>
+            Twenty-plus weapons including missile, heavy shell, nuke, MIRV, cluster bomb, bunker buster, drill,
+            laser, napalm, acid, EMP, land mine, bouncing bomb, supply crate, shield, and a full suite of
+            air-strike markers. Play across ten environments — forest, desert, canyon, arctic, ocean (with full
+            underwater physics), cave, moon, Mars, futuristic, and randomised mixes — with day, dusk, and night cycles.
+        </p>
+        <h2>Controls</h2>
+        <p>
+            Use the arrow keys for angle and power, Space or Enter to fire, and the on-screen joystick or touch
+            dial on mobile. See the <a href="/help.html">how-to-play guide</a> for the full controls and weapon reference.
+        </p>
+    </header>
+    <noscript>
+        <div style="max-width: 720px; margin: 40px auto; padding: 16px; color: #ddd; font-family: sans-serif; line-height: 1.6;">
+            <h1 style="color: #00f5ff;">Remote Command</h1>
+            <p>
+                Remote Command is a free online artillery tank game with destructible terrain, realistic
+                trajectory and wind physics, twenty-plus weapons, and ten themed environments including a full
+                underwater ocean mode. It runs entirely in your browser — no download required — but needs
+                JavaScript enabled to play. Please enable JavaScript and reload this page.
+            </p>
+            <p>
+                Visit the <a href="/help.html" style="color: #00f5ff;">how to play guide</a> for controls,
+                game modes, and the weapon reference.
+            </p>
+        </div>
+    </noscript>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
                 <!-- Post FX overlay (PixiJS renders here on top of the canvas) -->
