@@ -101,8 +101,16 @@ function handleAction(action) {
   switch (action) {
     case 'new': {
       hide();
-      const dlg = document.getElementById('new-game-modal');
-      dlg?.showModal?.();
+      // Go through the full setup-modal init path so slots render, tiles sync,
+      // and the .hidden class is removed. Calling dlg.showModal() alone skips
+      // all of that and leaves the dialog invisible (display:none from .hidden).
+      if (typeof globalThis.openNewGameModal === 'function') {
+        globalThis.openNewGameModal();
+      } else {
+        const dlg = document.getElementById('new-game-modal');
+        dlg?.classList.remove('hidden');
+        dlg?.showModal?.();
+      }
       break;
     }
     case 'resume': {
