@@ -292,3 +292,65 @@
   align-items: center;
 }
 .briefing-panel .panel-label .num { color: var(--text-dim); }
+
+/* Mode tiles */
+.mode-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.mode-tile {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  padding: 10px 8px;
+  cursor: pointer;
+  text-align: center;
+  border-radius: var(--radius-sharp);
+  color: var(--text-body);
+  font: inherit;
+}
+.mode-tile:hover { border-color: var(--accent-phosphor); background: var(--surface-raised); }
+.mode-tile.selected {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+  box-shadow: inset 0 -2px 0 var(--accent-phosphor);
+}
+.mode-tile .em { font-size: 20px; color: var(--accent-phosphor); margin-bottom: 4px; }
+.mode-tile .nm { font-family: var(--font-mono); font-size: 9px; color: var(--text-primary); letter-spacing: 1px; }
+.mode-tile .meta { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); margin-top: 2px; letter-spacing: 0.5px; }
+@media (max-width: 760px) {
+  .mode-tiles { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Env tiles */
+.env-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+.env-tile {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  aspect-ratio: 1.2;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px;
+  color: var(--text-body);
+  font: inherit;
+  border-radius: var(--radius-sharp);
+}
+.env-tile:hover { border-color: var(--accent-phosphor); }
+.env-tile.selected {
+  border-color: var(--accent-phosphor);
+  box-shadow: inset 0 0 10px rgba(80, 220, 130, 0.2);
+}
+.env-tile .em { font-size: 16px; }
+.env-tile .nm { font-family: var(--font-mono); font-size: 8px; color: var(--text-muted); letter-spacing: 0.5px; }
+.env-tile.selected .nm { color: var(--accent-phosphor); }
+@media (max-width: 760px) {
+  .env-tiles { grid-template-columns: repeat(3, 1fr); }
+}

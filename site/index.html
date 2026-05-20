@@ -379,7 +379,26 @@
                   <section class="briefing-panel" data-panel="mode">
                     <div class="panel-label">▸ MODE <span class="num">01 / 06</span></div>
                     <div class="mode-tiles">
-                      <!-- placeholder; populated in Task 10 -->
+                      <button class="mode-tile" data-mode="classic">
+                        <div class="em">⚔</div>
+                        <div class="nm">CLASSIC</div>
+                        <div class="meta">FREE FOR ALL</div>
+                      </button>
+                      <button class="mode-tile" data-mode="teams">
+                        <div class="em">⛨</div>
+                        <div class="nm">TEAMS</div>
+                        <div class="meta">2 × 4</div>
+                      </button>
+                      <button class="mode-tile" data-mode="solo">
+                        <div class="em">⊙</div>
+                        <div class="nm">SOLO</div>
+                        <div class="meta">TARGET PRACTICE</div>
+                      </button>
+                      <button class="mode-tile" data-mode="realtime">
+                        <div class="em">⚡</div>
+                        <div class="nm">REALTIME</div>
+                        <div class="meta">NO TURNS</div>
+                      </button>
                     </div>
                     <!-- Existing radio inputs preserved for JS compatibility (hidden via CSS) -->
                     <label style="display:none"><input type="radio" name="mode" value="classic" checked> Classic</label>
@@ -390,7 +409,17 @@
                   <section class="briefing-panel" data-panel="terrain">
                     <div class="panel-label">▸ TERRAIN <span class="num">02 / 06</span></div>
                     <div class="env-tiles">
-                      <!-- populated in Task 10 -->
+                      <button class="env-tile" data-env="forest"><div class="em">🌲</div><div class="nm">FOREST</div></button>
+                      <button class="env-tile" data-env="desert"><div class="em">🏜</div><div class="nm">DESERT</div></button>
+                      <button class="env-tile" data-env="canyon"><div class="em">🏜</div><div class="nm">CANYON</div></button>
+                      <button class="env-tile" data-env="arctic"><div class="em">❄</div><div class="nm">ARCTIC</div></button>
+                      <button class="env-tile" data-env="ocean"><div class="em">🌊</div><div class="nm">OCEAN</div></button>
+                      <button class="env-tile" data-env="cave"><div class="em">🕳</div><div class="nm">CAVE</div></button>
+                      <button class="env-tile" data-env="moon"><div class="em">🌙</div><div class="nm">MOON</div></button>
+                      <button class="env-tile" data-env="mars"><div class="em">🔴</div><div class="nm">MARS</div></button>
+                      <button class="env-tile" data-env="futuristic"><div class="em">🚀</div><div class="nm">FUTURIST</div></button>
+                      <button class="env-tile" data-env="random"><div class="em">🎲</div><div class="nm">RANDOM</div></button>
+                      <button class="env-tile" data-env="custom"><div class="em">⚙</div><div class="nm">CUSTOM</div></button>
                     </div>
                     <!-- existing select element preserved for JS — hidden in Task 10 -->
                     <label style="display:none">

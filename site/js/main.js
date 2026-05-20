@@ -1047,6 +1047,50 @@ function openNewGameModal() {
   // Apply mode-driven UI (Solo clamps players) before building slots
   renderTeamsUI();
   renderSlotsUI();
+  // Sync tile selections to reflect current radio/select state
+  syncModeTilesFromRadios();
+  syncEnvTilesFromSelect();
+}
+
+// ===== Briefing: Mode tiles ↔ existing radio inputs =====
+function syncModeTilesFromRadios() {
+  const checked = document.querySelector('#new-game-modal input[name="mode"]:checked');
+  document.querySelectorAll('#new-game-modal .mode-tile').forEach(t => {
+    t.classList.toggle('selected', t.dataset.mode === (checked?.value || ''));
+  });
+}
+(function wireBriefingTiles() {
+  document.querySelectorAll('#new-game-modal .mode-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const mode = tile.dataset.mode;
+      const radio = document.querySelector(`#new-game-modal input[name="mode"][value="${mode}"]`);
+      if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      syncModeTilesFromRadios();
+    });
+  });
+
+  // ===== Briefing: Env tiles ↔ existing #setup-environment select =====
+  const envSelect = document.getElementById('setup-environment');
+  document.querySelectorAll('#new-game-modal .env-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      if (envSelect) {
+        envSelect.value = tile.dataset.env;
+        envSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      syncEnvTilesFromSelect();
+    });
+  });
+})();
+
+function syncEnvTilesFromSelect() {
+  const envSelect = document.getElementById('setup-environment');
+  const v = envSelect?.value;
+  document.querySelectorAll('#new-game-modal .env-tile').forEach(t => {
+    t.classList.toggle('selected', t.dataset.env === v);
+  });
 }
 
 function hasActiveGame() {
