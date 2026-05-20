@@ -41,6 +41,7 @@
     <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/hud.css" />
     <link rel="stylesheet" href="/styles/modals.css" />
+    <link rel="stylesheet" href="/styles/title-screen.css" />
     <link rel="stylesheet" href="/styles.css" />
 
     <!-- Structured data: VideoGame schema for Google rich results -->
@@ -69,6 +70,66 @@
     </script>
 </head>
 <body>
+<div id="title-screen" hidden aria-label="Remote Command — Main Menu">
+  <div class="ts-grid"></div>
+  <div class="ts-terrain"></div>
+  <div class="ts-sweep"></div>
+  <span class="ts-bracket tl"></span>
+  <span class="ts-bracket tr"></span>
+  <span class="ts-bracket bl"></span>
+  <span class="ts-bracket br"></span>
+
+  <div class="ts-boot" id="ts-boot">
+    <span class="dim">&gt;</span> <span class="ok">CONNECT</span> rc-9.command.net ............... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">UPLINK</span> handshake ........................ <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">TELEMETRY</span> bus armed .................... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">SECTOR</span> table loaded ..................... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> awaiting operator<span class="ts-cursor"></span>
+  </div>
+
+  <div class="ts-uplink">
+    <div class="live">UPLINK · LIVE</div>
+    <div id="ts-utc">UTC 00:00:00</div>
+    <div id="ts-op">OP // OPERATOR</div>
+  </div>
+
+  <div class="ts-title">
+    <div class="ts-callsign">CALLSIGN · RC-9</div>
+    <div class="ts-name">REMOTE</div>
+    <div class="ts-name"><span class="glow">COMMAND</span></div>
+    <div class="ts-subtitle">ARTILLERY <span class="div">·</span> DESTRUCTIBLE TERRAIN <span class="div">·</span> 1-8 OPS</div>
+  </div>
+
+  <nav class="ts-menu" aria-label="Main menu">
+    <button class="ts-item primary" data-action="new" data-key="N">
+      <span class="ts-item-key">N</span>
+      <span class="ts-item-label">NEW ENGAGEMENT</span>
+      <span class="ts-item-meta">▸</span>
+    </button>
+    <button class="ts-item" data-action="resume" data-key="R" id="ts-resume" hidden>
+      <span class="ts-item-key">R</span>
+      <span class="ts-item-label">RESUME LAST OP</span>
+      <span class="ts-item-meta" id="ts-resume-meta">—</span>
+    </button>
+    <button class="ts-item" data-action="briefing" data-key="B">
+      <span class="ts-item-key">B</span>
+      <span class="ts-item-label">BRIEFING</span>
+      <span class="ts-item-meta">HOW-TO</span>
+    </button>
+    <button class="ts-item dim" data-action="archive" data-key="A" disabled>
+      <span class="ts-item-key">A</span>
+      <span class="ts-item-label">ARCHIVE</span>
+      <span class="ts-item-meta">SOON</span>
+    </button>
+  </nav>
+
+  <div class="ts-foot">
+    <div class="group"><span class="key">↑↓</span> NAVIGATE</div>
+    <div class="group"><span class="key">↵</span> SELECT</div>
+    <div class="group"><span class="key">ESC</span> EXIT</div>
+    <div class="build" id="ts-build">RC-9 v—</div>
+  </div>
+</div>
     <header class="sr-only">
         <h1>Remote Command — Free Online Artillery Tank Game</h1>
         <p>
