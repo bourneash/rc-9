@@ -741,45 +741,6 @@ input[type="range"]::-moz-range-thumb {
     box-shadow: inset 0 0 100px rgba(80, 220, 130, 0.1);
 }
 
-/* Edge tabs (Game Controls + Debug) */
-.edge-tab {
-    position: fixed;
-    left: 0;
-    top: 40%;
-    transform: translateY(-50%);
-    background: linear-gradient(180deg, rgba(0,245,255,0.35), rgba(0,136,255,0.3));
-    color: #eafcff;
-    border: 2px solid var(--accent-phosphor);
-    border-left: none;
-    border-radius: 0 12px 12px 0;
-    padding: 8px 10px;
-    font-weight: 600;
-    cursor: pointer;
-    z-index: 1060;
-    user-select: none;
-    pointer-events: auto;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
-.edge-tab.secondary {
-    top: calc(40% + 46px);
-    background: linear-gradient(180deg, rgba(0,255,136,0.35), rgba(0,200,120,0.3));
-    border-color: #00ff88;
-}
-/* Define explicit vertical order for edge tabs: Options (base), Debug, Log, Volume, Restart */
-#debug-tab.edge-tab.secondary { top: calc(40% + 46px); }
-#log-tab.edge-tab.secondary { top: calc(40% + 92px); }
-#volume-tab.edge-tab.secondary { top: calc(40% + 138px); }
-#restart-tab.edge-tab.secondary {
-    top: calc(40% + 184px);
-    white-space: nowrap;
-    text-shadow: none;
-}
-.edge-tab:hover { filter: brightness(1.15); }
-.edge-tab:focus-visible {
-    outline: 3px solid var(--accent-phosphor);
-    outline-offset: 3px;
-    filter: brightness(1.15);
-}
 
 button:focus-visible,
 input:focus-visible,

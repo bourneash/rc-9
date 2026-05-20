@@ -229,3 +229,40 @@
 @media (max-width: 860px) {
   #bottom-controls .angle-slider-wrap { display: none; }
 }
+
+/* ===== Edge tabs ===== */
+.edge-tab {
+  position: fixed;
+  left: 0;
+  background: var(--surface-panel);
+  border: var(--border-line);
+  border-left: 0;
+  color: var(--text-muted);
+  padding: 6px 12px 6px 10px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 0 var(--radius-sharp) var(--radius-sharp) 0;
+  z-index: 1060;
+}
+.edge-tab .icon { color: var(--accent-phosphor); font-size: 11px; width: 12px; text-align: center; }
+.edge-tab:hover { background: var(--surface-raised); color: var(--text-primary); }
+.edge-tab:hover .icon { text-shadow: 0 0 6px var(--accent-phosphor); }
+.edge-tab.active {
+  background: var(--surface-raised);
+  color: var(--accent-phosphor);
+  border-left: 2px solid var(--accent-phosphor);
+  padding-left: 8px;
+}
+
+/* Existing vertical stacking — preserve y-positions from the old CSS */
+#options-tab { top: 80px; }
+#debug-tab   { top: 116px; }
+#log-tab     { top: 152px; }
+#volume-tab  { top: 188px; }
+#restart-tab { top: 224px; }

@@ -2853,6 +2853,7 @@ function bindUI() {
   function openOptionsModal() {
     const modal = document.getElementById('options-modal');
     if (!modal) return;
+    document.getElementById('options-tab')?.classList.add('active');
     try {
       if ('showModal' in modal && !modal.open) modal.showModal();
     } catch {}
@@ -2870,6 +2871,7 @@ function bindUI() {
   function closeOptionsModal() {
     const modal = document.getElementById('options-modal');
     if (!modal) return;
+    document.getElementById('options-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
@@ -3063,6 +3065,7 @@ function bindUI() {
     const body = document.getElementById('debug-modal-body');
     const menu = document.getElementById('debug-menu');
     if (!modal || !body || !menu) return;
+    document.getElementById('debug-tab')?.classList.add('active');
     // Move the existing #debug-menu into the dialog body
     if (menu.parentElement !== body) {
       debugMenuOriginalParent = menu.parentElement;
@@ -3093,6 +3096,7 @@ function bindUI() {
     const body = document.getElementById('log-modal-body');
     const log = document.getElementById('game-log');
     if (!modal || !body || !log) return;
+    document.getElementById('log-tab')?.classList.add('active');
     // Move #game-log into the dialog body
     if (log.parentElement !== body) {
       gameLogOriginalParent = log.parentElement;
@@ -3114,6 +3118,7 @@ function bindUI() {
     const modal = document.getElementById('log-modal');
     const log = document.getElementById('game-log');
     if (!modal || !log) return;
+    document.getElementById('log-tab')?.classList.remove('active');
     // Restore #game-log back to its original sidebar location
     if (gameLogOriginalParent) {
       try {
@@ -3268,6 +3273,7 @@ function bindUI() {
   function openVolumeModal() {
     const modal = document.getElementById('volume-modal');
     if (!modal) return;
+    document.getElementById('volume-tab')?.classList.add('active');
     try {
       if ('showModal' in modal && !modal.open) modal.showModal();
     } catch {}
@@ -3279,6 +3285,7 @@ function bindUI() {
   function closeVolumeModal() {
     const modal = document.getElementById('volume-modal');
     if (!modal) return;
+    document.getElementById('volume-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
@@ -3307,6 +3314,7 @@ function bindUI() {
   function openRestartModal() {
     const modal = document.getElementById('restart-modal');
     if (!modal) return;
+    document.getElementById('restart-tab')?.classList.add('active');
     try {
       if ('showModal' in modal && !modal.open) modal.showModal();
     } catch {}
@@ -3325,6 +3333,7 @@ function bindUI() {
   function closeRestartModal() {
     const modal = document.getElementById('restart-modal');
     if (!modal) return;
+    document.getElementById('restart-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
@@ -3336,6 +3345,7 @@ function bindUI() {
     const modal = document.getElementById('debug-modal');
     const menu = document.getElementById('debug-menu');
     if (!modal || !menu) return;
+    document.getElementById('debug-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
