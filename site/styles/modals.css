@@ -150,3 +150,102 @@
   color: var(--accent-phosphor);
   box-shadow: inset 0 -2px 0 var(--accent-phosphor);
 }
+
+/* ── Volume modal ─────────────────────────────────────────── */
+#volume-modal .volume-section { padding: 10px 0; border-bottom: var(--border-line); }
+#volume-modal .volume-section:last-child { border-bottom: 0; }
+#volume-modal .volume-section label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--accent-phosphor);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+#volume-modal .volume-section .volume-icon { display: none; }
+#volume-modal .volume-slider-group {
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  gap: 10px;
+  align-items: center;
+}
+#volume-modal .volume-slider-group span {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  text-align: right;
+}
+#volume-modal .volume-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+/* ── Auto-restart countdown modal ────────────────────────── */
+#auto-restart-modal #auto-restart-countdown {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 64px;
+  color: var(--accent-phosphor);
+  text-align: center;
+  letter-spacing: 4px;
+  text-shadow: var(--glow-phosphor);
+  margin: 14px 0;
+}
+
+/* ── Log modal ────────────────────────────────────────────── */
+#log-modal .modal-body { max-height: 60vh; overflow-y: auto; }
+#log-modal #game-log {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-body);
+  background: var(--surface-deep);
+  border: var(--border-line);
+  padding: 10px;
+  border-radius: var(--radius-sharp);
+}
+
+/* ── Options modal grid ───────────────────────────────────── */
+#options-modal .options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+/* ── Checkbox row (used in Restart + Options modals) ─────── */
+.modal label.checkbox-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  padding: 4px 0;
+  cursor: pointer;
+}
+.modal input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border: var(--border-line);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  border-radius: 0;
+  flex-shrink: 0;
+}
+.modal input[type="checkbox"]:checked {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+}
+.modal input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--accent-phosphor);
+  font-size: 10px;
+  line-height: 1;
+}

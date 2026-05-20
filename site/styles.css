@@ -684,39 +684,7 @@ a:focus-visible {
     outline-offset: 2px;
 }
 
-/* Modern modal */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.9);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: auto;              /* allow scrolling if content taller than viewport */
-    padding: 12px;               /* breathing room so bottom buttons aren't clipped */
-    box-sizing: border-box;
-    z-index: 1000;
-    border: none;                /* Remove default dialog border */
-    outline: none;               /* Remove any outline */
-    max-width: 100%;
-    max-height: 100%;
-}
-
-.modal.hidden {
-    display: none;
-}
-
-.modal-content {
-    background: linear-gradient(135deg, rgba(10, 15, 8, 0.95), rgba(10, 15, 8, 0.95));
-    border: 3px solid var(--accent-phosphor);
-    padding: 50px;
-    text-align: center;
-    border-radius: 20px;
-    box-shadow: 0 0 80px rgba(80, 220, 130, 0.5);
-}
+/* .modal and .modal-content rules live in site/styles/modals.css */
 
 /* Winner dialog: keep gameplay visible but use a compact, solid card for clarity */
 #game-over-modal.modal {
@@ -777,23 +745,7 @@ a:focus-visible {
     font-weight: 600;
 }
 
-/* Options modal styling */
-#options-modal .modal-content {
-    background: rgba(10,14,30,0.85);
-    border-color: rgba(0,245,255,0.65);
-}
-#options-modal .options-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 12px;
-}
-
-/* Debug modal adopts same modal-content styling; #debug-menu styles already exist */
-#debug-modal .modal-content {
-    background: rgba(10,14,30,0.85);
-    border-color: rgba(0,245,255,0.65);
-}
+/* Options and Debug modal-content overrides moved to site/styles/modals.css */
 
 .modal-content.setup {
     /* Layout */
@@ -1119,47 +1071,9 @@ a:focus-visible {
     border-radius: 8px;
 }
 
-.modal-content h2 {
-    font-size: 40px;
-    margin-bottom: 30px;
-    background: linear-gradient(90deg, var(--accent-phosphor), #00ff88);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(80, 220, 130, 0.5);
-}
+/* .modal-content h2 and .modal-content button rules removed — use .btn-primary / .btn-ghost from modals.css */
 
-.modal-content button {
-    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
-    border: none;
-    color: #000;
-    padding: 15px 40px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 30px;
-    transition: all 0.3s ease;
-}
-
-.modal-content button:hover {
-    transform: scale(1.1);
-    box-shadow: 0 0 40px rgba(80, 220, 130, 0.8);
-}
-
-/* Close button for simple modals (game over, skip) */
-.modal-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: rgba(255,255,255,0.1);
-    color: #eafcff;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 8px;
-    font-size: 16px;
-    line-height: 1;
-    padding: 6px 8px;
-    cursor: pointer;
-}
+/* .modal-close button styles live in site/styles/modals.css */
 
 /* Scrollbar styling */
 ::-webkit-scrollbar {
@@ -1205,28 +1119,7 @@ a:focus-visible {
 #setup-ammo-section .ammo-grid label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 #setup-ammo-section .ammo-grid input[type="number"] { width: 80px; }
 
-/* Volume Modal Styling */
-.modal-close-inline {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: rgba(255,255,255,0.1);
-    color: #eafcff;
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 8px;
-    font-size: 18px;
-    line-height: 1;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    z-index: 10;
-}
-
-.modal-close-inline:hover {
-    background: rgba(255,255,255,0.2);
-    border-color: rgba(80, 220, 130, 0.5);
-    transform: scale(1.1);
-}
+/* .modal-close-inline styles moved to site/styles/modals.css */
 
 .volume-controls {
     display: flex;
@@ -1392,16 +1285,4 @@ a:focus-visible {
     color: var(--accent-phosphor);
 }
 
-/* Auto-restart countdown modal */
-#auto-restart-modal .modal-content {
-    text-align: center;
-    padding: 30px;
-}
-
-#auto-restart-countdown {
-    font-size: 48px;
-    font-weight: bold;
-    color: var(--accent-phosphor);
-    margin: 20px 0;
-    text-shadow: 0 0 20px rgba(80, 220, 130, 0.6);
-}
+/* #auto-restart-modal and #auto-restart-countdown styles moved to site/styles/modals.css */

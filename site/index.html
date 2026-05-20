@@ -207,12 +207,16 @@
     <!-- Debug modal (container for existing #debug-menu content) -->
     <dialog id="debug-modal" class="modal hidden" aria-labelledby="debug-title">
         <div class="modal-content">
-            <button id="debug-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="debug-title">Debug / Cheats</h2>
-            <div id="debug-modal-body"></div>
-            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <button id="copy-error-report" style="font-size: 0.85em; padding: 6px 12px; cursor: pointer;">Copy Error Report</button>
-                <span id="copy-report-status" style="margin-left: 8px; font-size: 0.8em; opacity: 0.7;"></span>
+            <div class="modal-titlebar">
+                <div class="h">DEBUG <span class="accent">CHEATS</span></div>
+                <button id="debug-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="debug-modal-body"></div>
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button id="copy-error-report" class="btn-ghost" style="font-size: 0.85em; cursor: pointer;">Copy Error Report</button>
+                    <span id="copy-report-status" style="margin-left: 8px; font-size: 0.8em; opacity: 0.7;"></span>
+                </div>
             </div>
         </div>
     </dialog>
@@ -220,58 +224,66 @@
     <!-- Game Log modal (moves existing #game-log into this body on open) -->
     <dialog id="log-modal" class="modal hidden" aria-labelledby="log-title">
         <div class="modal-content">
-            <button id="log-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="log-title">Game Log</h2>
-            <div id="log-modal-body"></div>
+            <div class="modal-titlebar">
+                <div class="h">GAME <span class="accent">LOG</span></div>
+                <button id="log-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="log-modal-body"></div>
+            </div>
         </div>
     </dialog>
 
     <!-- Volume modal (proper audio controls) -->
     <dialog id="volume-modal" class="modal hidden" aria-labelledby="volume-title">
         <div class="modal-content">
-            <h2 id="volume-title">Volume & Audio</h2>
-            <button id="volume-modal-close" class="modal-close-inline" title="Close" aria-label="Close">✖</button>
-            <div id="volume-modal-body">
-                <div class="volume-controls">
-                    <div class="volume-section">
-                        <label for="master-volume-slider">
-                            <span class="volume-icon">🔊</span>
-                            <span>Master Volume</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="master-volume-slider" min="0" max="100" value="70" step="1" />
-                            <span id="master-volume-value">70%</span>
+            <div class="modal-titlebar">
+                <div class="h" id="volume-title">AUDIO <span class="accent">CONTROL</span></div>
+                <button id="volume-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="volume-modal-body">
+                    <div class="volume-controls">
+                        <div class="volume-section">
+                            <label for="master-volume-slider">
+                                <span class="volume-icon">🔊</span>
+                                <span>Master Volume</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="master-volume-slider" min="0" max="100" value="70" step="1" />
+                                <span id="master-volume-value">70%</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="volume-section">
-                        <label for="sfx-volume-slider">
-                            <span class="volume-icon">💥</span>
-                            <span>Sound Effects</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="sfx-volume-slider" min="0" max="100" value="70" step="1" />
-                            <span id="sfx-volume-value">70%</span>
+                        <div class="volume-section">
+                            <label for="sfx-volume-slider">
+                                <span class="volume-icon">💥</span>
+                                <span>Sound Effects</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="sfx-volume-slider" min="0" max="100" value="70" step="1" />
+                                <span id="sfx-volume-value">70%</span>
+                            </div>
+                            <button id="test-sound-btn" class="btn-ghost">Test Sound</button>
                         </div>
-                        <button id="test-sound-btn" class="secondary">🔈 Test Sound</button>
-                    </div>
 
-                    <div class="volume-section">
-                        <label for="music-volume-slider">
-                            <span class="volume-icon">🎵</span>
-                            <span>Music</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="music-volume-slider" min="0" max="100" value="50" step="1" />
-                            <span id="music-volume-value">50%</span>
+                        <div class="volume-section">
+                            <label for="music-volume-slider">
+                                <span class="volume-icon">🎵</span>
+                                <span>Music</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="music-volume-slider" min="0" max="100" value="50" step="1" />
+                                <span id="music-volume-value">50%</span>
+                            </div>
+                            <button id="music-toggle-new" class="btn-ghost">Music: ON</button>
                         </div>
-                        <button id="music-toggle-new" class="secondary">Music: ON</button>
-                    </div>
 
-                    <div class="volume-section">
-                        <div class="volume-actions">
-                            <button id="mute-all-btn" class="secondary">🔇 Mute All</button>
-                            <button id="unmute-all-btn" class="secondary">🔊 Unmute All</button>
+                        <div class="volume-section">
+                            <div class="volume-actions">
+                                <button id="mute-all-btn" class="btn-ghost">Mute All</button>
+                                <button id="unmute-all-btn" class="btn-ghost">Unmute All</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -282,28 +294,38 @@
     <!-- Auto-restart countdown modal -->
     <dialog id="auto-restart-modal" class="modal hidden" aria-labelledby="auto-restart-title">
         <div class="modal-content">
-            <h2 id="auto-restart-title">Game Restarting</h2>
-            <p>The game will automatically restart in:</p>
-            <div id="auto-restart-countdown">5</div>
-            <button id="cancel-auto-restart" class="secondary">Cancel Auto-Restart</button>
+            <div class="modal-titlebar">
+                <div class="h" id="auto-restart-title">GAME <span class="accent">RESTARTING</span></div>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <p>The game will automatically restart in:</p>
+                <div id="auto-restart-countdown">5</div>
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-auto-restart" class="btn-ghost">Cancel Auto-Restart</button>
+            </div>
         </div>
     </dialog>
 
     <!-- Restart modal -->
     <dialog id="restart-modal" class="modal hidden" aria-labelledby="restart-title">
         <div class="modal-content">
-            <button id="restart-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="restart-title">Restart Game</h2>
-            <div id="restart-modal-body">
-                <div class="restart-options">
-                    <button id="restart-now-button" class="primary">Restart Now</button>
+            <div class="modal-titlebar">
+                <div class="h" id="restart-title">RESTART <span class="accent">ENGAGEMENT</span></div>
+                <button id="restart-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="restart-modal-body">
                     <div class="auto-restart-section">
-                        <label for="auto-restart-checkbox" title="Automatically restart the game after it ends">
+                        <label for="auto-restart-checkbox" class="checkbox-row" title="Automatically restart the game after it ends">
                             <input type="checkbox" id="auto-restart-checkbox" />
                             <span>Auto-restart after game ends (5s countdown)</span>
                         </label>
                     </div>
                 </div>
+            </div>
+            <div class="modal-actions">
+                <button id="restart-now-button" class="btn-primary">Restart Now</button>
             </div>
         </div>
     </dialog>
@@ -311,27 +333,31 @@
     <!-- Game Options modal (migrated from Remote Command sidebar) -->
     <dialog id="options-modal" class="modal hidden" aria-labelledby="options-title">
         <div class="modal-content">
-            <button id="options-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="options-title">Game Options</h2>
-            <div id="options-modal-body">
-                <!-- Populated by moving the existing sidebar Game Options row controls here at open time -->
-                <div class="options-grid">
-                    <button id="open-setup" class="secondary">New Game…</button>
-                    <button id="restart-button" class="secondary">Restart Game</button>
-                    <button id="resume-saved-button" class="secondary">Resume Last Game</button>
-                    <button id="clear-saved-button" class="secondary">Clear Saved Game</button>
-                </div>
-                <div class="auto-restart-section">
-                    <label for="auto-restart-toggle" title="Automatically restart the game after it ends">
-                        <input type="checkbox" id="auto-restart-toggle" />
-                        <span>Auto-restart after game ends (5s countdown)</span>
-                    </label>
-                </div>
-                <div class="auto-restore-section" style="margin-top:12px;">
-                    <label for="restore-state-toggle" title="On launch, return to what you were doing last time (resume game, keep Options open, or open New Game setup)">
-                        <input type="checkbox" id="restore-state-toggle" />
-                        <span>Restore last session on launch</span>
-                    </label>
+            <div class="modal-titlebar">
+                <div class="h" id="options-title">GAME <span class="accent">OPTIONS</span></div>
+                <button id="options-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="options-modal-body">
+                    <!-- Populated by moving the existing sidebar Game Options row controls here at open time -->
+                    <div class="options-grid">
+                        <button id="open-setup" class="btn-ghost">New Game…</button>
+                        <button id="restart-button" class="btn-ghost">Restart Game</button>
+                        <button id="resume-saved-button" class="btn-ghost">Resume Last Game</button>
+                        <button id="clear-saved-button" class="btn-ghost">Clear Saved Game</button>
+                    </div>
+                    <div class="auto-restart-section" style="margin-top:16px;">
+                        <label for="auto-restart-toggle" class="checkbox-row" title="Automatically restart the game after it ends">
+                            <input type="checkbox" id="auto-restart-toggle" />
+                            <span>Auto-restart after game ends (5s countdown)</span>
+                        </label>
+                    </div>
+                    <div class="auto-restore-section" style="margin-top:8px;">
+                        <label for="restore-state-toggle" class="checkbox-row" title="On launch, return to what you were doing last time (resume game, keep Options open, or open New Game setup)">
+                            <input type="checkbox" id="restore-state-toggle" />
+                            <span>Restore last session on launch</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -532,17 +558,6 @@
                         </div>
                     </div>
 
-                        <!-- Skip modal when no humans remain -->
-                        <div id="skip-modal" class="modal hidden" aria-labelledby="skip-title" aria-modal="true">
-                            <div class="modal-content">
-                                <h2 id="skip-title">All human players are eliminated</h2>
-                                <p>Do you want to skip the remaining AI-only turns and see the result now?</p>
-                                <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
-                                    <button id="skip-continue">Keep Watching</button>
-                                    <button id="skip-to-result" class="primary">Skip to Result</button>
-                                </div>
-                            </div>
-                        </div>
                 </div>
                 <div class="setup-actions">
                     <button id="setup-reset" class="danger">Reset All</button>
@@ -553,6 +568,22 @@
                 </div>
             </div>
         </dialog>
+
+    <!-- Skip modal when no humans remain -->
+    <dialog id="skip-modal" class="modal hidden" aria-labelledby="skip-title">
+        <div class="modal-content">
+            <div class="modal-titlebar">
+                <div class="h" id="skip-title">ALL HUMANS <span class="accent">ELIMINATED</span></div>
+            </div>
+            <div class="modal-body">
+                <p>Do you want to skip the remaining AI-only turns and see the result now?</p>
+            </div>
+            <div class="modal-actions">
+                <button id="skip-continue" class="btn-ghost">Keep Watching</button>
+                <button id="skip-to-result" class="btn-primary">Skip to Result</button>
+            </div>
+        </div>
+    </dialog>
 
     <!-- Load init module which handles all dependencies and main game -->
     <script type="module" src="/js/init.js"></script>
