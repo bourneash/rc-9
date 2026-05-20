@@ -150,7 +150,7 @@
   box-shadow: var(--glow-phosphor);
 }
 
-/* Drive button */
+/* Drive button — fixed width so OFF→ON toggle doesn't shift layout */
 #bottom-controls #drive-toggle.secondary {
   background: var(--surface-panel);
   border: var(--border-line);
@@ -161,6 +161,13 @@
   text-transform: uppercase;
   padding: 6px 14px;
   border-radius: var(--radius-sharp);
+  min-width: 160px;
+  text-align: center;
+  white-space: nowrap;
+}
+#bottom-controls #drive-toggle.secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 #bottom-controls #drive-toggle.secondary[aria-pressed="true"],
 #bottom-controls #drive-toggle.secondary.active {

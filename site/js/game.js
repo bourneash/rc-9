@@ -6761,13 +6761,16 @@ export class Game {
       fuelEl.textContent = String(Math.max(0, Math.min(100, pct)));
     }
 
-    // Drive button state: disabled if not a human player's turn or inputs are blocked
+    // Drive button state: disabled if not a human player's turn, inputs are
+    // blocked, or the current tank is out of fuel.
     const notHumanTurn = !currentTank || currentTank.isAI;
     const blocked = this.isInputBlocked();
+    const outOfFuel = !!currentTank && Number.isFinite(currentTank.fuel) && currentTank.fuel <= 0;
     const drv = document.getElementById('drive-toggle');
     const drvM = document.getElementById('drive-toggle-modal');
-    if (drv) drv.disabled = notHumanTurn || blocked;
-    if (drvM) drvM.disabled = notHumanTurn || blocked;
+    const disabled = notHumanTurn || blocked || outOfFuel;
+    if (drv) drv.disabled = disabled;
+    if (drvM) drvM.disabled = disabled;
 
     // Solo shots indicator: show only in Solo mode when active
     if (soloShotsStat && soloShotsValue) {
@@ -6941,14 +6944,16 @@ export class Game {
   }
 
   toggleDriveMode() {
+    // Block toggle when current tank has no fuel.
+    const currentTank = this.tanks[this.currentTankIndex];
+    if (currentTank && Number.isFinite(currentTank.fuel) && currentTank.fuel <= 0 && !this.driveMode) {
+      return;
+    }
     this.driveMode = !this.driveMode;
     const button = document.getElementById('drive-toggle');
-    if (this.driveMode) {
-      button.textContent = 'Drive Mode: ON';
-      button.classList.add('active');
-    } else {
-      button.textContent = 'Drive Mode: OFF';
-      button.classList.remove('active');
+    if (button) {
+      button.classList.toggle('active', this.driveMode);
+      button.textContent = `Drive Mode: ${this.driveMode ? 'ON' : 'OFF'}`;
     }
   }
 
