@@ -622,7 +622,11 @@ export class Game {
     this.fireLocked = false;
     // Ensure any lingering AI-skip modal is hidden when starting a new game
     try {
-      document.getElementById('skip-modal')?.classList.add('hidden');
+      const skipEl = document.getElementById('skip-modal');
+      if (skipEl) {
+        try { skipEl.close?.(); } catch {}
+        skipEl.classList.add('hidden');
+      }
     } catch {}
     // Hide the no-game overlay when starting a game
     try {
@@ -5951,8 +5955,13 @@ export class Game {
       const skip = !anyHumanAlive && !!this.hadHumansAtStart;
       const el = document.getElementById('skip-modal');
       if (el) {
-        if (skip) el.classList.remove('hidden');
-        else el.classList.add('hidden');
+        if (skip) {
+          el.classList.remove('hidden');
+          try { if (!el.open) el.showModal(); } catch {}
+        } else {
+          try { el.close?.(); } catch {}
+          el.classList.add('hidden');
+        }
       }
     } catch {}
     if (this.mode === 'teams' && this.teams && this.teams.length === this.tanks.length) {
