@@ -6099,17 +6099,6 @@ export class Game {
   showWinnerTeam(team) {
     const label = team === 'A' ? 'Team A' : 'Team B';
 
-    // Check if auto-restart is enabled
-    const autoRestartEnabled = localStorage.getItem('auto-restart-enabled') === 'true';
-    if (autoRestartEnabled && typeof globalThis.startAutoRestartCountdown === 'function') {
-      try {
-        globalThis.startAutoRestartCountdown();
-        return;
-      } catch (e) {
-        console.error('[showWinnerTeam] Auto-restart failed:', e);
-      }
-    }
-
     // Use toast instead of modal
     const victoryMessage = 'Teamwork makes the dream work!';
     this.showVictoryToast(label, victoryMessage, null);

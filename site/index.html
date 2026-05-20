@@ -107,11 +107,6 @@
       <span class="ts-item-label">NEW ENGAGEMENT</span>
       <span class="ts-item-meta">▸</span>
     </button>
-    <button class="ts-item" data-action="resume" data-key="R" id="ts-resume" hidden>
-      <span class="ts-item-key">R</span>
-      <span class="ts-item-label">RESUME LAST OP</span>
-      <span class="ts-item-meta" id="ts-resume-meta">—</span>
-    </button>
     <button class="ts-item" data-action="briefing" data-key="B">
       <span class="ts-item-key">B</span>
       <span class="ts-item-label">BRIEFING</span>
@@ -252,7 +247,6 @@
                 <div id="ui-staging" style="display:none" aria-hidden="true"></div>
                 <!-- Left edge tabs: Game Options, Debug, Game Log, Volume, Restart -->
                 <div id="new-game-tab" class="edge-tab" role="button" tabindex="0" aria-label="Start a new game"><span class="icon">＋</span><span class="label">NEW GAME</span></div>
-                <div id="options-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open game options"><span class="icon">▸</span><span class="label">OPTIONS</span></div>
                 <div id="debug-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open debug and cheats"><span class="icon">▣</span><span class="label">DEBUG</span></div>
                 <div id="log-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open game log"><span class="icon">≡</span><span class="label">LOG</span></div>
                 <div id="volume-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open volume controls"><span class="icon">♪</span><span class="label">AUDIO</span></div>
@@ -378,21 +372,6 @@
     </dialog>
 
     <!-- Auto-restart countdown modal -->
-    <dialog id="auto-restart-modal" class="modal hidden" aria-labelledby="auto-restart-title">
-        <div class="modal-content">
-            <div class="modal-titlebar">
-                <div class="h" id="auto-restart-title">GAME <span class="accent">RESTARTING</span></div>
-            </div>
-            <div class="modal-body" style="text-align:center;">
-                <p>The game will automatically restart in:</p>
-                <div id="auto-restart-countdown">5</div>
-            </div>
-            <div class="modal-actions">
-                <button id="cancel-auto-restart" class="btn-ghost">Cancel Auto-Restart</button>
-            </div>
-        </div>
-    </dialog>
-
     <!-- Restart modal -->
     <dialog id="restart-modal" class="modal hidden" aria-labelledby="restart-title">
         <div class="modal-content">
@@ -402,49 +381,11 @@
             </div>
             <div class="modal-body">
                 <div id="restart-modal-body">
-                    <div class="auto-restart-section">
-                        <label for="auto-restart-checkbox" class="checkbox-row" title="Automatically restart the game after it ends">
-                            <input type="checkbox" id="auto-restart-checkbox" />
-                            <span>Auto-restart after game ends (5s countdown)</span>
-                        </label>
-                    </div>
+                    <p style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1px; margin: 0;">Restart the current engagement with the same configuration?</p>
                 </div>
             </div>
             <div class="modal-actions">
                 <button id="restart-now-button" class="btn-primary">Restart Now</button>
-            </div>
-        </div>
-    </dialog>
-
-    <!-- Game Options modal (migrated from Remote Command sidebar) -->
-    <dialog id="options-modal" class="modal hidden" aria-labelledby="options-title">
-        <div class="modal-content">
-            <div class="modal-titlebar">
-                <div class="h" id="options-title">GAME <span class="accent">OPTIONS</span></div>
-                <button id="options-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
-            </div>
-            <div class="modal-body">
-                <div id="options-modal-body">
-                    <!-- Populated by moving the existing sidebar Game Options row controls here at open time -->
-                    <div class="options-grid">
-                        <button id="open-setup" class="btn-ghost">New Game…</button>
-                        <button id="restart-button" class="btn-ghost">Restart Game</button>
-                        <button id="resume-saved-button" class="btn-ghost">Resume Last Game</button>
-                        <button id="clear-saved-button" class="btn-ghost">Clear Saved Game</button>
-                    </div>
-                    <div class="auto-restart-section" style="margin-top:16px;">
-                        <label for="auto-restart-toggle" class="checkbox-row" title="Automatically restart the game after it ends">
-                            <input type="checkbox" id="auto-restart-toggle" />
-                            <span>Auto-restart after game ends (5s countdown)</span>
-                        </label>
-                    </div>
-                    <div class="auto-restore-section" style="margin-top:8px;">
-                        <label for="restore-state-toggle" class="checkbox-row" title="On launch, return to what you were doing last time (resume game, keep Options open, or open New Game setup)">
-                            <input type="checkbox" id="restore-state-toggle" />
-                            <span>Restore last session on launch</span>
-                        </label>
-                    </div>
-                </div>
             </div>
         </div>
     </dialog>
@@ -718,6 +659,7 @@
                   <section class="briefing-panel" data-panel="options">
                     <div class="panel-label">▸ OPTIONS</div>
                     <label class="checkbox-row"><input type="checkbox" id="setup-allow-drive-anytime" /><span>DRIVE ANYTIME <span class="ck-meta">non-turn movement</span></span></label>
+                    <label class="checkbox-row"><input type="checkbox" id="restore-state-toggle" /><span>RESTORE LAST SESSION <span class="ck-meta">resume on launch</span></span></label>
                     <label class="checkbox-row" style="display:none"><input type="checkbox" id="setup-disable-names" /><span>HIDE OTHER NAMES <span class="ck-meta">streamer mode</span></span></label>
                   </section>
                 </div>

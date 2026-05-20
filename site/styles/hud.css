@@ -262,11 +262,10 @@
 
 /* Existing vertical stacking — preserve y-positions from the old CSS */
 #new-game-tab { top: 80px; }
-#options-tab  { top: 116px; }
-#debug-tab    { top: 152px; }
-#log-tab      { top: 188px; }
-#volume-tab   { top: 224px; }
-#restart-tab  { top: 260px; }
+#debug-tab    { top: 116px; }
+#log-tab      { top: 152px; }
+#volume-tab   { top: 188px; }
+#restart-tab  { top: 224px; }
 
 /* NEW GAME tab — primary action gets phosphor accent border */
 #new-game-tab {

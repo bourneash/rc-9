@@ -8,7 +8,6 @@ export function show() {
   const el = $(TITLE_EL_ID);
   if (!el) return;
   el.removeAttribute('hidden');
-  refreshResume();
   refreshOperator();
   refreshBuild();
   startUtcTick();
@@ -20,35 +19,6 @@ export function hide() {
   if (!el) return;
   el.setAttribute('hidden', '');
   stopUtcTick();
-}
-
-function refreshResume() {
-  const resumeBtn = $('ts-resume');
-  const meta = $('ts-resume-meta');
-  if (!resumeBtn) return;
-  let hasSave = false;
-  let round = null;
-  // Try multiple known save keys — read whichever exists
-  const candidateKeys = ['se.lastGame.v1', 'rc9.save', 'se_lastGame', 'lastGame'];
-  for (const k of candidateKeys) {
-    try {
-      const raw = localStorage.getItem(k);
-      if (raw) {
-        hasSave = true;
-        try {
-          const parsed = JSON.parse(raw);
-          round = parsed?.round ?? parsed?.turn ?? parsed?.roundCount ?? null;
-        } catch {}
-        break;
-      }
-    } catch {}
-  }
-  if (hasSave) {
-    resumeBtn.removeAttribute('hidden');
-    if (meta) meta.textContent = round != null ? `ROUND ${String(round).padStart(2, '0')}` : 'SAVED';
-  } else {
-    resumeBtn.setAttribute('hidden', '');
-  }
 }
 
 function refreshOperator() {
@@ -111,12 +81,6 @@ function handleAction(action) {
         dlg?.classList.remove('hidden');
         dlg?.showModal?.();
       }
-      break;
-    }
-    case 'resume': {
-      hide();
-      const btn = document.getElementById('resume-saved-button');
-      btn?.click?.();
       break;
     }
     case 'briefing': {
