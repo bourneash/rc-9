@@ -110,6 +110,8 @@ export class Game {
     this.smokeScreens = [];
     // Last tracer round trajectory for display on next turn
     this.lastTracerTrail = null;
+    // Floating damage popups { x, y, amount, color, startedAt }
+    this.damagePopups = [];
     // Screen shake effect state
     this.screenShake = { intensity: 0, x: 0, y: 0 };
 
@@ -328,6 +330,16 @@ export class Game {
 
   loadSnapshot(snapshot) {
     return snapshotLoad(this, snapshot);
+  }
+
+  spawnDamagePopup(x, y, amount, opts = {}) {
+    if (!Number.isFinite(amount) || amount === 0) return;
+    this.damagePopups.push({
+      x, y,
+      amount: Math.round(amount),
+      color: opts.color || (amount > 0 ? '#ff5544' : '#50dc82'),
+      startedAt: performance.now(),
+    });
   }
 
   // --- Testing API for automated gameplay testing ---
@@ -1934,6 +1946,29 @@ export class Game {
     if (this.soloActive) {
       this.drawSoloTarget();
       this.drawSoloHUD();
+    }
+
+    // Damage popups — drift up + fade over 600ms
+    const _popupNow = performance.now();
+    if (this.damagePopups.length > 0) {
+      this.damagePopups = this.damagePopups.filter(p => {
+        const age = _popupNow - p.startedAt;
+        if (age > 600) return false;
+        const t = age / 600;
+        const drift = 30 * t;
+        const op = 1 - t;
+        this.ctx.save();
+        this.ctx.globalAlpha = op;
+        this.ctx.fillStyle = p.color;
+        this.ctx.font = '700 18px "Saira Condensed", "Oswald", system-ui, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.shadowColor = p.color;
+        this.ctx.shadowBlur = 6;
+        const sign = p.amount > 0 ? '−' : '+';
+        this.ctx.fillText(`${sign}${Math.abs(p.amount)}`, p.x, p.y - drift);
+        this.ctx.restore();
+        return true;
+      });
     }
 
     this.ctx.restore();
@@ -4971,6 +5006,7 @@ export class Game {
 
             if (actualHeal > 0) {
               healsApplied++;
+              this.spawnDamagePopup(t.x, t.y - 22, -actualHeal);
               this.addLog(`${t.name} healed for ${actualHeal} HP`, 'info');
 
               // Visual feedback: green healing particles rising from tank
@@ -5394,6 +5430,7 @@ export class Game {
 
           if (actualDamage > 0) {
             tank.takeDamage(actualDamage);
+            this.spawnDamagePopup(tank.x, tank.y - 22, actualDamage);
             hitAny = true;
 
             if (directHitTank === tank) {
