@@ -25,75 +25,7 @@ body {
 /* HUD overlay controls */
 #hud-overlay { pointer-events: none; }
 
-/* Bottom controls bar (responsive) */
-#bottom-controls.controls-bar {
-    position: fixed;
-    left: 12px;
-    right: 12px;
-    bottom: 12px;
-    display: grid;
-    grid-template-columns: auto minmax(180px, 1.1fr) minmax(180px, 1.1fr) auto auto auto;
-    gap: 8px;
-    background: var(--surface-panel);
-    border: 1px solid rgba(80, 220, 130, 0.3);
-    border-radius: 12px;
-    padding: 6px 8px; /* slightly smaller toolbar height */
-    backdrop-filter: blur(8px);
-    pointer-events: auto;
-    z-index: 1050;
-    align-items: center; /* vertically center grid items */
-}
-#bottom-controls .primary {
-    background: linear-gradient(135deg, rgba(255, 85, 68, 0.3), rgba(255, 0, 0, 0.3));
-    border: 2px solid var(--accent-hot);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-#bottom-controls .secondary {
-    background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
-    border: 2px solid var(--accent-phosphor);
-    color: #eafcff;
-    padding: 8px 12px;
-    border-radius: 10px;
-    cursor: pointer;
-}
-
-#bottom-controls .label { color: var(--text-muted); font-size: 12px; margin-right: 6px; }
-#bottom-controls select,
-#bottom-controls input[type="range"],
-#bottom-controls button {
-    pointer-events: auto;
-}
-
-.weapon-chooser select {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(80, 220, 130, 0.3);
-    color: #00d4ff;
-    padding: 6px 10px;
-    border-radius: 8px;
-}
-
-/* Weapon grid toggle and menu */
-.weapon-chooser {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-.weapon-grid-toggle {
-    background: rgba(0,0,0,0.45);
-    border: 1px solid rgba(0,255,255,0.3);
-    color: #00e7ff;
-    padding: 4px 8px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
+/* Bottom controls bar — see site/styles/hud.css */
 .weapon-menu {
     position: fixed; /* positioned by JS to clamp within viewport */
     min-width: 320px;
@@ -162,83 +94,7 @@ body {
   .weapon-menu { grid-template-columns: repeat(2, minmax(160px, 1fr)); min-width: 320px; }
 }
 
-.angle-slider-wrap,
-.power-slider-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Fire and Drive buttons inside bottom bar */
-#bottom-controls #fire-button {
-    min-width: 110px;
-}
-
-#bottom-controls #drive-toggle {
-    min-width: 140px;
-}
-
-/* Bottom stats: fuel + wind */
-#bottom-controls .stats-group {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 4px 8px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(80, 220, 130, 0.2);
-    border-radius: 8px;
-}
-
-#bottom-controls .stat { display: inline-flex; align-items: center; gap: 6px; }
-#bottom-controls .stat .icon { filter: drop-shadow(0 0 6px rgba(0,245,255,0.5)); }
-#bottom-controls .wind-stat {
-    padding: 4px 8px;
-    border: 1px solid rgba(80, 220, 130, 0.25);
-    border-radius: 8px;
-    background: rgba(0,0,0,0.25);
-}
-
-#bottom-controls .fuel-stat #fuel-value,
-#bottom-controls .wind-stat #wind-value {
-    color: var(--accent-phosphor);
-    font-weight: 700;
-    text-shadow: 0 0 10px var(--accent-phosphor);
-}
-
-/* Wind arrow emphasis: IMPROVED VISIBILITY for all backgrounds */
-#bottom-controls .wind-stat #wind-arrow {
-    font-size: 28px; /* Increased from 22px */
-    line-height: 1;
-    font-weight: 900;
-    display: inline-block;
-    min-width: 28px; /* Increased to match font size */
-    text-align: center;
-    vertical-align: middle;
-    /* Multi-layered shadow for visibility on both light and dark backgrounds */
-    text-shadow:
-        0 0 12px currentColor,
-        0 0 20px currentColor,
-        0 0 28px currentColor,
-        0 3px 6px rgba(0,0,0,0.95),
-        2px 2px 0 rgba(0,0,0,0.9),
-        -2px -2px 0 rgba(0,0,0,0.9),
-        1px 1px 0 rgba(255,255,255,0.3);
-    transform: scale(1.6); /* Increased from 1.5 */
-    transform-origin: center center;
-    filter: drop-shadow(0 0 10px currentColor);
-}
-
-/* New: name and health in bottom stats */
-#bottom-controls .name-stat #player-name {
-    color: #ffffff;
-    font-weight: 800;
-    text-shadow: 0 0 10px rgba(255,255,255,0.4);
-}
-#bottom-controls .health-stat #player-health {
-    color: var(--accent-hot);
-    font-weight: 800;
-    text-shadow: 0 0 10px var(--accent-hot);
-}
+/* Slider wraps and bottom bar sub-components — see site/styles/hud.css */
 
 /* Solo shots indicator was moved to canvas HUD in Solo mode; bottom-bar DOM variant removed. */
 
@@ -346,11 +202,7 @@ body {
 /* Removed sidebar reopen handle and collapsed transform */
 
 /* Responsive rules */
-@media (max-width: 1024px), (hover: none) and (pointer: coarse) {
-  #bottom-controls.controls-bar {
-                grid-template-columns: auto minmax(120px, 1fr) minmax(120px, 1fr) auto auto auto;
-  }
-}
+/* #bottom-controls responsive grid — see site/styles/hud.css */
 
 @media (max-width: 860px), (hover: none) and (pointer: coarse) {
   #ui-container.sidebar { width: min(88vw, 420px); }

@@ -1,0 +1,226 @@
+/* site/styles/hud.css — Tactical Command HUD chrome */
+
+/* ===== Bottom controls bar ===== */
+#bottom-controls.controls-bar {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(180px, 1.1fr) minmax(180px, 1.1fr) auto auto auto;
+  gap: 10px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  pointer-events: auto;
+  z-index: 1050;
+  align-items: stretch;
+}
+
+/* Modules */
+#bottom-controls .stats-group,
+#bottom-controls .angle-slider-wrap,
+#bottom-controls .power-slider-wrap,
+#bottom-controls .weapon-chooser {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  border-radius: var(--radius-sharp);
+  padding: 6px 10px;
+  position: relative;
+}
+
+/* Corner-bracket marker on "live combat state" panels */
+#bottom-controls .stats-group::before,
+#bottom-controls .stats-group::after,
+#bottom-controls .weapon-chooser::before,
+#bottom-controls .weapon-chooser::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: var(--accent-phosphor);
+  border-style: solid;
+}
+#bottom-controls .stats-group::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+#bottom-controls .stats-group::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+#bottom-controls .weapon-chooser::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+#bottom-controls .weapon-chooser::after  { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+
+/* Stats group (HP / FUEL / WIND) */
+#bottom-controls .stats-group {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+#bottom-controls .stats-group .stat {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' 1;
+}
+#bottom-controls .stats-group .icon { display: none; } /* hide emoji icons */
+#bottom-controls .stats-group .stat::before {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: var(--accent-phosphor);
+  opacity: 0.6;
+  line-height: 1;
+}
+#bottom-controls .stats-group .health-stat::before { content: 'HP'; }
+#bottom-controls .stats-group .fuel-stat::before { content: 'FUEL'; }
+#bottom-controls .stats-group .wind-stat::before { content: 'WIND'; }
+#bottom-controls .stats-group #player-health,
+#bottom-controls .stats-group #fuel-value,
+#bottom-controls .stats-group #wind-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  margin-top: 2px;
+  line-height: 1;
+}
+#bottom-controls .stats-group .wind-stat #wind-value { color: var(--accent-amber); }
+
+/* Sliders (angle + power) */
+#bottom-controls .angle-slider-wrap,
+#bottom-controls .power-slider-wrap {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+#bottom-controls .angle-slider-wrap .label,
+#bottom-controls .power-slider-wrap .label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--accent-phosphor);
+  margin-right: 0;
+  display: flex;
+  justify-content: space-between;
+}
+#bottom-controls .angle-slider-wrap #angle-value,
+#bottom-controls .power-slider-wrap #power-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+}
+
+/* Restyle range input — webkit + firefox */
+#bottom-controls input[type="range"] {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  height: 18px;
+  width: 100%;
+  cursor: pointer;
+}
+#bottom-controls input[type="range"]::-webkit-slider-runnable-track {
+  height: 12px;
+  background: var(--surface-deep);
+  border: var(--border-line);
+  border-radius: 0;
+  background-image:
+    linear-gradient(90deg, transparent calc(25% - 1px), rgba(80, 220, 130, 0.2) 25%, rgba(80, 220, 130, 0.2) calc(25% + 1px), transparent calc(25% + 1px)),
+    linear-gradient(90deg, transparent calc(50% - 1px), rgba(80, 220, 130, 0.2) 50%, rgba(80, 220, 130, 0.2) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(90deg, transparent calc(75% - 1px), rgba(80, 220, 130, 0.2) 75%, rgba(80, 220, 130, 0.2) calc(75% + 1px), transparent calc(75% + 1px));
+}
+#bottom-controls input[type="range"]::-moz-range-track {
+  height: 12px;
+  background: var(--surface-deep);
+  border: var(--border-line);
+}
+#bottom-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 3px;
+  height: 18px;
+  background: var(--accent-phosphor);
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--glow-phosphor);
+  margin-top: -3px;
+}
+#bottom-controls input[type="range"]::-moz-range-thumb {
+  width: 3px;
+  height: 18px;
+  background: var(--accent-phosphor);
+  border: 0;
+  border-radius: 0;
+  box-shadow: var(--glow-phosphor);
+}
+
+/* Drive button */
+#bottom-controls #drive-toggle.secondary {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: var(--radius-sharp);
+}
+#bottom-controls #drive-toggle.secondary[aria-pressed="true"],
+#bottom-controls #drive-toggle.secondary.active {
+  border-color: var(--accent-signal);
+  color: var(--accent-signal);
+  box-shadow: var(--glow-signal);
+}
+
+/* Weapon picker trigger */
+#bottom-controls .weapon-chooser {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+#bottom-controls #weapon-grid-toggle.weapon-grid-toggle {
+  background: transparent;
+  border: 0;
+  color: var(--text-primary);
+  padding: 4px 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+#bottom-controls #weapon-grid-toggle .weapon-current-icon { font-size: 16px; color: var(--accent-phosphor); }
+#bottom-controls #weapon-grid-toggle .weapon-current-name { text-transform: uppercase; }
+#bottom-controls #weapon-grid-toggle .caret { color: var(--accent-phosphor); }
+#bottom-controls #ammo-badge.ammo-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  background: transparent;
+  border: 0;
+}
+
+/* FIRE button — the climax */
+#bottom-controls #fire-button.primary {
+  background: var(--accent-hot);
+  border: var(--border-hot);
+  color: #fff;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  letter-spacing: 4px;
+  padding: 8px 22px;
+  border-radius: var(--radius-sharp);
+  box-shadow: var(--glow-hot), inset 0 0 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  position: relative;
+}
+#bottom-controls #fire-button.primary::before {
+  content: '▶';
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+}
+#bottom-controls #fire-button.primary:hover { filter: brightness(1.1); }
+#bottom-controls #fire-button.primary:active { transform: translateY(1px); }
