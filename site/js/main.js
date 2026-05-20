@@ -819,6 +819,7 @@ function ensureGameOverModalHandlers() {
 
 // Restart game helper function
 function hideOptionsModalShell() {
+  document.getElementById('options-tab')?.classList.remove('active');
   const modal = document.getElementById('options-modal');
   if (!modal) return;
   try {
@@ -2788,10 +2789,7 @@ function bindUI() {
       if (!raw) return;
       const ok = game.loadSnapshot(JSON.parse(raw));
       if (ok) {
-        document.getElementById('options-modal')?.classList.add('hidden');
-        try {
-          document.getElementById('options-modal')?.close?.();
-        } catch {}
+        closeOptionsModal();
         try {
           saveLastUIState('playing');
         } catch {}

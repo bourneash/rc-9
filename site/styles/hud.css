@@ -236,9 +236,9 @@
   left: 0;
   background: var(--surface-panel);
   border: var(--border-line);
-  border-left: 0;
+  border-left: 2px solid transparent;
   color: var(--text-muted);
-  padding: 6px 12px 6px 10px;
+  padding: 6px 12px 6px 8px;
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 2px;
@@ -256,9 +256,9 @@
 .edge-tab.active {
   background: var(--surface-raised);
   color: var(--accent-phosphor);
-  border-left: 2px solid var(--accent-phosphor);
-  padding-left: 8px;
+  border-left-color: var(--accent-phosphor);
 }
+.edge-tab.active .icon { text-shadow: 0 0 8px var(--accent-phosphor); }
 
 /* Existing vertical stacking — preserve y-positions from the old CSS */
 #options-tab { top: 80px; }
