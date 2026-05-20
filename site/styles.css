@@ -202,16 +202,12 @@ body {
 /* Removed sidebar reopen handle and collapsed transform */
 
 /* Responsive rules */
-/* #bottom-controls responsive grid — see site/styles/hud.css */
-
 @media (max-width: 860px), (hover: none) and (pointer: coarse) {
   #ui-container.sidebar { width: min(88vw, 420px); }
   #joystick { display: block; }
     #angle-dial { display: block; bottom: 168px; }
     /* Place mobile fire below angle dial to avoid overlap */
     #mobile-fire { display: block; bottom: 20px; right: 16px; }
-  /* Hide desktop angle slider on small screens; angle via dial */
-  #bottom-controls .angle-slider-wrap { display: none; }
 }
 
 /* Right-side floating sidebar */
@@ -392,64 +388,6 @@ input[type="range"]::-moz-range-thumb {
 /* Futuristic buttons */
 #button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 
-#fire-button, #restart-button, #drive-toggle, #open-setup {
-    background: linear-gradient(135deg, rgba(255, 85, 68, 0.3), rgba(255, 0, 0, 0.3));
-    border: 2px solid var(--accent-hot);
-    color: #fff;
-    padding: 10px 14px;
-    font-size: 14px;
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 12px;
-    font-family: var(--font-body);
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-}
-
-#fire-button::before, #restart-button::before, #drive-toggle::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
-}
-
-#fire-button:hover::before {
-    width: 300px;
-    height: 300px;
-}
-
-#fire-button:hover {
-    border-color: #ff6666;
-    box-shadow: 0 0 30px rgba(255, 85, 68, 0.6);
-    transform: translateY(-2px);
-}
-
-#fire-button:disabled {
-    background: rgba(100, 100, 100, 0.3);
-    border-color: #666;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-#restart-button {
-    background: linear-gradient(135deg, rgba(0, 255, 136, 0.3), rgba(0, 200, 100, 0.3));
-    border-color: #00ff88;
-}
-
-#restart-button:hover {
-    border-color: #00ffaa;
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
-    transform: translateY(-2px);
-}
-
 .debug-toggle {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
     color: #eafcff;
@@ -532,18 +470,6 @@ input[type="range"]::-moz-range-thumb {
     text-shadow: 0 0 8px rgba(80, 220, 130, 0.35);
 }
 
-/* Make New Game button stand out with a cool gradient */
-#open-setup {
-    background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
-    border-color: var(--accent-phosphor);
-    color: #e8ffff;
-    text-shadow: 0 0 8px rgba(0,245,255,0.6);
-}
-#open-setup:hover {
-    border-color: #00ffaa;
-    box-shadow: 0 0 30px rgba(80, 220, 130, 0.6), 0 0 20px rgba(0,255,136,0.4) inset;
-    transform: translateY(-2px);
-}
 
 /* Pause UI removed */
 

@@ -224,3 +224,8 @@
 }
 #bottom-controls #fire-button.primary:hover { filter: brightness(1.1); }
 #bottom-controls #fire-button.primary:active { transform: translateY(1px); }
+
+/* ===== Mobile: hide angle slider (use angle dial instead) ===== */
+@media (max-width: 860px) {
+  #bottom-controls .angle-slider-wrap { display: none; }
+}
