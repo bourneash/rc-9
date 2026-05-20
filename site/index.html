@@ -566,15 +566,21 @@
                       <input type="checkbox" id="setup-static-time" />
                       <span>STATIC TIME (no day/night)</span>
                     </label>
-                    <label id="time-select-wrap" style="margin-top:6px; display:flex; align-items:center; gap:10px">
-                      <span class="t-micro">TIME</span>
-                      <select id="setup-time" class="t-mono">
-                        <option value="auto">AUTO / RANDOM</option>
+                    <div id="time-select-wrap" style="margin-top:8px">
+                      <div class="t-micro" style="margin-bottom:6px">TIME</div>
+                      <div class="pill-row" data-pill-group="time">
+                        <button type="button" class="pill" data-pill="auto">RANDOM</button>
+                        <button type="button" class="pill" data-pill="day">DAY</button>
+                        <button type="button" class="pill" data-pill="dusk">DUSK</button>
+                        <button type="button" class="pill" data-pill="night">NIGHT</button>
+                      </div>
+                      <select id="setup-time" style="display:none">
+                        <option value="auto">RANDOM</option>
                         <option value="day">DAY</option>
                         <option value="dusk">DUSK</option>
                         <option value="night">NIGHT</option>
                       </select>
-                    </label>
+                    </div>
                   </section>
                   <section class="briefing-panel" data-panel="roster">
                     <div class="panel-label">▸ ROSTER</div>

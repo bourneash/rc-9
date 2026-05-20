@@ -1064,6 +1064,7 @@ function openNewGameModal() {
   syncHealthPills();
   syncAmmoModePills();
   syncAmmoPresetPills();
+  syncTimePills();
 }
 
 // ===== Briefing: Mode tiles ↔ existing radio inputs =====
@@ -1143,6 +1144,12 @@ const syncAmmoModePills = wirePillGroup('ammo-mode',
 const syncAmmoPresetPills = wirePillGroup('ammo-preset',
   () => ammoSelect?.value,
   v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+
+const timeSelect = document.getElementById('setup-time');
+const syncTimePills = wirePillGroup('time',
+  () => timeSelect?.value,
+  v => { if (timeSelect) { timeSelect.value = v; timeSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
 );
 
 // ===== Tank callsign helpers =====
