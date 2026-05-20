@@ -19,6 +19,32 @@ function drawTrajectoryDot(ctx, x, y, t, totalSteps, themeTint = '#50dc82') {
   ctx.restore();
 }
 
+function drawImpactReticle(ctx, x, y, label = '') {
+  ctx.save();
+  ctx.strokeStyle = '#ff5544';
+  ctx.fillStyle = '#ff5544';
+  ctx.lineWidth = 1;
+  // Outer circle
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI * 2);
+  ctx.stroke();
+  // Crosshair — 4 short ticks pointing inward
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y); ctx.lineTo(x - 4, y);
+  ctx.moveTo(x + 4, y); ctx.lineTo(x + 12, y);
+  ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 4);
+  ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 12);
+  ctx.stroke();
+  // Optional label above
+  if (label) {
+    ctx.font = '500 9px "JetBrains Mono", ui-monospace, monospace';
+    ctx.fillStyle = '#ff5544';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y - 18);
+  }
+  ctx.restore();
+}
+
 export function drawTrajectoryGuide(game) {
   if (!game.trajectoryGuide) return;
   if (game.gameOver || game.isAnimating) return;
@@ -188,10 +214,7 @@ export function drawTrajectoryGuide(game) {
     ctx.lineTo(impact.x, impact.y);
     ctx.stroke();
     // Impact marker
-    ctx.fillStyle = impact.hitTank ? 'rgba(255,0,0,0.95)' : 'rgba(255,120,0,0.95)';
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    drawImpactReticle(ctx, impact.x, impact.y, '');
     ctx.restore();
     ctx.restore();
     return;
@@ -251,17 +274,7 @@ export function drawTrajectoryGuide(game) {
     const onGround = y >= ground - 1;
 
     if (onGround) {
-      // Impact point — left for Task 18; keep existing style
-      const size = 2.8;
-      ctx.fillStyle = 'rgba(255,0,0,0.95)';
-      ctx.strokeStyle = 'rgba(0,0,0,0.95)';
-      ctx.lineWidth = 1.2;
-      ctx.shadowColor = 'rgba(0,0,0,0.45)';
-      ctx.shadowBlur = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, size, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      drawImpactReticle(ctx, x, y, '');
       break;
     }
 
