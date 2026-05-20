@@ -1077,10 +1077,8 @@ function hasActiveGame() {
 }
 
 function closeNewGameModal() {
-  // Don't allow closing if no game is in progress — user must start a game
-  if (!hasActiveGame()) return;
-
   const modal = document.getElementById('new-game-modal');
+  const hadActiveGame = hasActiveGame();
   try {
     modal?.close?.();
   } catch {}
@@ -1095,6 +1093,13 @@ function closeNewGameModal() {
   try {
     saveLastUIState('playing');
   } catch {}
+
+  // If ESC'd out without an active game, show the title screen instead
+  // of dropping the user onto an empty canvas.
+  if (!hadActiveGame) {
+    const titleEl = document.getElementById('title-screen');
+    if (titleEl) titleEl.removeAttribute('hidden');
+  }
 }
 
 function renderThemePreviews() {
@@ -1557,27 +1562,15 @@ function ensureNewGameModalHandlers() {
   modal._escHandler = escHandler;
   globalThis.addEventListener('keydown', escHandler);
 
-  // Native dialog cancel event (Esc) — prevent if no active game
+  // Native dialog cancel event (Esc) — route through closeNewGameModal so
+  // post-close cleanup (return to title screen if no active game) runs.
   modal.addEventListener('cancel', e => {
-    if (!hasActiveGame()) {
-      e.preventDefault();
-      return;
-    }
     e.preventDefault();
     closeNewGameModal();
   });
 
-  // Native dialog close event — re-open if no active game
-  modal.addEventListener('close', () => {
-    if (!hasActiveGame()) {
-      // Dialog was closed but no game is running — force it back open
-      setTimeout(() => openNewGameModal(), 0);
-    }
-  });
-
-  // Click outside modal-content closes (only if game is active)
+  // Click outside modal-content closes.
   modal.addEventListener('click', e => {
-    if (!hasActiveGame()) return;
     const content = modal.querySelector('.modal-content');
     if (!content) return;
     const r = content.getBoundingClientRect();
