@@ -299,32 +299,6 @@ export class Tank {
     // Performance: removed shadow effect
     ctx.strokeRect(-healthBarWidth / 2, -this.height - 16, healthBarWidth, healthBarHeight);
 
-    // Name tag with glow (upright) — respect streamer/disable-names mode
-    let showName = true;
-    try {
-      const game = globalThis.__SE_GAME__;
-      if (game?.hideOtherNames) {
-        const current = game.getCurrentTank ? game.getCurrentTank() : null;
-        const isCurrentHuman = !!current && current === this && !this.isAI;
-        showName = isCurrentHuman;
-      }
-      // In dark mode, only show name for current player
-      if (game?.themeName === 'dark') {
-        const current = game.getCurrentTank ? game.getCurrentTank() : null;
-        showName = current === this;
-      }
-    } catch {}
-    if (showName) {
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 11px "Segoe UI"';
-      ctx.textAlign = 'center';
-      // Performance: removed shadow effect - use outline instead
-      ctx.strokeStyle = '#000';
-      ctx.lineWidth = 2;
-      ctx.strokeText(this.name, 0, -this.height - 20);
-      ctx.fillText(this.name, 0, -this.height - 20);
-    }
-
     ctx.restore();
   }
 

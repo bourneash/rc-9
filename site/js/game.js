@@ -32,6 +32,54 @@ import {
   chooseAIWeapon as _chooseAIWeapon,
 } from './game-ai.js';
 
+// ---------------------------------------------------------------------------
+// Tank label tag renderer (Phase 2 visual redesign)
+// Draws a framed "CALLSIGN · HP" tag above each tank with a connector tick.
+// Colors: friend = phosphor green, enemy = hot red, ocean override = signal blue.
+// ---------------------------------------------------------------------------
+function drawTankLabel(ctx, tank, opts = {}) {
+  if (!tank || tank.dead) return;
+  const isOcean = !!opts.isOcean;
+  const isEnemy = !!opts.isEnemy;
+  const color = isOcean ? '#4d9fff' : isEnemy ? '#ff5544' : '#50dc82';
+  ctx.save();
+  ctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace';
+  ctx.textBaseline = 'alphabetic';
+  const nameTxt = String(tank.name || '').toUpperCase();
+  const sepTxt = ' · ';
+  const hpTxt = String(Math.max(0, Math.round(tank.health)));
+  const fullText = nameTxt + sepTxt + hpTxt;
+  const metrics = ctx.measureText(fullText);
+  const padX = 5;
+  const padY = 2;
+  const w = Math.ceil(metrics.width + padX * 2);
+  const h = 14;
+  const x = Math.round(tank.x - w / 2);
+  const y = Math.round(tank.y - 32);
+  // Connector tick from tank to label
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(tank.x, tank.y - 18);
+  ctx.lineTo(tank.x, y + h);
+  ctx.stroke();
+  // Background
+  ctx.fillStyle = 'rgba(13, 20, 16, 0.85)';
+  ctx.fillRect(x, y, w, h);
+  // Border
+  ctx.strokeStyle = color;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  // Text — name + sep in color, HP in white
+  const nameW = ctx.measureText(nameTxt).width;
+  const sepW = ctx.measureText(sepTxt).width;
+  ctx.fillStyle = color;
+  ctx.fillText(nameTxt, x + padX, y + h - padY - 1);
+  ctx.fillText(sepTxt, x + padX + nameW, y + h - padY - 1);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(hpTxt, x + padX + nameW + sepW, y + h - padY - 1);
+  ctx.restore();
+}
+
 export class Game {
   constructor(canvas, ctx) {
     this.canvas = canvas;
@@ -1792,6 +1840,7 @@ export class Game {
     this.renderMines(this.ctx);
 
     // Draw tanks with glow
+    const _currentTank = this.getCurrentTank();
     for (let i = 0; i < this.tanks.length; i++) {
       const tank = this.tanks[i];
       if (tank.health > 0) {
@@ -1820,6 +1869,18 @@ export class Game {
         }
         if (this.tanks[this.currentTankIndex] === tank) {
           this.drawAimLine(tank);
+        }
+        // Tank label tag (framed callsign + HP)
+        // Streamer mode: only show label for the current (active) tank
+        // Dark mode: same restriction — only show label for current tank
+        const isCurrentTank = tank === _currentTank;
+        const streamerHide = this.hideOtherNames && !isCurrentTank;
+        const darkHide = this.themeName === 'dark' && !isCurrentTank;
+        if (!streamerHide && !darkHide) {
+          drawTankLabel(this.ctx, tank, {
+            isOcean: !!(this.terrain?._isOceanTerrain || this.terrain?.isOcean),
+            isEnemy: !isCurrentTank,
+          });
         }
       }
     }
