@@ -9,9 +9,9 @@ html, body { height: 100%; }
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #0a0e27 0%, #1a1a2e 50%, #16213e 100%);
-    color: #e4e4e4;
+    font-family: var(--font-body);
+    background: var(--surface-ink);
+    color: var(--text-body);
     overflow: hidden;
 }
 
@@ -45,7 +45,7 @@ body {
 }
 #bottom-controls .primary {
     background: linear-gradient(135deg, rgba(255, 77, 77, 0.3), rgba(255, 0, 0, 0.3));
-    border: 2px solid #ff4d4d;
+    border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 8px 12px;
     border-radius: 10px;
@@ -54,14 +54,14 @@ body {
 
 #bottom-controls .secondary {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
-    border: 2px solid #00f5ff;
+    border: 2px solid var(--accent-phosphor);
     color: #eafcff;
     padding: 8px 12px;
     border-radius: 10px;
     cursor: pointer;
 }
 
-#bottom-controls .label { color: #a0a0a0; font-size: 12px; margin-right: 6px; }
+#bottom-controls .label { color: var(--text-muted); font-size: 12px; margin-right: 6px; }
 #bottom-controls select,
 #bottom-controls input[type="range"],
 #bottom-controls button {
@@ -200,9 +200,9 @@ body {
 
 #bottom-controls .fuel-stat #fuel-value,
 #bottom-controls .wind-stat #wind-value {
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     font-weight: 700;
-    text-shadow: 0 0 10px #00f5ff;
+    text-shadow: 0 0 10px var(--accent-phosphor);
 }
 
 /* Wind arrow emphasis: IMPROVED VISIBILITY for all backgrounds */
@@ -235,9 +235,9 @@ body {
     text-shadow: 0 0 10px rgba(255,255,255,0.4);
 }
 #bottom-controls .health-stat #player-health {
-    color: #ff4d4d;
+    color: var(--accent-hot);
     font-weight: 800;
-    text-shadow: 0 0 10px #ff4d4d;
+    text-shadow: 0 0 10px var(--accent-hot);
 }
 
 /* Solo shots indicator was moved to canvas HUD in Solo mode; bottom-bar DOM variant removed. */
@@ -288,7 +288,7 @@ body {
     display: none; /* show on mobile */
     pointer-events: auto; /* ensure clicks are received despite parent overlay */
     background: linear-gradient(135deg, rgba(255, 77, 77, 0.6), rgba(255, 0, 0, 0.6));
-    border: 2px solid #ff4d4d;
+    border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 16px 18px;
     border-radius: 16px;
@@ -325,7 +325,7 @@ body {
     width: 12px;
     height: 12px;
     margin-left: 50px; /* arm length */
-    background: #00f5ff;
+    background: var(--accent-phosphor);
     border-radius: 50%;
     box-shadow: 0 0 16px rgba(0,245,255,0.6);
 }
@@ -398,7 +398,7 @@ body {
 
 .icon-btn {
     background: rgba(0,0,0,0.4);
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     border: 1px solid rgba(0, 255, 255, 0.4);
     padding: 4px 8px;
     font-size: 14px;
@@ -415,7 +415,7 @@ body {
 #game-info h1 {
     font-size: 28px;
     margin-bottom: 12px;
-    background: linear-gradient(90deg, #00f5ff, #00ff88, #00f5ff);
+    background: linear-gradient(90deg, var(--accent-phosphor), #00ff88, var(--accent-phosphor));
     background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -443,8 +443,8 @@ body {
 }
 
 #player-health {
-    color: #ff4d4d;
-    text-shadow: 0 0 10px #ff4d4d;
+    color: var(--accent-hot);
+    text-shadow: 0 0 10px var(--accent-hot);
 }
 
 /* Modern controls */
@@ -455,7 +455,7 @@ body {
     align-items: center;
     gap: 10px;
     font-size: 14px;
-    color: #a0a0a0;
+    color: var(--text-muted);
 }
 
 #difficulty-select {
@@ -489,7 +489,7 @@ body {
     align-items: center;
     gap: 12px;
     font-size: 14px;
-    color: #a0a0a0;
+    color: var(--text-muted);
 }
 
 input[type="range"] {
@@ -508,7 +508,7 @@ input[type="range"]::-webkit-slider-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     cursor: pointer;
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
     transition: all 0.3s ease;
@@ -523,7 +523,7 @@ input[type="range"]::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     cursor: pointer;
     border: none;
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
@@ -531,10 +531,10 @@ input[type="range"]::-moz-range-thumb {
 
 #angle-value, #power-value {
     font-weight: bold;
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     min-width: 50px;
     text-align: right;
-    text-shadow: 0 0 10px #00f5ff;
+    text-shadow: 0 0 10px var(--accent-phosphor);
 }
 
 /* Futuristic buttons */
@@ -542,14 +542,14 @@ input[type="range"]::-moz-range-thumb {
 
 #fire-button, #restart-button, #drive-toggle, #open-setup {
     background: linear-gradient(135deg, rgba(255, 77, 77, 0.3), rgba(255, 0, 0, 0.3));
-    border: 2px solid #ff4d4d;
+    border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 10px 14px;
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
     border-radius: 12px;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -601,11 +601,11 @@ input[type="range"]::-moz-range-thumb {
 .debug-toggle {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
     color: #eafcff;
-    border: 2px solid #00f5ff;
+    border: 2px solid var(--accent-phosphor);
     padding: 10px 18px;
     font-size: 13px;
     cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     margin-top: 12px;
     border-radius: 10px;
     transition: all 0.3s ease;
@@ -641,7 +641,7 @@ input[type="range"]::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     box-shadow: 0 0 18px rgba(0, 245, 255, 0.6);
 }
 
@@ -649,13 +649,13 @@ input[type="range"]::-moz-range-thumb {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     border: none;
     box-shadow: 0 0 18px rgba(0, 245, 255, 0.6);
 }
 
 #debug-menu input[type="checkbox"] {
-    accent-color: #00f5ff;
+    accent-color: var(--accent-phosphor);
     transform: scale(1.1);
 }
 
@@ -683,7 +683,7 @@ input[type="range"]::-moz-range-thumb {
 /* Make New Game button stand out with a cool gradient */
 #open-setup {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
-    border-color: #00f5ff;
+    border-color: var(--accent-phosphor);
     color: #e8ffff;
     text-shadow: 0 0 8px rgba(0,245,255,0.6);
 }
@@ -700,13 +700,13 @@ input[type="range"]::-moz-range-thumb {
 #fuel-info, #wind-info {
     font-size: 14px;
     font-weight: 600;
-    color: #a0a0a0;
+    color: var(--text-muted);
 }
 
 #fuel-value, #wind-value {
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     font-weight: bold;
-    text-shadow: 0 0 10px #00f5ff;
+    text-shadow: 0 0 10px var(--accent-phosphor);
 }
 
 /* Modern debug menu */
@@ -769,7 +769,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 10px;
     font-size: 12px;
     cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     margin-top: 12px;
     font-weight: bold;
     border-radius: 8px;
@@ -857,9 +857,9 @@ input[type="range"]::-moz-range-thumb {
 #game-log h3 {
     font-size: 18px;
     margin-bottom: 8px;
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     display: inline-block;
-    text-shadow: 0 0 10px #00f5ff;
+    text-shadow: 0 0 10px var(--accent-phosphor);
 }
 
 #clear-log-button {
@@ -869,7 +869,7 @@ input[type="range"]::-moz-range-thumb {
     padding: 4px 10px;
     font-size: 11px;
     cursor: pointer;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: var(--font-body);
     margin-left: 12px;
     float: right;
     border-radius: 6px;
@@ -900,7 +900,7 @@ input[type="range"]::-moz-range-thumb {
 #sidebar-footer .footer-btn {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
     color: #eafcff;
-    border: 2px solid #00f5ff;
+    border: 2px solid var(--accent-phosphor);
     padding: 8px 12px;
     border-radius: 10px;
     cursor: pointer;
@@ -938,7 +938,7 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .log-entry.hit {
-    border-left-color: #ff4d4d;
+    border-left-color: var(--accent-hot);
     color: #ff8888;
     background: rgba(255, 77, 77, 0.1);
 }
@@ -971,7 +971,7 @@ input[type="range"]::-moz-range-thumb {
     transform: translateY(-50%);
     background: linear-gradient(180deg, rgba(0,245,255,0.35), rgba(0,136,255,0.3));
     color: #eafcff;
-    border: 2px solid #00f5ff;
+    border: 2px solid var(--accent-phosphor);
     border-left: none;
     border-radius: 0 12px 12px 0;
     padding: 8px 10px;
@@ -998,7 +998,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .edge-tab:hover { filter: brightness(1.15); }
 .edge-tab:focus-visible {
-    outline: 3px solid #00f5ff;
+    outline: 3px solid var(--accent-phosphor);
     outline-offset: 3px;
     filter: brightness(1.15);
 }
@@ -1008,7 +1008,7 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 a:focus-visible {
-    outline: 2px solid #00f5ff;
+    outline: 2px solid var(--accent-phosphor);
     outline-offset: 2px;
 }
 
@@ -1039,7 +1039,7 @@ a:focus-visible {
 
 .modal-content {
     background: linear-gradient(135deg, rgba(10, 14, 39, 0.95), rgba(26, 26, 46, 0.95));
-    border: 3px solid #00f5ff;
+    border: 3px solid var(--accent-phosphor);
     padding: 50px;
     text-align: center;
     border-radius: 20px;
@@ -1068,8 +1068,8 @@ a:focus-visible {
 #game-over-modal .modal-close {
     top: 8px;
     right: 8px;
-    background: #0a0e27;
-    border: 1px solid #00f5ff;
+    background: var(--surface-ink);
+    border: 1px solid var(--accent-phosphor);
     color: #ffffff;
     font-size: 18px;
     padding: 8px 10px;
@@ -1254,7 +1254,7 @@ a:focus-visible {
 .modal-content.setup input:focus-visible,
 .modal-content.setup select:focus-visible,
 .modal-content.setup button:focus-visible {
-    outline: 2px solid #00f5ff;
+    outline: 2px solid var(--accent-phosphor);
     outline-offset: 2px;
     box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.25);
 }
@@ -1262,7 +1262,7 @@ a:focus-visible {
 /* Improve radio/checkbox visibility */
 .modal-content.setup input[type="radio"],
 .modal-content.setup input[type="checkbox"] {
-    accent-color: #00f5ff;
+    accent-color: var(--accent-phosphor);
 }
 
 .theme-previews {
@@ -1294,7 +1294,7 @@ a:focus-visible {
 }
 
 .theme-tile.selected {
-    border-color: #00f5ff;
+    border-color: var(--accent-phosphor);
     box-shadow: 0 0 18px rgba(0, 245, 255, 0.5), 0 0 0 2px rgba(0, 245, 255, 0.25) inset;
 }
 
@@ -1303,7 +1303,7 @@ a:focus-visible {
 }
 
 .theme-tile:focus-visible {
-    outline: 2px solid #00f5ff;
+    outline: 2px solid var(--accent-phosphor);
     outline-offset: 2px;
 }
 
@@ -1334,11 +1334,11 @@ a:focus-visible {
 
 .setup-actions .danger:hover {
     background: linear-gradient(135deg, rgba(255,77,77,0.35), rgba(255,77,77,0.2));
-    border-color: #ff4d4d;
+    border-color: var(--accent-hot);
 }
 
 .setup-actions .primary {
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     color: #000;
     border: none;
     padding: 9px 18px;
@@ -1349,7 +1349,7 @@ a:focus-visible {
 .setup-actions button:not(.primary) {
     background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
     color: #eafcff;
-    border: 2px solid #00f5ff;
+    border: 2px solid var(--accent-phosphor);
     padding: 9px 14px;
     border-radius: 10px;
 }
@@ -1399,11 +1399,11 @@ a:focus-visible {
     padding: 6px 8px;
     border-radius: 8px;
 }
-.slot-row span { min-width: 64px; color: #a0a0a0; }
+.slot-row span { min-width: 64px; color: var(--text-muted); }
 .slot-row select, .slot-row input[type="text"] {
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 255, 255, 0.3);
-    color: #e4e4e4;
+    color: var(--text-body);
     padding: 6px 10px;
     border-radius: 8px;
 }
@@ -1425,7 +1425,7 @@ a:focus-visible {
 .color-chooser { display: inline-block; }
 .color-chooser .color-grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 6px; padding: 6px 0 0 0; }
 .color-chooser .swatch { width: 18px; height: 18px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.4); cursor: pointer; padding: 0; background: none; /* Override modal-content button background */ }
-.color-chooser .swatch.selected { outline: 2px solid #00f5ff; outline-offset: 1px; }
+.color-chooser .swatch.selected { outline: 2px solid var(--accent-phosphor); outline-offset: 1px; }
 
 /* Teams section */
 .teams {
@@ -1442,7 +1442,7 @@ a:focus-visible {
 .team-row select {
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid rgba(0, 255, 255, 0.3);
-    color: #e4e4e4;
+    color: var(--text-body);
     padding: 6px 10px;
     border-radius: 8px;
 }
@@ -1450,7 +1450,7 @@ a:focus-visible {
 .modal-content h2 {
     font-size: 40px;
     margin-bottom: 30px;
-    background: linear-gradient(90deg, #00f5ff, #00ff88);
+    background: linear-gradient(90deg, var(--accent-phosphor), #00ff88);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1458,7 +1458,7 @@ a:focus-visible {
 }
 
 .modal-content button {
-    background: linear-gradient(135deg, #00f5ff, #00ff88);
+    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     border: none;
     color: #000;
     padding: 15px 40px;
@@ -1607,9 +1607,9 @@ a:focus-visible {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #00f5ff;
+    background: var(--accent-phosphor);
     cursor: pointer;
-    border: 2px solid #0a0e27;
+    border: 2px solid var(--surface-ink);
     box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
     transition: all 0.2s ease;
 }
@@ -1624,9 +1624,9 @@ a:focus-visible {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #00f5ff;
+    background: var(--accent-phosphor);
     cursor: pointer;
-    border: 2px solid #0a0e27;
+    border: 2px solid var(--surface-ink);
     box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
     transition: all 0.2s ease;
 }
@@ -1641,7 +1641,7 @@ a:focus-visible {
     min-width: 45px;
     text-align: right;
     font-size: 14px;
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     font-weight: 600;
 }
 
@@ -1713,11 +1713,11 @@ a:focus-visible {
     width: 18px;
     height: 18px;
     cursor: pointer;
-    accent-color: #00f5ff;
+    accent-color: var(--accent-phosphor);
 }
 
 .auto-restart-section label:hover {
-    color: #00f5ff;
+    color: var(--accent-phosphor);
 }
 
 /* Auto-restart countdown modal */
@@ -1729,7 +1729,7 @@ a:focus-visible {
 #auto-restart-countdown {
     font-size: 48px;
     font-weight: bold;
-    color: #00f5ff;
+    color: var(--accent-phosphor);
     margin: 20px 0;
     text-shadow: 0 0 20px rgba(0, 245, 255, 0.6);
 }
