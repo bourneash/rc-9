@@ -32,5 +32,6 @@
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
+  /* Color opinion — override at use site when not phosphor */
   color: var(--accent-phosphor);
 }
