@@ -329,11 +329,9 @@
   border-color: var(--accent-phosphor);
   background: var(--surface-raised);
   box-shadow: inset 0 0 12px rgba(80, 220, 130, 0.15);
-  outline: none !important; /* suppress inline outline set by old JS */
 }
-/* Locked / disabled tiles dim to 25% */
-.weapon-menu .weapon-item.disabled,
-.weapon-menu .weapon-item.locked {
+/* Disabled (locked) tiles dim to 25% */
+.weapon-menu .weapon-item.disabled {
   opacity: 0.25;
   filter: none;
   cursor: not-allowed;
@@ -379,5 +377,5 @@
   background: none;
   border: none;
 }
-.weapon-menu .weapon-ammo.low  { color: var(--warning, #ffd580); }
-.weapon-menu .weapon-ammo.empty { color: var(--danger, #ffb0b0); }
+.weapon-menu .weapon-ammo.low  { color: var(--accent-amber); }
+.weapon-menu .weapon-ammo.empty { color: var(--accent-hot); }

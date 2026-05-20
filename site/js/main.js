@@ -3046,6 +3046,13 @@ function bindUI() {
   // Global ESC: open Game Options during gameplay when no modal is open
   globalThis.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
+    // Close weapon menu first if it's open
+    const wm = document.getElementById('weapon-menu');
+    if (wm && !wm.classList.contains('hidden')) {
+      closeWeaponMenu();
+      e.preventDefault();
+      return;
+    }
     // If any modal is open, let its own ESC handler close it instead
     const anyOpen = [
       'options-modal',
