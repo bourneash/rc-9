@@ -6467,24 +6467,27 @@ export class Game {
       });
     }
 
-    const winnerText = document.getElementById('winner-text');
-    if (winnerText) {
-      winnerText.textContent = 'Solo Complete!';
+    const accuracy = used > 0 ? Math.round((hits / used) * 100) : 0;
+
+    // Populate engagement-report IDs used by the new game-over modal structure
+    const setText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(val);
+    };
+    const banner = document.getElementById('er-banner');
+    if (banner) {
+      banner.textContent = 'SOLO COMPLETE';
+      banner.className = 'er-banner';
     }
-    const statsEl = document.getElementById('game-over-stats');
-    if (statsEl) {
-      const accuracy = used > 0 ? Math.round((hits / used) * 100) : 0;
-      statsEl.innerHTML = `
-                                <table class="score-table" role="table" aria-label="Solo results">
-                                    <tbody>
-                                        <tr><th scope="row">Score</th><td>${this.soloScore}</td></tr>
-                                        <tr><th scope="row">Hits</th><td>${hits}</td></tr>
-                                        <tr><th scope="row">Misses</th><td>${misses}</td></tr>
-                                        <tr><th scope="row">Shots Used</th><td>${used}</td></tr>
-                                        <tr><th scope="row">Accuracy</th><td>${accuracy}%</td></tr>
-                                    </tbody>
-                                </table>`;
-    }
+    setText('er-subtitle', `SOLO RUN · ${this.soloTargetsHit ?? 0} / ${this.soloTargetGoal ?? 0} TARGETS`);
+    setText('winner-text', String(this.soloScore));
+    setText('er-standing', ' PTS');
+    setText('er-tag', total === '∞' ? 'UNLIMITED AMMO' : `${total} SHOTS ALLOWED`);
+    setText('er-rounds', used);
+    setText('er-hits', hits);
+    setText('er-shots', used);
+    setText('er-damage', misses);
+    setText('er-accuracy', accuracy);
     // Always use the shared helper so close handlers (ESC/click-outside/X) are attached
     if (typeof globalThis.openGameOverModal === 'function') {
       try {

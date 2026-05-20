@@ -163,7 +163,12 @@ export function mount() {
   bindMenu();
   // Decide whether to show: honor existing "restore last session" toggle
   let restore = false;
-  try { restore = localStorage.getItem('se.ui.restoreEnabled') === 'true' || localStorage.getItem('se.restoreLastSession') === '1'; } catch {}
+  try {
+    const restoreRaw = localStorage.getItem('se.ui.restoreEnabled');
+    restore = restoreRaw === null ? true : restoreRaw === 'true';
+    // Legacy key fallback
+    if (!restore && localStorage.getItem('se.restoreLastSession') === '1') restore = true;
+  } catch {}
   let hasSave = false;
   try {
     hasSave = !!(localStorage.getItem('se.lastGame.v1') || localStorage.getItem('rc9.save'));

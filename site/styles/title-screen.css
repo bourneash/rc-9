@@ -172,7 +172,7 @@
 }
 .ts-item.dim .ts-item-key { color: var(--text-dim); border-color: var(--text-dim); }
 .ts-item:disabled:hover {
-  border-color: var(--border-line);
+  border-color: #1a2a1c;
   background: var(--surface-panel);
   box-shadow: none;
 }
