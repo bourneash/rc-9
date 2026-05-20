@@ -3169,6 +3169,10 @@ function bindUI() {
     if (Date.now() < suppressOptionsUntil) return;
     openOptionsModal();
   });
+  const newGameTab = document.getElementById('new-game-tab');
+  bindEdgeTabAction(newGameTab, () => {
+    openNewGameModal();
+  });
   const logTab = document.getElementById('log-tab');
   bindEdgeTabAction(logTab, () => {
     openLogModal();

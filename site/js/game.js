@@ -6765,7 +6765,7 @@ export class Game {
       nameEl.textContent = currentTank.name;
       nameEl.style.color = currentTank.color;
     }
-    if (healthEl) healthEl.textContent = `Health: ${currentTank.health}`;
+    if (healthEl) healthEl.textContent = String(currentTank.health);
     if (fuelEl) {
       const pct =
         currentTank.maxFuel > 0 ? Math.round((currentTank.fuel / currentTank.maxFuel) * 100) : 0;

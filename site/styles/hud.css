@@ -261,11 +261,25 @@
 .edge-tab.active .icon { text-shadow: 0 0 8px var(--accent-phosphor); }
 
 /* Existing vertical stacking — preserve y-positions from the old CSS */
-#options-tab { top: 80px; }
-#debug-tab   { top: 116px; }
-#log-tab     { top: 152px; }
-#volume-tab  { top: 188px; }
-#restart-tab { top: 224px; }
+#new-game-tab { top: 80px; }
+#options-tab  { top: 116px; }
+#debug-tab    { top: 152px; }
+#log-tab      { top: 188px; }
+#volume-tab   { top: 224px; }
+#restart-tab  { top: 260px; }
+
+/* NEW GAME tab — primary action gets phosphor accent border */
+#new-game-tab {
+  border-color: var(--accent-phosphor);
+  color: var(--accent-phosphor);
+  background: var(--surface-raised);
+}
+#new-game-tab .icon { text-shadow: 0 0 6px var(--accent-phosphor); }
+#new-game-tab:hover {
+  border-color: var(--accent-phosphor);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px rgba(80, 220, 130, 0.3);
+}
 
 /* ===== Weapon menu ===== */
 .weapon-menu {
