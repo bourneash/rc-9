@@ -1,0 +1,152 @@
+/* site/styles/modals.css — Tactical Command modal chrome */
+
+/* Backdrop + position */
+.modal {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  max-width: min(960px, 92vw);
+  max-height: 92vh;
+  color: var(--text-body);
+}
+.modal::backdrop {
+  background: rgba(5, 10, 6, 0.78);
+  backdrop-filter: blur(2px);
+}
+.modal.hidden { display: none; }
+
+/* Wrapper inside each modal */
+.modal .modal-content {
+  background: var(--surface-ink);
+  border: var(--border-line);
+  border-radius: var(--radius-sharp);
+  position: relative;
+  overflow: hidden;
+}
+.modal .modal-content::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  opacity: 0.5;
+}
+
+/* Title bar */
+.modal-titlebar {
+  background: var(--surface-panel);
+  border-bottom: var(--border-line);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 1;
+}
+.modal-titlebar::before,
+.modal-titlebar::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--accent-phosphor);
+  border-style: solid;
+}
+.modal-titlebar::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+.modal-titlebar::after  { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+.modal-titlebar .h {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--text-primary);
+  letter-spacing: 3px;
+  flex: 1;
+}
+.modal-titlebar .h .accent { color: var(--accent-phosphor); }
+.modal-titlebar .sub {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+.modal-titlebar .x,
+.modal-titlebar .modal-close,
+.modal-titlebar .modal-close-inline {
+  background: var(--surface-deep);
+  border: var(--border-line);
+  color: var(--text-muted);
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: var(--radius-sharp);
+}
+.modal-titlebar .x:hover,
+.modal-titlebar .modal-close:hover { border-color: var(--accent-hot); color: var(--accent-hot); }
+
+/* Modal body (default — surfaces override) */
+.modal-body { padding: 18px; position: relative; z-index: 1; }
+
+/* Footer actions */
+.modal-actions {
+  background: var(--surface-panel);
+  border-top: var(--border-line);
+  padding: 12px 18px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.btn-ghost {
+  background: transparent;
+  border: var(--border-line);
+  color: var(--text-muted);
+  padding: 8px 14px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  border-radius: var(--radius-sharp);
+}
+.btn-ghost:hover { border-color: var(--accent-phosphor); color: var(--accent-phosphor); }
+.btn-ghost.danger:hover { border-color: var(--accent-hot); color: var(--accent-hot); }
+.btn-primary {
+  background: var(--accent-phosphor);
+  border: 1px solid var(--accent-phosphor);
+  color: var(--surface-ink);
+  padding: 8px 22px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 3px;
+  cursor: pointer;
+  box-shadow: var(--glow-phosphor);
+  border-radius: var(--radius-sharp);
+}
+
+/* Pill row (used in many modals) */
+.pill-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.pill {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  cursor: pointer;
+  border-radius: var(--radius-sharp);
+}
+.pill:hover { border-color: var(--accent-phosphor); color: var(--accent-phosphor); }
+.pill.selected {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+  color: var(--accent-phosphor);
+  box-shadow: inset 0 -2px 0 var(--accent-phosphor);
+}
