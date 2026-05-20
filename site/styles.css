@@ -25,74 +25,7 @@ body {
 /* HUD overlay controls */
 #hud-overlay { pointer-events: none; }
 
-/* Bottom controls bar — see site/styles/hud.css */
-.weapon-menu {
-    position: fixed; /* positioned by JS to clamp within viewport */
-    min-width: 320px;
-    max-width: 90vw;
-    max-height: 60vh;
-    overflow: auto;
-    display: grid;
-    grid-template-columns: repeat(3, minmax(160px, 1fr));
-    gap: 8px;
-    padding: 10px;
-    background: var(--surface-panel);
-    border: 1px solid rgba(80, 220, 130, 0.35);
-    border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
-    z-index: 2000;
-    pointer-events: auto; /* Override parent #hud-overlay pointer-events: none */
-}
-.weapon-menu.hidden {
-    display: none !important;
-}
-.weapon-item {
-    display: grid;
-    grid-template-columns: 40px 1fr auto;
-    align-items: center;
-    gap: 10px;
-    padding: 8px;
-    border: 1px solid rgba(80, 220, 130, 0.18);
-    border-radius: 10px;
-    background: rgba(0,0,0,0.35);
-    cursor: pointer;
-}
-.weapon-item:hover { background: rgba(0,40,60,0.6); }
-.weapon-item.disabled {
-    opacity: 0.5;
-    filter: grayscale(70%);
-    cursor: not-allowed;
-}
-.weapon-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 6px;
-    background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-    border: 1px solid rgba(255,255,255,0.08);
-    display: grid;
-    place-items: center;
-    color: #fff;
-}
-.weapon-label {
-    display: flex;
-    flex-direction: column;
-}
-.weapon-label .name { font-weight: 700; color: #e8faff; }
-.weapon-label .desc { font-size: 12px; color: #93cbd1; }
-.weapon-ammo {
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: rgba(0,245,255,0.15);
-    border: 1px solid rgba(0,245,255,0.35);
-    color: #bffcff;
-    font-weight: 800;
-}
-.weapon-ammo.low { background: rgba(255,180,0,0.15); border-color: rgba(255,180,0,0.5); color: #ffd580; }
-.weapon-ammo.empty { background: rgba(255,60,60,0.18); border-color: rgba(255,60,60,0.45); color: #ffb0b0; }
-
-@media (max-width: 720px) {
-  .weapon-menu { grid-template-columns: repeat(2, minmax(160px, 1fr)); min-width: 320px; }
-}
+/* Bottom controls bar + weapon menu — see site/styles/hud.css */
 
 /* Slider wraps and bottom bar sub-components — see site/styles/hud.css */
 

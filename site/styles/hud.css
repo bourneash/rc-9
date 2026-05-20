@@ -266,3 +266,118 @@
 #log-tab     { top: 152px; }
 #volume-tab  { top: 188px; }
 #restart-tab { top: 224px; }
+
+/* ===== Weapon menu ===== */
+.weapon-menu {
+  position: fixed;
+  min-width: 320px;
+  max-width: 90vw;
+  background: var(--surface-panel);
+  border: var(--border-phosphor);
+  padding: 14px;
+  box-shadow: 0 0 24px rgba(80, 220, 130, 0.2);
+  z-index: 1100;
+  border-radius: var(--radius-sharp);
+  /* Override old styles.css grid layout — contents now laid out by .menu-grid */
+  display: block;
+  max-height: 70vh;
+  overflow: auto;
+  pointer-events: auto; /* Override parent #hud-overlay pointer-events: none */
+}
+.weapon-menu.hidden { display: none !important; }
+
+.weapon-menu .menu-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--accent-phosphor);
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+}
+.weapon-menu .menu-title .count { color: var(--text-muted); }
+
+.weapon-menu .menu-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+@media (max-width: 600px) {
+  .weapon-menu .menu-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Tile — alias existing JS class .weapon-item to new spec .menu-item */
+.weapon-menu .weapon-item {
+  aspect-ratio: 1;
+  background: var(--surface-deep);
+  border: var(--border-line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 4px;
+  position: relative;
+  border-radius: var(--radius-sharp);
+}
+.weapon-menu .weapon-item:hover {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+}
+.weapon-menu .weapon-item.selected {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+  box-shadow: inset 0 0 12px rgba(80, 220, 130, 0.15);
+  outline: none !important; /* suppress inline outline set by old JS */
+}
+/* Locked / disabled tiles dim to 25% */
+.weapon-menu .weapon-item.disabled,
+.weapon-menu .weapon-item.locked {
+  opacity: 0.25;
+  filter: none;
+  cursor: not-allowed;
+}
+
+/* Icon — alias .weapon-icon → .item-icon */
+.weapon-menu .weapon-icon {
+  font-size: 18px;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: none;
+  border: none;
+  display: block;
+  color: inherit;
+}
+
+/* Name — alias .weapon-label .name → .item-name; hide .desc and old label layout */
+.weapon-menu .weapon-label {
+  display: contents; /* flatten label wrapper so children flow normally */
+}
+.weapon-menu .weapon-label .name {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: normal;
+}
+.weapon-menu .weapon-item.selected .weapon-label .name { color: var(--text-primary); }
+.weapon-menu .weapon-label .desc { display: none; }
+
+/* Ammo badge — alias .weapon-ammo → .item-ammo */
+.weapon-menu .weapon-ammo {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--accent-phosphor);
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: none;
+}
+.weapon-menu .weapon-ammo.low  { color: var(--warning, #ffd580); }
+.weapon-menu .weapon-ammo.empty { color: var(--danger, #ffb0b0); }

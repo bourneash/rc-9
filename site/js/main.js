@@ -2522,7 +2522,18 @@ function bindUI() {
       'land_mine',
       'toxic_gas',
     ];
-    weaponMenu.innerHTML = '';
+    weaponMenu.replaceChildren();
+    // Header row
+    const titleBar = document.createElement('div');
+    titleBar.className = 'menu-title';
+    const titleText = document.createElement('span');
+    titleText.textContent = 'SELECT WEAPON';
+    titleBar.appendChild(titleText);
+    weaponMenu.appendChild(titleBar);
+    // Tile grid container
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+    weaponMenu.appendChild(grid);
     const waterOnly =
       game.waterOnlyWeapons ||
       new Set([
@@ -2587,9 +2598,15 @@ function bindUI() {
         }
       }
       // Highlight current selection
-      if (t.weapon === w) item.style.outline = '2px solid #00f5ff';
-      weaponMenu.appendChild(item);
+      if (t.weapon === w) item.classList.add('selected');
+      grid.appendChild(item);
     }
+    // Add available-count to title bar now that we know how many tiles were rendered
+    const availCount = grid.querySelectorAll('.weapon-item:not(.disabled)').length;
+    const countSpan = document.createElement('span');
+    countSpan.className = 'count';
+    countSpan.textContent = String(availCount) + ' AVAILABLE';
+    titleBar.appendChild(countSpan);
   }
 
   function syncWeaponMenuState() {
@@ -2612,7 +2629,7 @@ function bindUI() {
         : isEmpty
           ? 'Out of ammo'
           : '';
-      item.style.outline = t.weapon === weaponKey ? '2px solid #00f5ff' : '';
+      item.classList.toggle('selected', t.weapon === weaponKey);
 
       const badge = item.querySelector('.weapon-ammo');
       if (badge) {
