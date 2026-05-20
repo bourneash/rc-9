@@ -814,6 +814,12 @@ function ensureGameOverModalHandlers() {
       e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
     if (!inside) closeGameOverModal();
   });
+  // Return to Command button — closes modal (title screen wired in Task 13)
+  document.getElementById('er-return')?.addEventListener('click', () => {
+    closeGameOverModal();
+    // Show title screen if it exists (added in Task 13). If not yet, this no-ops.
+    document.getElementById('title-screen')?.removeAttribute('hidden');
+  });
   modal.dataset.handlers = '1';
 }
 

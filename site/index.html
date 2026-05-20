@@ -195,12 +195,30 @@
     </div>
 
     <dialog id="game-over-modal" class="modal hidden" aria-labelledby="winner-text">
-        <div class="modal-content">
-            <button id="game-over-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="winner-text">Player X Wins!</h2>
-            <div id="game-over-stats" aria-live="polite"></div>
-            <button id="new-game-button">New Game</button>
+      <div class="modal-content engagement-report">
+        <div class="modal-titlebar">
+          <div class="h">ENGAGEMENT <span class="accent">REPORT</span></div>
+          <div class="sub" id="er-subtitle">ROUND COMPLETE</div>
+          <button id="game-over-close" class="modal-close" aria-label="Close">ESC</button>
         </div>
+        <div class="modal-body">
+          <div class="er">
+            <div class="er-banner" id="er-banner">VICTORY · OPERATOR</div>
+            <div class="er-winner"><span class="accent" id="winner-text">—</span><span id="er-standing"> STANDING</span></div>
+            <div class="er-tag" id="er-tag">—</div>
+            <div class="er-stats">
+              <div class="er-stat"><div class="lab">ROUNDS</div><div class="val" id="er-rounds">—</div></div>
+              <div class="er-stat"><div class="lab">HITS</div><div class="val"><span id="er-hits">—</span> <span class="small">/ <span id="er-shots">—</span></span></div></div>
+              <div class="er-stat"><div class="lab">DAMAGE</div><div class="val" id="er-damage">—</div></div>
+              <div class="er-stat"><div class="lab">ACCURACY</div><div class="val"><span id="er-accuracy">—</span><span class="small">%</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="er-return" class="btn-ghost">RETURN TO COMMAND</button>
+          <button id="new-game-button" class="btn-primary" style="margin-left:auto">&#9654; NEW ENGAGEMENT</button>
+        </div>
+      </div>
     </dialog>
 
 

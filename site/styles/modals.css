@@ -437,3 +437,62 @@
 .slot-skill.dim { opacity: 0.3; }
 
 .checkbox-row .ck-meta { color: var(--text-dim); margin-left: 6px; font-size: 9px; }
+
+/* ── Engagement Report (game-over modal) ─────────────────────────────────── */
+.engagement-report .er { padding: 28px; text-align: center; position: relative; }
+.engagement-report .er-banner {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--accent-phosphor);
+  letter-spacing: 6px;
+  margin-bottom: 12px;
+}
+.engagement-report .er-banner.defeat { color: var(--accent-hot); }
+.engagement-report .er-banner.tie { color: var(--accent-amber); }
+.engagement-report .er-winner {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 56px;
+  color: var(--text-primary);
+  letter-spacing: 3px;
+  line-height: 1;
+}
+.engagement-report .er-winner .accent {
+  color: var(--accent-phosphor);
+  text-shadow: 0 0 16px rgba(80, 220, 130, 0.5);
+}
+.engagement-report .er-tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  margin: 12px 0 24px;
+}
+.engagement-report .er-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: #1a2a1c;
+  border: var(--border-line);
+  max-width: 540px;
+  margin: 0 auto 24px;
+}
+.engagement-report .er-stat { background: var(--surface-ink); padding: 16px 12px; }
+.engagement-report .er-stat .lab {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.engagement-report .er-stat .val {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  color: var(--text-primary);
+  margin-top: 6px;
+  font-feature-settings: 'tnum' 1;
+}
+.engagement-report .er-stat .val .small { font-size: 11px; color: var(--text-muted); }
+@media (max-width: 600px) {
+  .engagement-report .er-stats { grid-template-columns: repeat(2, 1fr); }
+  .engagement-report .er-winner { font-size: 40px; }
+}
