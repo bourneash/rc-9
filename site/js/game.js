@@ -1,4 +1,5 @@
 import { Terrain } from './terrain.js';
+import * as Overlays from './canvas-overlays.js';
 import { renderMetaballs } from './metaballs.js';
 import { massFromRadius, mergeDroplets } from './liquid.js';
 import { Tank } from './tank.js';
@@ -870,6 +871,15 @@ export class Game {
       // Human starts: make sure inputs are enabled
       this.enableControls();
     }
+    // Canvas overlays: sync theme, streamer mode, and show grid
+    Overlays.setTheme(this.themeName || null);
+    Overlays.setStreamerMode(!!this.hideOtherNames);
+    Overlays.setGridVisible(true);
+    Overlays.updateCorners({
+      sector: this.turnCount || 0,
+      round: this.turnCount || 0,
+      activeCallsign: this.getCurrentTank()?.name || null,
+    });
     // Autosave right after a new game is configured
     try {
       this.saveSnapshotToStorage('newGame');
@@ -5656,6 +5666,14 @@ export class Game {
     // Autosave at natural turn boundaries
     try {
       this.saveSnapshotToStorage('endTurn');
+    } catch {}
+    // Canvas overlays: update corner readouts for the new active tank
+    try {
+      Overlays.updateCorners({
+        sector: this.turnCount || 0,
+        round: this.turnCount || 0,
+        activeCallsign: this.getCurrentTank()?.name || null,
+      });
     } catch {}
   }
 

@@ -1,0 +1,51 @@
+/* site/styles/canvas-overlays.css — Diegetic in-canvas readouts */
+
+#canvas-overlays {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5; /* above canvas, below #fx-overlay (z-index: 1000) */
+  font-family: var(--font-mono);
+}
+
+.co-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  opacity: 0.35;
+  display: none; /* enabled by .co-grid.show */
+}
+.co-grid.show { display: block; }
+
+/* Theme tints for grid (set on parent via [data-theme]) */
+#canvas-overlays[data-theme="mars"] .co-grid {
+  background-image:
+    linear-gradient(rgba(255, 85, 68, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 85, 68, 0.06) 1px, transparent 1px);
+}
+#canvas-overlays[data-theme="ocean"] .co-grid {
+  background-image:
+    linear-gradient(rgba(77, 159, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(77, 159, 255, 0.08) 1px, transparent 1px);
+}
+#canvas-overlays[data-theme="cave"] { opacity: 0.2; }
+
+.co-corner {
+  position: absolute;
+  font-size: 10px;
+  color: var(--accent-phosphor);
+  letter-spacing: 2px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+.co-corner.tl { top: 14px; left: 18px; }
+.co-corner.tr { top: 14px; right: 18px; }
+
+#canvas-overlays[data-theme="mars"] .co-corner { color: var(--accent-hot); }
+#canvas-overlays[data-theme="ocean"] .co-corner { color: var(--accent-signal); }
+
+/* Streamer-mode toggle hides corner readouts */
+#canvas-overlays.streamer-mode .co-corner { display: none; }

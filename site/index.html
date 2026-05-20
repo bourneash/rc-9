@@ -42,6 +42,7 @@
     <link rel="stylesheet" href="/styles/hud.css" />
     <link rel="stylesheet" href="/styles/modals.css" />
     <link rel="stylesheet" href="/styles/title-screen.css" />
+    <link rel="stylesheet" href="/styles/canvas-overlays.css" />
     <link rel="stylesheet" href="/styles.css" />
 
     <!-- Structured data: VideoGame schema for Google rich results -->
@@ -174,6 +175,11 @@
     </noscript>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
+                <div id="canvas-overlays" aria-hidden="true" style="pointer-events:none">
+                  <div id="co-grid" class="co-grid"></div>
+                  <div id="co-corner-tl" class="co-corner tl">RC-9 // SECTOR 00</div>
+                  <div id="co-corner-tr" class="co-corner tr">ROUND 00</div>
+                </div>
                 <!-- Post FX overlay (PixiJS renders here on top of the canvas) -->
                 <div id="fx-overlay" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></div>
                 <!-- HUD overlay controls (desktop + mobile responsive) -->

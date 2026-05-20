@@ -5,6 +5,7 @@
 import { getMemoryManager, resetMemoryManager } from './memory-manager.js';
 import mobileFixes from './mobile-fixes.js';
 import * as TitleScreen from './title-screen.js';
+import * as Overlays from './canvas-overlays.js';
 
 // Global cleanup function for game restarts
 function cleanupGameResources() {
@@ -1495,8 +1496,9 @@ function bindNewGameModalEvents() {
   document.getElementById('setup-solo-shots')?.addEventListener('change', () => {
     persistSetupSelection();
   });
-  document.getElementById('setup-disable-names')?.addEventListener('change', () => {
+  document.getElementById('setup-disable-names')?.addEventListener('change', e => {
     persistSetupSelection();
+    Overlays.setStreamerMode(!!e.target.checked);
   });
   document.getElementById('setup-allow-drive-anytime')?.addEventListener('change', () => {
     persistSetupSelection();
