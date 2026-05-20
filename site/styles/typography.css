@@ -1,0 +1,36 @@
+/* site/styles/typography.css — Self-hosted font faces + role classes */
+
+/* @fontsource provides WOFF2 files; we import the specific weights we need. */
+@import url('@fontsource/saira-condensed/600.css');
+@import url('@fontsource/saira-condensed/700.css');
+@import url('@fontsource/jetbrains-mono/400.css');
+@import url('@fontsource/jetbrains-mono/500.css');
+
+/* Role classes for explicit-use surfaces */
+.t-display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.t-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.t-body {
+  font-family: var(--font-body);
+  font-weight: 400;
+}
+.t-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-feature-settings: 'tnum' 1;
+}
+.t-micro {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent-phosphor);
+}
