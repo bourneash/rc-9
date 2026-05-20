@@ -4,6 +4,7 @@
 
 import { getMemoryManager, resetMemoryManager } from './memory-manager.js';
 import mobileFixes from './mobile-fixes.js';
+import * as TitleScreen from './title-screen.js';
 
 // Global cleanup function for game restarts
 function cleanupGameResources() {
@@ -416,33 +417,35 @@ globalThis.hideNoGameOverlay = hideNoGameOverlay;
       } catch {}
     });
 
-    // Always open New Game setup on page load — snapshot restore is too fragile
-    // (AI timers, animation state, event listeners don't survive page reload)
-    const openNewGameSetup = () => {
+    // Title screen (Task 14) is now the entry point — it shows on boot and
+    // opens the New Game modal when the player chooses NEW ENGAGEMENT.
+    // Only fall back to opening the modal directly if the title screen element
+    // is absent (e.g. an older build or integration test that strips markup).
+    const openNewGameSetupFallback = () => {
       try {
+        if (document.getElementById('title-screen')) {
+          // Title screen present — it will handle first-boot modal opening.
+          console.info('[bootstrap] Title screen present; skipping auto-open of New Game modal');
+          return;
+        }
         const modal = document.getElementById('new-game-modal');
         if (!modal) {
           console.warn('[bootstrap] New Game modal element not found, retrying...');
-          // Retry after a short delay if modal doesn't exist yet
-          setTimeout(openNewGameSetup, 100);
+          setTimeout(openNewGameSetupFallback, 100);
           return;
         }
-
         openNewGameModal();
-        console.info('[bootstrap] Opened New Game setup modal');
+        console.info('[bootstrap] Opened New Game setup modal (title screen absent)');
       } catch (err) {
         console.error('[bootstrap] Failed to open New Game modal:', err);
-        // Fallback: show a simple start screen overlay
         showNoGameOverlay();
       }
     };
 
-    // Always open the New Game modal on first visit or when no game exists
-    // This provides a clear, intentional start to gameplay
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', openNewGameSetup);
+      document.addEventListener('DOMContentLoaded', openNewGameSetupFallback);
     } else {
-      openNewGameSetup();
+      openNewGameSetupFallback();
     }
   } catch (e) {
     console.error('[main] bootstrapSessionRestore failed:', e);
@@ -814,11 +817,10 @@ function ensureGameOverModalHandlers() {
       e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
     if (!inside) closeGameOverModal();
   });
-  // Return to Command button — closes modal (title screen wired in Task 13)
+  // Return to Command button — closes modal and shows title screen
   document.getElementById('er-return')?.addEventListener('click', () => {
     closeGameOverModal();
-    // Show title screen if it exists (added in Task 13). If not yet, this no-ops.
-    document.getElementById('title-screen')?.removeAttribute('hidden');
+    TitleScreen.show();
   });
   modal.dataset.handlers = '1';
 }

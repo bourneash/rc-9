@@ -1,5 +1,14 @@
 import { test, expect } from '@playwright/test';
 
+// Seed localStorage so the title screen auto-skips in test env.
+// se.ui.restoreEnabled=true + a fake save causes mount() to return early.
+async function skipTitleScreen(page) {
+  await page.addInitScript(() => {
+    localStorage.setItem('se.ui.restoreEnabled', 'true');
+    localStorage.setItem('se.lastGame.v1', JSON.stringify({ round: 1, tanks: [] }));
+  });
+}
+
 async function waitForGameReady(page) {
   await page.waitForSelector('#game-canvas', { state: 'visible' });
   await page.waitForFunction(() => !!(window.__SE_GAME__ || window.game || window.mainGame));
@@ -48,6 +57,7 @@ async function startDeterministicGame(page) {
 
 test.describe('Gameplay smoke', () => {
   test('loads game shell and controls', async ({ page }) => {
+    await skipTitleScreen(page);
     await page.goto('/');
     await waitForGameReady(page);
 
@@ -57,6 +67,7 @@ test.describe('Gameplay smoke', () => {
   });
 
   test('starts a new deterministic game and can fire', async ({ page }) => {
+    await skipTitleScreen(page);
     await page.goto('/');
     await waitForGameReady(page);
     await startDeterministicGame(page);
@@ -80,6 +91,7 @@ test.describe('Gameplay smoke', () => {
   });
 
   test('progresses turn after shot resolves', async ({ page }) => {
+    await skipTitleScreen(page);
     await page.goto('/');
     await waitForGameReady(page);
     await startDeterministicGame(page);
@@ -100,6 +112,7 @@ test.describe('Gameplay smoke', () => {
   });
 
   test('reaches game over state when one tank remains', async ({ page }) => {
+    await skipTitleScreen(page);
     await page.goto('/');
     await waitForGameReady(page);
     await startDeterministicGame(page);
