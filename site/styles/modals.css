@@ -496,3 +496,193 @@
   .engagement-report .er-stats { grid-template-columns: repeat(2, 1fr); }
   .engagement-report .er-winner { font-size: 40px; }
 }
+
+/* ===== Roster slot rows — tactical refresh ===== */
+#setup-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  counter-reset: slot;
+}
+#setup-slots .slot-row {
+  counter-increment: slot;
+  background: var(--surface-panel);
+  border: var(--border-line);
+  border-radius: var(--radius-sharp);
+  padding: 8px 12px;
+  display: grid;
+  grid-template-columns: 28px auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  position: relative;
+}
+
+/* Slot number badge — replace "Slot N" text with phosphor counter */
+#setup-slots .slot-row > span:first-child {
+  font-size: 0; /* hide "Slot N" text */
+  width: 24px;
+  min-width: 24px;
+  max-width: 24px;
+  height: 24px;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 24px;
+  justify-self: start;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-deep);
+  border: 1px solid var(--accent-phosphor);
+  border-radius: 50%;
+  padding: 0;
+  overflow: hidden;
+  color: var(--accent-phosphor); /* override .slot-row span color */
+}
+#setup-slots .slot-row > span:first-child::after {
+  content: counter(slot, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--accent-phosphor);
+}
+
+/* Human/AI dropdown — tactical look */
+#setup-slots .slot-type {
+  background: var(--surface-deep);
+  border: var(--border-line);
+  color: var(--accent-phosphor);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: var(--radius-sharp);
+  cursor: pointer;
+}
+
+/* Human / AI wrappers */
+#setup-slots .slot-human,
+#setup-slots .slot-ai {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Name input */
+#setup-slots .slot-name {
+  background: transparent;
+  border: 0;
+  border-bottom: 1px dotted var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  padding: 4px 6px;
+  width: 140px;
+}
+#setup-slots .slot-name:focus {
+  outline: none;
+  border-bottom-color: var(--accent-phosphor);
+}
+
+/* Tank style chooser (◀ glyph ▶) */
+#setup-slots .style-chooser {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-deep);
+  border: var(--border-line);
+  border-radius: var(--radius-sharp);
+  padding: 2px 4px;
+}
+#setup-slots .style-chooser button {
+  background: transparent;
+  border: 0;
+  color: var(--accent-phosphor);
+  padding: 2px 4px;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+}
+#setup-slots .style-chooser button:hover { color: var(--text-primary); }
+#setup-slots .style-preview {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-body);
+  letter-spacing: 1px;
+  min-width: 76px;
+  text-align: center;
+  text-transform: uppercase;
+  padding: 0 4px;
+}
+
+/* Color chooser — small swatch trigger, popover grid */
+#setup-slots .color-chooser {
+  position: relative;
+}
+#setup-slots .color-chooser .selected-color {
+  width: 22px;
+  height: 22px;
+  border: 1px solid var(--text-dim);
+  border-radius: var(--radius-sharp);
+  cursor: pointer;
+}
+#setup-slots .color-chooser .selected-color:hover {
+  border-color: var(--accent-phosphor);
+  box-shadow: var(--glow-phosphor);
+}
+#setup-slots .color-chooser .color-grid {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--surface-panel);
+  border: 1px solid var(--accent-phosphor);
+  border-radius: var(--radius-sharp);
+  padding: 6px;
+  display: none;
+  grid-template-columns: repeat(5, 18px);
+  gap: 4px;
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--surface-ink);
+}
+#setup-slots .color-chooser.open .color-grid { display: grid; }
+#setup-slots .color-chooser .swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--surface-deep);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0;
+}
+#setup-slots .color-chooser .swatch:hover { transform: scale(1.15); }
+#setup-slots .color-chooser .swatch.selected {
+  border-color: var(--accent-phosphor);
+  box-shadow: 0 0 6px rgba(80, 220, 130, 0.5);
+}
+
+/* AI difficulty label + select */
+#setup-slots .slot-ai label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-right: 0;
+}
+#setup-slots .slot-difficulty {
+  background: var(--surface-deep);
+  border: var(--border-line);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: var(--radius-sharp);
+  cursor: pointer;
+}
+#setup-slots .slot-difficulty:hover { border-color: var(--accent-phosphor); }
+
+/* Spacing fix for the roster panel — give it room */
+.briefing-panel[data-panel="roster"] #setup-slots { margin-top: 4px; }
