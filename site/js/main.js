@@ -1050,6 +1050,11 @@ function openNewGameModal() {
   // Sync tile selections to reflect current radio/select state
   syncModeTilesFromRadios();
   syncEnvTilesFromSelect();
+  // Sync pill groups to reflect current hidden input/select state
+  syncWindPills();
+  syncHealthPills();
+  syncAmmoModePills();
+  syncAmmoPresetPills();
 }
 
 // ===== Briefing: Mode tiles ↔ existing radio inputs =====
@@ -1092,6 +1097,83 @@ function syncEnvTilesFromSelect() {
     t.classList.toggle('selected', t.dataset.env === v);
   });
 }
+
+// ===== Generic pill group sync — keeps hidden input/select in sync =====
+function wirePillGroup(group, getCurrent, setCurrent) {
+  const pills = document.querySelectorAll(`.pill-row[data-pill-group="${group}"] .pill`);
+  function reflect() {
+    const cur = String(getCurrent() ?? '');
+    pills.forEach(p => p.classList.toggle('selected', p.dataset.pill === cur));
+  }
+  pills.forEach(p => p.addEventListener('click', () => {
+    setCurrent(p.dataset.pill);
+    reflect();
+  }));
+  return reflect;
+}
+
+const syncWindPills = wirePillGroup('wind',
+  () => document.querySelector('#new-game-modal input[name="wind"]:checked')?.value,
+  v => {
+    const r = document.querySelector(`#new-game-modal input[name="wind"][value="${v}"]`);
+    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+);
+const syncHealthPills = wirePillGroup('health',
+  () => document.querySelector('#new-game-modal input[name="health"]:checked')?.value,
+  v => {
+    const r = document.querySelector(`#new-game-modal input[name="health"][value="${v}"]`);
+    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+);
+const ammoSelect = document.getElementById('setup-ammo-mode');
+const syncAmmoModePills = wirePillGroup('ammo-mode',
+  () => ammoSelect?.value,
+  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+const syncAmmoPresetPills = wirePillGroup('ammo-preset',
+  () => ammoSelect?.value,
+  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+
+// ===== Tank callsign helpers =====
+const CALLSIGNS = ['JAGUAR', 'VIPER', 'RAVEN', 'HAWK', 'COBRA', 'FALCON', 'GHOST', 'WOLF', 'OWL', 'BEAR'];
+
+function defaultCallsign(slotIdx) {
+  try {
+    const legacy = localStorage.getItem(`rc9.player.name.${slotIdx}`);
+    if (legacy) return legacy;
+  } catch {}
+  try {
+    const stored = localStorage.getItem(`rc9.callsign.slot.${slotIdx}`);
+    if (stored) return stored;
+  } catch {}
+  return CALLSIGNS[slotIdx % CALLSIGNS.length];
+}
+
+function saveCallsign(slotIdx, name) {
+  try { localStorage.setItem(`rc9.callsign.slot.${slotIdx}`, name); } catch {}
+}
+
+// ===== Briefing stepper (slot count) =====
+(function wireBriefingStepper() {
+  const totalInput = document.getElementById('setup-total-players');
+  const stepperVal = document.getElementById('setup-slots-value');
+  function setSlotCount(n) {
+    n = Math.max(1, Math.min(8, n));
+    if (totalInput) {
+      totalInput.value = String(n);
+      totalInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (stepperVal) stepperVal.textContent = String(n).padStart(2, '0');
+  }
+  document.getElementById('setup-slots-minus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) - 1));
+  document.getElementById('setup-slots-plus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) + 1));
+  // Initial reflect on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    if (totalInput) setSlotCount(parseInt(totalInput.value || '4', 10));
+  });
+})();
 
 function hasActiveGame() {
   return !!(game?.tanks && Array.isArray(game.tanks) && game.tanks.length > 0 && !game.gameOver);
@@ -1887,7 +1969,7 @@ function renderSlotsUI() {
     nameInput.type = 'text';
     nameInput.className = 'slot-name';
     nameInput.placeholder = `Player ${i + 1} Name`;
-    nameInput.value = prev[i]?.name || stored?.[i]?.name || (i === 0 ? 'Player 1' : '');
+    nameInput.value = prev[i]?.name || stored?.[i]?.name || defaultCallsign(i);
 
     // Tank style with left/right arrows + live preview glyph
     const styleWrap = document.createElement('span');
@@ -2047,7 +2129,10 @@ function renderSlotsUI() {
       syncVisibility();
       persist();
     });
-    nameInput.addEventListener('input', persist);
+    nameInput.addEventListener('input', () => {
+      saveCallsign(i, nameInput.value);
+      persist();
+    });
     // style buttons and palette update persist via their handlers
     syncVisibility();
 

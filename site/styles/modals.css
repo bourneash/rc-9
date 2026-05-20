@@ -354,3 +354,86 @@
 @media (max-width: 760px) {
   .env-tiles { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ── Roster panel — stepper + slot cards ─────────────────── */
+.roster-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  background: var(--surface-panel);
+  border: var(--border-line);
+  border-radius: var(--radius-sharp);
+}
+.stepper button {
+  background: transparent;
+  border: 0;
+  color: var(--accent-phosphor);
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  cursor: pointer;
+}
+.stepper button:hover { background: var(--surface-raised); }
+.stepper .val {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-primary);
+  padding: 4px 10px;
+  min-width: 24px;
+  text-align: center;
+  font-feature-settings: 'tnum' 1;
+}
+
+#setup-roster.roster { display: flex; flex-direction: column; gap: 5px; }
+.slot-card {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 18px 1fr auto auto;
+  gap: 10px;
+  align-items: center;
+  border-radius: var(--radius-sharp);
+}
+.slot-color {
+  width: 12px;
+  height: 12px;
+  border: var(--border-line);
+  cursor: pointer;
+}
+.slot-name-input {
+  background: transparent;
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  letter-spacing: 1px;
+  padding: 2px 4px;
+  width: 100%;
+}
+.slot-name-input:focus { outline: 1px solid var(--accent-phosphor); }
+.slot-type { display: flex; gap: 4px; }
+.slot-type span {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  padding: 2px 6px;
+  border: var(--border-line);
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-sharp);
+}
+.slot-type span.on {
+  border-color: var(--accent-phosphor);
+  color: var(--accent-phosphor);
+  background: var(--surface-raised);
+}
+.slot-skill {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.slot-skill.dim { opacity: 0.3; }
+
+.checkbox-row .ck-meta { color: var(--text-dim); margin-left: 6px; font-size: 9px; }

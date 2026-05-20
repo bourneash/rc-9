@@ -493,7 +493,16 @@
                   </section>
                   <section class="briefing-panel" data-panel="roster">
                     <div class="panel-label">▸ ROSTER <span class="num">03 / 06</span></div>
-                    <!-- populated in Task 11 — existing inputs preserved below -->
+                    <div class="roster-controls">
+                      <span class="t-mono" style="font-size:10px; color:var(--text-muted); letter-spacing:2px">SLOTS</span>
+                      <div class="stepper">
+                        <button type="button" id="setup-slots-minus">−</button>
+                        <span class="val" id="setup-slots-value">4</span>
+                        <button type="button" id="setup-slots-plus">+</button>
+                      </div>
+                      <span class="t-mono" style="font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-left:auto">MAX 8</span>
+                    </div>
+                    <!-- hidden legacy inputs preserved -->
                     <div style="display:none">
                       <label>
                         Total Players:
@@ -523,7 +532,13 @@
                 <div class="briefing-col right">
                   <section class="briefing-panel" data-panel="wind">
                     <div class="panel-label">▸ WIND <span class="num">04 / 06</span></div>
-                    <!-- pill row populated in Task 11 — existing radios preserved hidden -->
+                    <div class="pill-row" data-pill-group="wind">
+                      <button type="button" class="pill" data-pill="none">NONE</button>
+                      <button type="button" class="pill" data-pill="low">LOW</button>
+                      <button type="button" class="pill" data-pill="high">HIGH</button>
+                      <button type="button" class="pill" data-pill="random-per-turn">RANDOM</button>
+                    </div>
+                    <!-- existing radios preserved hidden -->
                     <div style="display:none">
                       <label><input type="radio" name="wind" value="none"> No Wind</label>
                       <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
@@ -533,7 +548,13 @@
                   </section>
                   <section class="briefing-panel" data-panel="health">
                     <div class="panel-label">▸ TANK HEALTH <span class="num">05 / 06</span></div>
-                    <!-- pill row populated in Task 11 — existing radios preserved hidden -->
+                    <div class="pill-row" data-pill-group="health">
+                      <button type="button" class="pill" data-pill="100">100</button>
+                      <button type="button" class="pill" data-pill="150">150</button>
+                      <button type="button" class="pill" data-pill="200">200</button>
+                      <button type="button" class="pill" data-pill="300">300</button>
+                    </div>
+                    <!-- existing radios preserved hidden -->
                     <div style="display:none">
                       <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
                       <label><input type="radio" name="health" value="150"> Increased (150%)</label>
@@ -543,7 +564,18 @@
                   </section>
                   <section class="briefing-panel" data-panel="ammo">
                     <div class="panel-label">▸ AMMO <span class="num">06 / 06</span></div>
-                    <!-- pill row + custom-grid populated in Task 11 — existing select preserved hidden -->
+                    <div class="pill-row" data-pill-group="ammo-mode" style="margin-bottom:8px">
+                      <button type="button" class="pill" data-pill="unlimited">UNLIMITED</button>
+                      <button type="button" class="pill" data-pill="standard">STANDARD</button>
+                      <button type="button" class="pill" data-pill="custom">CUSTOM</button>
+                    </div>
+                    <div class="pill-row" data-pill-group="ammo-preset">
+                      <button type="button" class="pill" data-pill="no-heavy">NO HEAVY</button>
+                      <button type="button" class="pill" data-pill="missile-only">MISSILE ONLY</button>
+                      <button type="button" class="pill" data-pill="laser-only">LASER ONLY</button>
+                      <button type="button" class="pill" data-pill="basic-weapons">BASIC ONLY</button>
+                    </div>
+                    <!-- existing select preserved hidden -->
                     <div style="display:none">
                       <label>
                         Ammo Mode:
@@ -594,15 +626,8 @@
                   </section>
                   <section class="briefing-panel" data-panel="options">
                     <div class="panel-label">▸ OPTIONS</div>
-                    <!-- checkbox rows populated in Task 11 — existing checkboxes preserved hidden -->
-                    <div style="display:none">
-                      <label title="Hide name tags for all other tanks. Only your own tank's label is shown.">
-                        <input id="setup-disable-names" type="checkbox" /> Hide other players' names (streamer mode)
-                      </label>
-                      <label title="Allow all players to drive their tanks even when it's not their turn. Only the current player can fire.">
-                        <input id="setup-allow-drive-anytime" type="checkbox" /> Allow driving during other players' turns
-                      </label>
-                    </div>
+                    <label class="checkbox-row"><input type="checkbox" id="setup-allow-drive-anytime" /><span>DRIVE ANYTIME <span class="ck-meta">non-turn movement</span></span></label>
+                    <label class="checkbox-row"><input type="checkbox" id="setup-disable-names" /><span>HIDE OTHER NAMES <span class="ck-meta">streamer mode</span></span></label>
                   </section>
                 </div>
               </div>
