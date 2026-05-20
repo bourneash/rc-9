@@ -34,8 +34,8 @@ body {
     display: grid;
     grid-template-columns: auto minmax(180px, 1.1fr) minmax(180px, 1.1fr) auto auto auto;
     gap: 8px;
-    background: rgba(10, 14, 39, 0.75);
-    border: 1px solid rgba(0, 245, 255, 0.3);
+    background: var(--surface-panel);
+    border: 1px solid rgba(80, 220, 130, 0.3);
     border-radius: 12px;
     padding: 6px 8px; /* slightly smaller toolbar height */
     backdrop-filter: blur(8px);
@@ -44,7 +44,7 @@ body {
     align-items: center; /* vertically center grid items */
 }
 #bottom-controls .primary {
-    background: linear-gradient(135deg, rgba(255, 77, 77, 0.3), rgba(255, 0, 0, 0.3));
+    background: linear-gradient(135deg, rgba(255, 85, 68, 0.3), rgba(255, 0, 0, 0.3));
     border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 8px 12px;
@@ -70,7 +70,7 @@ body {
 
 .weapon-chooser select {
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 255, 255, 0.3);
+    border: 1px solid rgba(80, 220, 130, 0.3);
     color: #00d4ff;
     padding: 6px 10px;
     border-radius: 8px;
@@ -104,8 +104,8 @@ body {
     grid-template-columns: repeat(3, minmax(160px, 1fr));
     gap: 8px;
     padding: 10px;
-    background: rgba(10, 14, 39, 0.95);
-    border: 1px solid rgba(0, 245, 255, 0.35);
+    background: var(--surface-panel);
+    border: 1px solid rgba(80, 220, 130, 0.35);
     border-radius: 12px;
     box-shadow: 0 12px 30px rgba(0,0,0,0.5);
     z-index: 2000;
@@ -120,7 +120,7 @@ body {
     align-items: center;
     gap: 10px;
     padding: 8px;
-    border: 1px solid rgba(0, 245, 255, 0.18);
+    border: 1px solid rgba(80, 220, 130, 0.18);
     border-radius: 10px;
     background: rgba(0,0,0,0.35);
     cursor: pointer;
@@ -185,7 +185,7 @@ body {
     gap: 12px;
     padding: 4px 8px;
     background: rgba(0,0,0,0.3);
-    border: 1px solid rgba(0, 245, 255, 0.2);
+    border: 1px solid rgba(80, 220, 130, 0.2);
     border-radius: 8px;
 }
 
@@ -193,7 +193,7 @@ body {
 #bottom-controls .stat .icon { filter: drop-shadow(0 0 6px rgba(0,245,255,0.5)); }
 #bottom-controls .wind-stat {
     padding: 4px 8px;
-    border: 1px solid rgba(0, 245, 255, 0.25);
+    border: 1px solid rgba(80, 220, 130, 0.25);
     border-radius: 8px;
     background: rgba(0,0,0,0.25);
 }
@@ -274,8 +274,8 @@ body {
     top: 50%;
     width: 56px;
     height: 56px;
-    background: rgba(0, 245, 255, 0.4);
-    border: 2px solid rgba(0, 245, 255, 0.75);
+    background: rgba(80, 220, 130, 0.4);
+    border: 2px solid rgba(80, 220, 130, 0.75);
     border-radius: 50%;
     transform: translate(-50%, -50%);
 }
@@ -287,7 +287,7 @@ body {
     z-index: 1060; /* above other HUD touch elements */
     display: none; /* show on mobile */
     pointer-events: auto; /* ensure clicks are received despite parent overlay */
-    background: linear-gradient(135deg, rgba(255, 77, 77, 0.6), rgba(255, 0, 0, 0.6));
+    background: linear-gradient(135deg, rgba(255, 85, 68, 0.6), rgba(255, 0, 0, 0.6));
     border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 16px 18px;
@@ -372,9 +372,9 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: rgba(10, 14, 39, 0.9);
+    background: var(--surface-panel);
     backdrop-filter: blur(18px);
-    border: 1px solid rgba(0, 245, 255, 0.35);
+    border: 1px solid rgba(80, 220, 130, 0.35);
     padding: 14px;
     border-radius: 14px;
     box-shadow: 0 16px 48px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.04);
@@ -387,7 +387,7 @@ body {
     align-items: center;
     justify-content: space-between;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(80, 220, 130, 0.2);
     cursor: move;
 }
 
@@ -399,7 +399,7 @@ body {
 .icon-btn {
     background: rgba(0,0,0,0.4);
     color: var(--accent-phosphor);
-    border: 1px solid rgba(0, 255, 255, 0.4);
+    border: 1px solid rgba(80, 220, 130, 0.4);
     padding: 4px 8px;
     font-size: 14px;
     border-radius: 6px;
@@ -460,7 +460,7 @@ body {
 
 #difficulty-select {
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 255, 255, 0.3);
+    border: 1px solid rgba(80, 220, 130, 0.3);
     color: #00d4ff;
     padding: 6px 10px;
     border-radius: 8px;
@@ -471,8 +471,8 @@ body {
 
 #difficulty-select:hover {
     background: rgba(0, 40, 60, 0.8);
-    border-color: rgba(0, 255, 255, 0.5);
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+    border-color: rgba(80, 220, 130, 0.5);
+    box-shadow: 0 0 15px rgba(80, 220, 130, 0.3);
 }
 
 /* Make dropdown options darker too */
@@ -510,13 +510,13 @@ input[type="range"]::-webkit-slider-thumb {
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     cursor: pointer;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 15px rgba(80, 220, 130, 0.6);
     transition: all 0.3s ease;
 }
 
 input[type="range"]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
-    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 25px rgba(80, 220, 130, 0.8);
 }
 
 input[type="range"]::-moz-range-thumb {
@@ -526,7 +526,7 @@ input[type="range"]::-moz-range-thumb {
     background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     cursor: pointer;
     border: none;
-    box-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
+    box-shadow: 0 0 15px rgba(80, 220, 130, 0.6);
 }
 
 #angle-value, #power-value {
@@ -541,7 +541,7 @@ input[type="range"]::-moz-range-thumb {
 #button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 
 #fire-button, #restart-button, #drive-toggle, #open-setup {
-    background: linear-gradient(135deg, rgba(255, 77, 77, 0.3), rgba(255, 0, 0, 0.3));
+    background: linear-gradient(135deg, rgba(255, 85, 68, 0.3), rgba(255, 0, 0, 0.3));
     border: 2px solid var(--accent-hot);
     color: #fff;
     padding: 10px 14px;
@@ -575,7 +575,7 @@ input[type="range"]::-moz-range-thumb {
 
 #fire-button:hover {
     border-color: #ff6666;
-    box-shadow: 0 0 30px rgba(255, 77, 77, 0.6);
+    box-shadow: 0 0 30px rgba(255, 85, 68, 0.6);
     transform: translateY(-2px);
 }
 
@@ -612,7 +612,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .debug-toggle:hover {
     background: linear-gradient(135deg, rgba(0,245,255,0.4), rgba(0,255,136,0.35));
-    box-shadow: 0 0 22px rgba(0, 245, 255, 0.5);
+    box-shadow: 0 0 22px rgba(80, 220, 130, 0.5);
 }
 
 /* Inputs inside debug menu: readable, modern */
@@ -624,7 +624,7 @@ input[type="range"]::-moz-range-thumb {
 
 #debug-menu select {
     background: rgba(0, 0, 0, 0.55);
-    border: 1px solid rgba(0, 245, 255, 0.35);
+    border: 1px solid rgba(80, 220, 130, 0.35);
     color: #eafcff;
     padding: 6px 10px;
     border-radius: 8px;
@@ -642,7 +642,7 @@ input[type="range"]::-moz-range-thumb {
     height: 18px;
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
-    box-shadow: 0 0 18px rgba(0, 245, 255, 0.6);
+    box-shadow: 0 0 18px rgba(80, 220, 130, 0.6);
 }
 
 #debug-menu input[type="range"]::-moz-range-thumb {
@@ -651,7 +651,7 @@ input[type="range"]::-moz-range-thumb {
     border-radius: 50%;
     background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
     border: none;
-    box-shadow: 0 0 18px rgba(0, 245, 255, 0.6);
+    box-shadow: 0 0 18px rgba(80, 220, 130, 0.6);
 }
 
 #debug-menu input[type="checkbox"] {
@@ -674,10 +674,10 @@ input[type="range"]::-moz-range-thumb {
     padding: 2px 6px;
     margin-left: 6px;
     border-radius: 6px;
-    background: rgba(0, 245, 255, 0.15);
+    background: rgba(80, 220, 130, 0.15);
     color: #eafcff;
     font-weight: 700;
-    text-shadow: 0 0 8px rgba(0, 245, 255, 0.35);
+    text-shadow: 0 0 8px rgba(80, 220, 130, 0.35);
 }
 
 /* Make New Game button stand out with a cool gradient */
@@ -689,7 +689,7 @@ input[type="range"]::-moz-range-thumb {
 }
 #open-setup:hover {
     border-color: #00ffaa;
-    box-shadow: 0 0 30px rgba(0, 245, 255, 0.6), 0 0 20px rgba(0,255,136,0.4) inset;
+    box-shadow: 0 0 30px rgba(80, 220, 130, 0.6), 0 0 20px rgba(0,255,136,0.4) inset;
     transform: translateY(-2px);
 }
 
@@ -714,12 +714,12 @@ input[type="range"]::-moz-range-thumb {
     margin-top: 16px;
     padding: 16px;
     background: linear-gradient(180deg, rgba(14,18,38,0.95), rgba(10,14,34,0.95));
-    border: 1px solid rgba(0, 245, 255, 0.35);
+    border: 1px solid rgba(80, 220, 130, 0.35);
     border-radius: 14px;
     max-height: 460px;
     overflow-y: auto;
     backdrop-filter: blur(14px) saturate(120%);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 0 24px rgba(0, 245, 255, 0.06);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 0 24px rgba(80, 220, 130, 0.06);
     position: relative;
 }
 
@@ -732,16 +732,16 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 12px;
     font-size: 18px;
     text-align: center;
-    border-bottom: 1px solid rgba(0, 245, 255, 0.25);
+    border-bottom: 1px solid rgba(80, 220, 130, 0.25);
     padding-bottom: 10px;
-    text-shadow: 0 0 14px rgba(0, 245, 255, 0.55);
+    text-shadow: 0 0 14px rgba(80, 220, 130, 0.55);
 }
 
 .debug-section {
     margin-bottom: 14px;
     padding: 14px;
     background: rgba(18, 26, 52, 0.7);
-    border-left: 3px solid rgba(0, 245, 255, 0.35);
+    border-left: 3px solid rgba(80, 220, 130, 0.35);
     border-radius: 10px;
     display: grid;
     grid-template-columns: 1fr;
@@ -803,7 +803,7 @@ input[type="range"]::-moz-range-thumb {
     overflow: auto;
     z-index: 2100;
     margin-top: 0; /* override sidebar spacing */
-    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(0, 245, 255, 0.2) inset;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(80, 220, 130, 0.2) inset;
 }
 
 /* Close button only visible in modal */
@@ -828,7 +828,7 @@ input[type="range"]::-moz-range-thumb {
 /* Game log with modern styling */
 #game-log {
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 255, 255, 0.25);
+    border: 1px solid rgba(80, 220, 130, 0.25);
     border-radius: 10px;
     overflow: hidden;
     z-index: 21; /* floats above sidebar body when dragged */
@@ -843,7 +843,7 @@ input[type="range"]::-moz-range-thumb {
     align-items: center;
     justify-content: space-between;
     padding: 10px 12px;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(80, 220, 130, 0.2);
     cursor: move;
     background: rgba(0, 0, 0, 0.4);
 }
@@ -892,7 +892,7 @@ input[type="range"]::-moz-range-thumb {
 #sidebar-footer {
     margin-top: 10px;
     padding-top: 8px;
-    border-top: 1px solid rgba(0, 255, 255, 0.2);
+    border-top: 1px solid rgba(80, 220, 130, 0.2);
     display: flex;
     justify-content: flex-end;
 }
@@ -919,9 +919,9 @@ input[type="range"]::-moz-range-thumb {
 .log-entry {
     margin: 4px 0;
     padding: 6px;
-    border-left: 2px solid rgba(0, 255, 255, 0.4);
+    border-left: 2px solid rgba(80, 220, 130, 0.4);
     padding-left: 10px;
-    background: rgba(0, 255, 255, 0.05);
+    background: rgba(80, 220, 130, 0.05);
     border-radius: 4px;
     animation: slideIn 0.3s ease;
 }
@@ -940,7 +940,7 @@ input[type="range"]::-moz-range-thumb {
 .log-entry.hit {
     border-left-color: var(--accent-hot);
     color: #ff8888;
-    background: rgba(255, 77, 77, 0.1);
+    background: rgba(255, 85, 68, 0.1);
 }
 
 .log-entry.miss {
@@ -960,7 +960,7 @@ input[type="range"]::-moz-range-thumb {
     flex: 1;
     background: #000;
     display: block;
-    box-shadow: inset 0 0 100px rgba(0, 255, 255, 0.1);
+    box-shadow: inset 0 0 100px rgba(80, 220, 130, 0.1);
 }
 
 /* Edge tabs (Game Controls + Debug) */
@@ -1038,12 +1038,12 @@ a:focus-visible {
 }
 
 .modal-content {
-    background: linear-gradient(135deg, rgba(10, 14, 39, 0.95), rgba(26, 26, 46, 0.95));
+    background: linear-gradient(135deg, rgba(10, 15, 8, 0.95), rgba(10, 15, 8, 0.95));
     border: 3px solid var(--accent-phosphor);
     padding: 50px;
     text-align: center;
     border-radius: 20px;
-    box-shadow: 0 0 80px rgba(0, 245, 255, 0.5);
+    box-shadow: 0 0 80px rgba(80, 220, 130, 0.5);
 }
 
 /* Winner dialog: keep gameplay visible but use a compact, solid card for clarity */
@@ -1056,7 +1056,7 @@ a:focus-visible {
     /* Solid, high-contrast background so controls are clearly visible */
     background: #0d1326;
     border-color: rgba(0,245,255,0.9);
-    box-shadow: 0 14px 42px rgba(0, 245, 255, 0.28), 0 0 0 1px rgba(0,245,255,0.25) inset;
+    box-shadow: 0 14px 42px rgba(80, 220, 130, 0.28), 0 0 0 1px rgba(0,245,255,0.25) inset;
     /* Compact sizing for a small centered modal */
     width: min(420px, 92vw);
     padding: 20px 22px;
@@ -1160,7 +1160,7 @@ a:focus-visible {
 
 .setup-section {
     background: rgba(10, 14, 30, 0.6); /* darker, less transparent */
-    border: 1px solid rgba(0, 245, 255, 0.45); /* brighter border for separation */
+    border: 1px solid rgba(80, 220, 130, 0.45); /* brighter border for separation */
     border-radius: 10px;
     padding: 12px 10px;
     box-shadow: 0 6px 20px rgba(0,0,0,0.35) inset;
@@ -1231,7 +1231,7 @@ a:focus-visible {
     margin: 0 0 8px 0;
     font-size: clamp(15px, 2.2vw, 18px);
     color: #c9faff; /* brighter heading inside darker panel */
-    text-shadow: 0 0 10px rgba(0, 245, 255, 0.35);
+    text-shadow: 0 0 10px rgba(80, 220, 130, 0.35);
 }
 
 .setup-section label {
@@ -1243,7 +1243,7 @@ a:focus-visible {
 .setup-section input[type="number"],
 .setup-section select {
     background: rgba(0, 0, 0, 0.75);
-    border: 1px solid rgba(0, 245, 255, 0.5);
+    border: 1px solid rgba(80, 220, 130, 0.5);
     color: #eafcff;
     padding: 6px 8px;
     border-radius: 8px;
@@ -1256,7 +1256,7 @@ a:focus-visible {
 .modal-content.setup button:focus-visible {
     outline: 2px solid var(--accent-phosphor);
     outline-offset: 2px;
-    box-shadow: 0 0 0 3px rgba(0, 245, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(80, 220, 130, 0.25);
 }
 
 /* Improve radio/checkbox visibility */
@@ -1295,7 +1295,7 @@ a:focus-visible {
 
 .theme-tile.selected {
     border-color: var(--accent-phosphor);
-    box-shadow: 0 0 18px rgba(0, 245, 255, 0.5), 0 0 0 2px rgba(0, 245, 255, 0.25) inset;
+    box-shadow: 0 0 18px rgba(80, 220, 130, 0.5), 0 0 0 2px rgba(80, 220, 130, 0.25) inset;
 }
 
 .theme-tile:hover {
@@ -1314,8 +1314,8 @@ a:focus-visible {
     gap: 12px;
     margin-top: 12px;
     padding-top: 10px;
-    background: linear-gradient(to bottom, rgba(10,14,39,0), rgba(10,14,39,0.6));
-    border-top: 1px solid rgba(0, 245, 255, 0.2);
+    background: linear-gradient(to bottom, rgba(10,15,8,0), rgba(10,15,8,0.6));
+    border-top: 1px solid rgba(80, 220, 130, 0.2);
 }
 
 .setup-actions-right {
@@ -1402,7 +1402,7 @@ a:focus-visible {
 .slot-row span { min-width: 64px; color: var(--text-muted); }
 .slot-row select, .slot-row input[type="text"] {
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 255, 255, 0.3);
+    border: 1px solid rgba(80, 220, 130, 0.3);
     color: var(--text-body);
     padding: 6px 10px;
     border-radius: 8px;
@@ -1441,7 +1441,7 @@ a:focus-visible {
 }
 .team-row select {
     background: rgba(0, 0, 0, 0.6);
-    border: 1px solid rgba(0, 255, 255, 0.3);
+    border: 1px solid rgba(80, 220, 130, 0.3);
     color: var(--text-body);
     padding: 6px 10px;
     border-radius: 8px;
@@ -1454,7 +1454,7 @@ a:focus-visible {
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(0, 245, 255, 0.5);
+    text-shadow: 0 0 30px rgba(80, 220, 130, 0.5);
 }
 
 .modal-content button {
@@ -1471,7 +1471,7 @@ a:focus-visible {
 
 .modal-content button:hover {
     transform: scale(1.1);
-    box-shadow: 0 0 40px rgba(0, 245, 255, 0.8);
+    box-shadow: 0 0 40px rgba(80, 220, 130, 0.8);
 }
 
 /* Close button for simple modals (game over, skip) */
@@ -1499,12 +1499,12 @@ a:focus-visible {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: rgba(0, 245, 255, 0.5);
+    background: rgba(80, 220, 130, 0.5);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 245, 255, 0.7);
+    background: rgba(80, 220, 130, 0.7);
 }
 
 /* Ammo badge next to weapon select */
@@ -1552,7 +1552,7 @@ a:focus-visible {
 
 .modal-close-inline:hover {
     background: rgba(255,255,255,0.2);
-    border-color: rgba(0, 245, 255, 0.5);
+    border-color: rgba(80, 220, 130, 0.5);
     transform: scale(1.1);
 }
 
@@ -1610,13 +1610,13 @@ a:focus-visible {
     background: var(--accent-phosphor);
     cursor: pointer;
     border: 2px solid var(--surface-ink);
-    box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
+    box-shadow: 0 0 8px rgba(80, 220, 130, 0.6);
     transition: all 0.2s ease;
 }
 
 .volume-slider-group input[type="range"]::-webkit-slider-thumb:hover {
     background: #33f7ff;
-    box-shadow: 0 0 12px rgba(0, 245, 255, 0.8);
+    box-shadow: 0 0 12px rgba(80, 220, 130, 0.8);
     transform: scale(1.1);
 }
 
@@ -1627,13 +1627,13 @@ a:focus-visible {
     background: var(--accent-phosphor);
     cursor: pointer;
     border: 2px solid var(--surface-ink);
-    box-shadow: 0 0 8px rgba(0, 245, 255, 0.6);
+    box-shadow: 0 0 8px rgba(80, 220, 130, 0.6);
     transition: all 0.2s ease;
 }
 
 .volume-slider-group input[type="range"]::-moz-range-thumb:hover {
     background: #33f7ff;
-    box-shadow: 0 0 12px rgba(0, 245, 255, 0.8);
+    box-shadow: 0 0 12px rgba(80, 220, 130, 0.8);
     transform: scale(1.1);
 }
 
@@ -1731,5 +1731,5 @@ a:focus-visible {
     font-weight: bold;
     color: var(--accent-phosphor);
     margin: 20px 0;
-    text-shadow: 0 0 20px rgba(0, 245, 255, 0.6);
+    text-shadow: 0 0 20px rgba(80, 220, 130, 0.6);
 }
