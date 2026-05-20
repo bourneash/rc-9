@@ -1191,6 +1191,22 @@ function saveCallsign(slotIdx, name) {
   });
 })();
 
+// ===== Briefing: Enter key commits Start Engagement =====
+(function wireBriefingEnter() {
+  const modal = document.getElementById('new-game-modal');
+  if (!modal) return;
+  modal.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    // Skip if focus is on a <select> (let the browser handle its own Enter behavior).
+    const t = e.target;
+    if (t && t.tagName === 'SELECT') return;
+    // Skip if focus is on the Reset/Cancel buttons — Enter on them should activate them, not Start.
+    if (t && (t.id === 'setup-reset' || t.id === 'setup-cancel' || t.id === 'briefing-close')) return;
+    e.preventDefault();
+    document.getElementById('setup-start')?.click();
+  });
+})();
+
 function hasActiveGame() {
   return !!(game?.tanks && Array.isArray(game.tanks) && game.tanks.length > 0 && !game.gameOver);
 }
