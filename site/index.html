@@ -367,206 +367,223 @@
 
         <!-- New Game setup modal -->
         <dialog id="new-game-modal" class="modal hidden" aria-labelledby="new-game-title">
-            <div class="modal-content setup">
-                <h2 id="new-game-title">New Game Setup</h2>
-                <div class="setup-grid">
-                    <div class="setup-section">
-                        <h3>Mode</h3>
-                        <label><input type="radio" name="mode" value="classic" checked> Classic</label>
-                        <label><input type="radio" name="mode" value="solo"> Solo (Target Practice)</label>
-                        <label><input type="radio" name="mode" value="teams"> Teams (2×4)</label>
-                        <label><input type="radio" name="mode" value="realtime"> Realtime (No Turns)</label>
-                    </div>
-                    <div class="setup-section">
-                        <h3>Environment</h3>
-                        <label>
-                            Environment Preset:
-                            <select id="setup-environment">
-                                <option value="random">🎲 Random</option>
-                                <optgroup label="Earth">
-                                    <option value="forest">🌲 Forest (Hilly, Day)</option>
-                                    <option value="desert">🏜️ Desert (Flat, Day)</option>
-                                    <option value="canyon">🏜️ Canyon (Canyon, Dusk)</option>
-                                    <option value="arctic">❄️ Arctic (Hilly, Day)</option>
-                                    <option value="ocean">🌊 Ocean (Underwater, Day)</option>
-                                </optgroup>
-                                <optgroup label="Underground">
-                                    <option value="cave">🕳️ Cave (Mountain, Dark)</option>
-                                </optgroup>
-                                <optgroup label="Space">
-                                    <option value="moon">🌙 Moon (Hilly, Night)</option>
-                                    <option value="mars">🔴 Mars (Mountain, Dusk)</option>
-                                </optgroup>
-                                <optgroup label="Sci-Fi">
-                                    <option value="futuristic">🚀 Futuristic (Flat, Night)</option>
-                                </optgroup>
-                                <optgroup label="Custom">
-                                    <option value="custom">⚙️ Custom (Advanced)</option>
-                                </optgroup>
-                            </select>
-                        </label>
-
-                        <!-- Advanced options (hidden by default) -->
-                        <div id="advanced-environment" style="display:none;">
-                            <label style="margin-top:12px;">
-                                Terrain Type:
-                                <select id="setup-terrain">
-                                    <option value="random">Random</option>
-                                    <option value="flat">Flat</option>
-                                    <option value="hilly">Hilly</option>
-                                    <option value="mountain">Mountain</option>
-                                    <option value="valley">Valley</option>
-                                    <option value="ocean">Ocean (Underwater)</option>
-                                </select>
-                            </label>
-                            <label>
-                                Theme:
-                                <select id="setup-theme">
-                                    <option value="random">Random</option>
-                                    <option value="forest">Forest</option>
-                                    <option value="desert">Desert</option>
-                                    <option value="cave">Cave</option>
-                                    <option value="moon">Moon</option>
-                                    <option value="mars">Mars</option>
-                                    <option value="arctic">Arctic</option>
-                                    <option value="ocean">Ocean</option>
-                                    <option value="canyon">Desert Canyon</option>
-                                    <option value="futuristic">Futuristic</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <label style="margin-top:12px;">
-                            <input type="checkbox" id="setup-static-time" />
-                            Static Time (no day/night cycle)
-                        </label>
-                        <label id="time-select-wrap">
-                            Time of Day:
-                            <select id="setup-time">
-                                <option value="auto">Auto/Random</option>
-                                <option value="day">Day</option>
-                                <option value="dusk">Dusk</option>
-                                <option value="night">Night</option>
-                            </select>
-                        </label>
-
-                    </div>
-                    <div class="setup-section">
-                        <h3>Players</h3>
-                        <label>
-                            Total Players:
-                            <input id="setup-total-players" type="number" min="1" max="8" value="2" />
-                        </label>
-
-                        
-                        <label id="solo-rounds-wrap" style="display:none">
-                            Solo Targets:
-                            <input id="setup-solo-targets" type="number" min="1" max="50" value="10" />
-                        </label>
-                        <label id="solo-shots-wrap" style="display:none">
-                            Solo Shots:
-                            <select id="setup-solo-shots">
-                                <option value="10" selected>10 shots</option>
-                                <option value="20">20 shots</option>
-                                <option value="unlimited">Unlimited</option>
-                            </select>
-                        </label>
-                                    <div id="setup-roster" class="roster"></div>
-                                    <div id="setup-slots" class="slots"></div>
-                    </div>
-                                            <div class="setup-section" id="setup-teams-section" style="display:none;">
-                                                <h3>Teams (A/B)</h3>
-                                                <div class="debug-sublabel">Assign each slot to Team A or Team B. Max 4 per team.</div>
-                                                <div id="setup-teams" class="teams"></div>
-                                            </div>
-                    <div class="setup-section">
-                        <h3>Wind</h3>
-                        <label><input type="radio" name="wind" value="none"> No Wind</label>
-                        <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
-                        <label><input type="radio" name="wind" value="high"> High Wind</label>
-                        <label><input type="radio" name="wind" value="random-per-turn"> Random Each Turn</label>
-                    </div>
-
-                    <div class="setup-section">
-                        <h3>Tank Health</h3>
-                        <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
-                        <label><input type="radio" name="health" value="150"> Increased (150%)</label>
-                        <label><input type="radio" name="health" value="200"> High (200%)</label>
-                        <label><input type="radio" name="health" value="300"> Very High (300%)</label>
-                    </div>
-
-                    <div class="setup-section" id="setup-display-section">
-                        <h3>Display</h3>
-                        <label title="Hide name tags for all other tanks. Only your own tank's label is shown.">
-                            <input id="setup-disable-names" type="checkbox" /> Hide other players' names (streamer mode)
-                        </label>
-                    </div>
-
-                    <div class="setup-section" id="setup-gameplay-section">
-                        <h3>Gameplay</h3>
-                        <label title="Allow all players to drive their tanks even when it's not their turn. Only the current player can fire.">
-                            <input id="setup-allow-drive-anytime" type="checkbox" /> Allow driving during other players' turns
-                        </label>
-                    </div>
-
-                    <div class="setup-section" id="setup-ammo-section">
-                        <h3>Ammo</h3>
-                        <label>
-                            Ammo Mode:
-                            <select id="setup-ammo-mode">
-                                <option value="unlimited" selected>Unlimited</option>
-                                <option value="standard">Standard</option>
-                                <option value="no-heavy">No Heavy Weapons</option>
-                                <option value="missile-only">Missile Only</option>
-                                <option value="laser-only">Laser Only</option>
-                                <option value="explosive-only">Explosives Only</option>
-                                <option value="marker-only">Markers Only</option>
-                                <option value="basic-weapons">Basic Weapons (Missile, Homing, Cluster)</option>
-                                <option value="custom">Custom…</option>
-                            </select>
-                        </label>
-                        <div id="setup-ammo-custom" style="display:none; margin-top:8px;">
-                            <div class="debug-sublabel">Per-weapon counts (leave blank for 0)</div>
-                            <div class="ammo-grid">
-                                <label>Missile <input type="number" id="ammo-missile" min="0" value="" placeholder="∞" /></label>
-                                <label>Homing <input type="number" id="ammo-homing" min="0" value="" /></label>
-                                <label>Heavy <input type="number" id="ammo-heavy" min="0" value="" /></label>
-                                <label>Nuke <input type="number" id="ammo-nuke" min="0" value="" /></label>
-                                <label>EMP <input type="number" id="ammo-emp" min="0" value="" /></label>
-                                <label>Laser <input type="number" id="ammo-laser" min="0" value="" /></label>
-                                <label>Cluster <input type="number" id="ammo-cluster" min="0" value="" /></label>
-                                <label>Bunker <input type="number" id="ammo-bunker" min="0" value="" /></label>
-                                <label>MIRV <input type="number" id="ammo-mirv" min="0" value="" /></label>
-                                <label>Funky <input type="number" id="ammo-funky" min="0" value="" /></label>
-                                <label>Drill <input type="number" id="ammo-drill" min="0" value="" /></label>
-                                <label>Acid <input type="number" id="ammo-acid" min="0" value="" /></label>
-                                <label>Napalm <input type="number" id="ammo-napalm" min="0" value="" /></label>
-                                <label>Tracer Round <input type="number" id="ammo-tracer" min="0" value="" /></label>
-                                <label>Smoke Bomb <input type="number" id="ammo-smoke_bomb" min="0" value="" /></label>
-                                <label>Flare <input type="number" id="ammo-flare" min="0" value="" /></label>
-                                <label>Parachute Flare <input type="number" id="ammo-parachute_flare" min="0" value="" /></label>
-                                <label>Marker: Paratroopers <input type="number" id="ammo-marker_attack" min="0" value="" /></label>
-                                <label>Marker: Medics <input type="number" id="ammo-marker_medic" min="0" value="" /></label>
-                                <label>Marker: Airstrike <input type="number" id="ammo-marker_airstrike" min="0" value="" /></label>
-                                <label>Marker: Air Nukes <input type="number" id="ammo-marker_airnukes" min="0" value="" /></label>
-                                <label>Bouncing Bomb <input type="number" id="ammo-bouncing_bomb" min="0" value="" /></label>
-                                <label>Supply Crate <input type="number" id="ammo-supply_crate" min="0" value="" /></label>
-                                <label>Shield <input type="number" id="ammo-shield" min="0" value="" /></label>
-                                <label>Land Mine <input type="number" id="ammo-land_mine" min="0" value="" /></label>
-                                <label>Toxic Gas <input type="number" id="ammo-toxic_gas" min="0" value="" /></label>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="setup-actions">
-                    <button id="setup-reset" class="danger">Reset All</button>
-                    <div class="setup-actions-right">
-                        <button id="setup-cancel">Cancel</button>
-                        <button id="setup-start" class="primary">Start Game</button>
-                    </div>
-                </div>
+          <div class="modal-content setup briefing">
+            <div class="modal-titlebar">
+              <div class="h" id="new-game-title">OPERATIONAL <span class="accent">BRIEFING</span></div>
+              <div class="sub">CONFIGURE ENGAGEMENT · PRESS [↵] TO COMMIT</div>
+              <button id="briefing-close" class="modal-close" aria-label="Close">ESC</button>
             </div>
+            <div class="modal-body briefing-body">
+              <div class="briefing-grid">
+                <div class="briefing-col left">
+                  <section class="briefing-panel" data-panel="mode">
+                    <div class="panel-label">▸ MODE <span class="num">01 / 06</span></div>
+                    <div class="mode-tiles">
+                      <!-- placeholder; populated in Task 10 -->
+                    </div>
+                    <!-- Existing radio inputs preserved for JS compatibility (hidden via CSS) -->
+                    <label style="display:none"><input type="radio" name="mode" value="classic" checked> Classic</label>
+                    <label style="display:none"><input type="radio" name="mode" value="solo"> Solo (Target Practice)</label>
+                    <label style="display:none"><input type="radio" name="mode" value="teams"> Teams (2×4)</label>
+                    <label style="display:none"><input type="radio" name="mode" value="realtime"> Realtime (No Turns)</label>
+                  </section>
+                  <section class="briefing-panel" data-panel="terrain">
+                    <div class="panel-label">▸ TERRAIN <span class="num">02 / 06</span></div>
+                    <div class="env-tiles">
+                      <!-- populated in Task 10 -->
+                    </div>
+                    <!-- existing select element preserved for JS — hidden in Task 10 -->
+                    <label style="display:none">
+                      Environment Preset:
+                      <select id="setup-environment">
+                        <option value="random">🎲 Random</option>
+                        <optgroup label="Earth">
+                          <option value="forest">🌲 Forest (Hilly, Day)</option>
+                          <option value="desert">🏜️ Desert (Flat, Day)</option>
+                          <option value="canyon">🏜️ Canyon (Canyon, Dusk)</option>
+                          <option value="arctic">❄️ Arctic (Hilly, Day)</option>
+                          <option value="ocean">🌊 Ocean (Underwater, Day)</option>
+                        </optgroup>
+                        <optgroup label="Underground">
+                          <option value="cave">🕳️ Cave (Mountain, Dark)</option>
+                        </optgroup>
+                        <optgroup label="Space">
+                          <option value="moon">🌙 Moon (Hilly, Night)</option>
+                          <option value="mars">🔴 Mars (Mountain, Dusk)</option>
+                        </optgroup>
+                        <optgroup label="Sci-Fi">
+                          <option value="futuristic">🚀 Futuristic (Flat, Night)</option>
+                        </optgroup>
+                        <optgroup label="Custom">
+                          <option value="custom">⚙️ Custom (Advanced)</option>
+                        </optgroup>
+                      </select>
+                    </label>
+                    <!-- existing advanced custom terrain section, kept hidden by default -->
+                    <div id="advanced-environment" style="display:none">
+                      <label>
+                        Terrain Type:
+                        <select id="setup-terrain">
+                          <option value="random">Random</option>
+                          <option value="flat">Flat</option>
+                          <option value="hilly">Hilly</option>
+                          <option value="mountain">Mountain</option>
+                          <option value="valley">Valley</option>
+                          <option value="ocean">Ocean (Underwater)</option>
+                        </select>
+                      </label>
+                      <label>
+                        Theme:
+                        <select id="setup-theme">
+                          <option value="random">Random</option>
+                          <option value="forest">Forest</option>
+                          <option value="desert">Desert</option>
+                          <option value="cave">Cave</option>
+                          <option value="moon">Moon</option>
+                          <option value="mars">Mars</option>
+                          <option value="arctic">Arctic</option>
+                          <option value="ocean">Ocean</option>
+                          <option value="canyon">Desert Canyon</option>
+                          <option value="futuristic">Futuristic</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="checkbox-row" style="margin-top:10px">
+                      <input type="checkbox" id="setup-static-time" />
+                      <span>STATIC TIME (no day/night)</span>
+                    </label>
+                    <label id="time-select-wrap" style="margin-top:6px; display:flex; align-items:center; gap:10px">
+                      <span class="t-micro">TIME</span>
+                      <select id="setup-time" class="t-mono">
+                        <option value="auto">AUTO / RANDOM</option>
+                        <option value="day">DAY</option>
+                        <option value="dusk">DUSK</option>
+                        <option value="night">NIGHT</option>
+                      </select>
+                    </label>
+                  </section>
+                  <section class="briefing-panel" data-panel="roster">
+                    <div class="panel-label">▸ ROSTER <span class="num">03 / 06</span></div>
+                    <!-- populated in Task 11 — existing inputs preserved below -->
+                    <div style="display:none">
+                      <label>
+                        Total Players:
+                        <input id="setup-total-players" type="number" min="1" max="8" value="2" />
+                      </label>
+                      <label id="solo-rounds-wrap">
+                        Solo Targets:
+                        <input id="setup-solo-targets" type="number" min="1" max="50" value="10" />
+                      </label>
+                      <label id="solo-shots-wrap">
+                        Solo Shots:
+                        <select id="setup-solo-shots">
+                          <option value="10" selected>10 shots</option>
+                          <option value="20">20 shots</option>
+                          <option value="unlimited">Unlimited</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div id="setup-roster" class="roster"></div>
+                    <div id="setup-slots" class="slots"></div>
+                    <div id="setup-teams-section" style="display:none;">
+                      <div class="debug-sublabel">Assign each slot to Team A or Team B. Max 4 per team.</div>
+                      <div id="setup-teams" class="teams"></div>
+                    </div>
+                  </section>
+                </div>
+                <div class="briefing-col right">
+                  <section class="briefing-panel" data-panel="wind">
+                    <div class="panel-label">▸ WIND <span class="num">04 / 06</span></div>
+                    <!-- pill row populated in Task 11 — existing radios preserved hidden -->
+                    <div style="display:none">
+                      <label><input type="radio" name="wind" value="none"> No Wind</label>
+                      <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
+                      <label><input type="radio" name="wind" value="high"> High Wind</label>
+                      <label><input type="radio" name="wind" value="random-per-turn"> Random Each Turn</label>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="health">
+                    <div class="panel-label">▸ TANK HEALTH <span class="num">05 / 06</span></div>
+                    <!-- pill row populated in Task 11 — existing radios preserved hidden -->
+                    <div style="display:none">
+                      <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
+                      <label><input type="radio" name="health" value="150"> Increased (150%)</label>
+                      <label><input type="radio" name="health" value="200"> High (200%)</label>
+                      <label><input type="radio" name="health" value="300"> Very High (300%)</label>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="ammo">
+                    <div class="panel-label">▸ AMMO <span class="num">06 / 06</span></div>
+                    <!-- pill row + custom-grid populated in Task 11 — existing select preserved hidden -->
+                    <div style="display:none">
+                      <label>
+                        Ammo Mode:
+                        <select id="setup-ammo-mode">
+                          <option value="unlimited" selected>Unlimited</option>
+                          <option value="standard">Standard</option>
+                          <option value="no-heavy">No Heavy Weapons</option>
+                          <option value="missile-only">Missile Only</option>
+                          <option value="laser-only">Laser Only</option>
+                          <option value="explosive-only">Explosives Only</option>
+                          <option value="marker-only">Markers Only</option>
+                          <option value="basic-weapons">Basic Weapons (Missile, Homing, Cluster)</option>
+                          <option value="custom">Custom…</option>
+                        </select>
+                      </label>
+                      <div id="setup-ammo-custom" style="margin-top:8px;">
+                        <div class="debug-sublabel">Per-weapon counts (leave blank for 0)</div>
+                        <div class="ammo-grid">
+                          <label>Missile <input type="number" id="ammo-missile" min="0" value="" placeholder="∞" /></label>
+                          <label>Homing <input type="number" id="ammo-homing" min="0" value="" /></label>
+                          <label>Heavy <input type="number" id="ammo-heavy" min="0" value="" /></label>
+                          <label>Nuke <input type="number" id="ammo-nuke" min="0" value="" /></label>
+                          <label>EMP <input type="number" id="ammo-emp" min="0" value="" /></label>
+                          <label>Laser <input type="number" id="ammo-laser" min="0" value="" /></label>
+                          <label>Cluster <input type="number" id="ammo-cluster" min="0" value="" /></label>
+                          <label>Bunker <input type="number" id="ammo-bunker" min="0" value="" /></label>
+                          <label>MIRV <input type="number" id="ammo-mirv" min="0" value="" /></label>
+                          <label>Funky <input type="number" id="ammo-funky" min="0" value="" /></label>
+                          <label>Drill <input type="number" id="ammo-drill" min="0" value="" /></label>
+                          <label>Acid <input type="number" id="ammo-acid" min="0" value="" /></label>
+                          <label>Napalm <input type="number" id="ammo-napalm" min="0" value="" /></label>
+                          <label>Tracer Round <input type="number" id="ammo-tracer" min="0" value="" /></label>
+                          <label>Smoke Bomb <input type="number" id="ammo-smoke_bomb" min="0" value="" /></label>
+                          <label>Flare <input type="number" id="ammo-flare" min="0" value="" /></label>
+                          <label>Parachute Flare <input type="number" id="ammo-parachute_flare" min="0" value="" /></label>
+                          <label>Marker: Paratroopers <input type="number" id="ammo-marker_attack" min="0" value="" /></label>
+                          <label>Marker: Medics <input type="number" id="ammo-marker_medic" min="0" value="" /></label>
+                          <label>Marker: Airstrike <input type="number" id="ammo-marker_airstrike" min="0" value="" /></label>
+                          <label>Marker: Air Nukes <input type="number" id="ammo-marker_airnukes" min="0" value="" /></label>
+                          <label>Bouncing Bomb <input type="number" id="ammo-bouncing_bomb" min="0" value="" /></label>
+                          <label>Supply Crate <input type="number" id="ammo-supply_crate" min="0" value="" /></label>
+                          <label>Shield <input type="number" id="ammo-shield" min="0" value="" /></label>
+                          <label>Land Mine <input type="number" id="ammo-land_mine" min="0" value="" /></label>
+                          <label>Toxic Gas <input type="number" id="ammo-toxic_gas" min="0" value="" /></label>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="options">
+                    <div class="panel-label">▸ OPTIONS</div>
+                    <!-- checkbox rows populated in Task 11 — existing checkboxes preserved hidden -->
+                    <div style="display:none">
+                      <label title="Hide name tags for all other tanks. Only your own tank's label is shown.">
+                        <input id="setup-disable-names" type="checkbox" /> Hide other players' names (streamer mode)
+                      </label>
+                      <label title="Allow all players to drive their tanks even when it's not their turn. Only the current player can fire.">
+                        <input id="setup-allow-drive-anytime" type="checkbox" /> Allow driving during other players' turns
+                      </label>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button id="setup-reset" class="btn-ghost danger">RESET ALL</button>
+              <button id="setup-start" class="btn-primary" style="margin-left:auto">▶ START ENGAGEMENT</button>
+              <button id="setup-cancel" class="btn-ghost">CANCEL</button>
+            </div>
+          </div>
         </dialog>
 
     <!-- Skip modal when no humans remain -->

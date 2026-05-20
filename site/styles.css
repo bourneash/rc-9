@@ -747,48 +747,6 @@ a:focus-visible {
 
 /* Options and Debug modal-content overrides moved to site/styles/modals.css */
 
-.modal-content.setup {
-    /* Layout */
-    width: min(920px, 92vw);
-    height: min(92vh, 880px); /* explicit height so grid tracks size correctly */
-    display: grid;
-    grid-template-rows: auto 1fr auto; /* title, scrollable body, actions */
-    overflow: hidden; /* body will scroll, actions stay visible */
-
-    /* Typography and readability */
-    text-align: left;
-    color: #eaf7ff; /* higher contrast text */
-    font-size: clamp(14px, 1.6vw, 16px);
-    line-height: 1.45;
-
-    /* Reduce padding on setup variant to save space */
-    padding: clamp(16px, 2.5vw, 28px);
-    border-radius: 16px;
-}
-
-.modal-content.setup > h2 {
-    margin: 0 0 10px 0;
-    font-size: clamp(20px, 3vw, 26px);
-    line-height: 1.2;
-    text-align: center;
-}
-
-.setup-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
-    overflow-y: auto; /* only the body scrolls */
-    min-height: 0; /* allow the grid to shrink within modal */
-    padding-right: 2px; /* avoid scrollbar overlay on content */
-}
-
-.setup-section {
-    background: rgba(10, 14, 30, 0.6); /* darker, less transparent */
-    border: 1px solid rgba(80, 220, 130, 0.45); /* brighter border for separation */
-    border-radius: 10px;
-    padding: 12px 10px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.35) inset;
-}
 
 /* Players stepper */
 .players-stepper {
@@ -851,43 +809,6 @@ a:focus-visible {
 #setup-slots .color-chooser .color-grid { display: none; position: absolute; z-index: 5; background: rgba(0,0,0,0.8); padding: 6px; border-radius: 8px; border: 1px solid rgba(0,245,255,0.35); box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
 #setup-slots .color-chooser.open .color-grid { display: grid; grid-template-columns: repeat(10, 18px); gap: 6px; }
 
-.setup-section h3 {
-    margin: 0 0 8px 0;
-    font-size: clamp(15px, 2.2vw, 18px);
-    color: #c9faff; /* brighter heading inside darker panel */
-    text-shadow: 0 0 10px rgba(80, 220, 130, 0.35);
-}
-
-.setup-section label {
-    display: block;
-    margin: 6px 0;
-    color: #e9fbff; /* improve label contrast */
-}
-
-.setup-section input[type="number"],
-.setup-section select {
-    background: rgba(0, 0, 0, 0.75);
-    border: 1px solid rgba(80, 220, 130, 0.5);
-    color: #eafcff;
-    padding: 6px 8px;
-    border-radius: 8px;
-    margin-left: 6px;
-}
-
-/* Better keyboard accessibility */
-.modal-content.setup input:focus-visible,
-.modal-content.setup select:focus-visible,
-.modal-content.setup button:focus-visible {
-    outline: 2px solid var(--accent-phosphor);
-    outline-offset: 2px;
-    box-shadow: 0 0 0 3px rgba(80, 220, 130, 0.25);
-}
-
-/* Improve radio/checkbox visibility */
-.modal-content.setup input[type="radio"],
-.modal-content.setup input[type="checkbox"] {
-    accent-color: var(--accent-phosphor);
-}
 
 .theme-previews {
     display: grid;
@@ -931,81 +852,10 @@ a:focus-visible {
     outline-offset: 2px;
 }
 
-.setup-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-top: 12px;
-    padding-top: 10px;
-    background: linear-gradient(to bottom, rgba(10,15,8,0), rgba(10,15,8,0.6));
-    border-top: 1px solid rgba(80, 220, 130, 0.2);
-}
-
-.setup-actions-right {
-    display: flex;
-    gap: 12px;
-}
-
-.setup-actions .danger {
-    background: linear-gradient(135deg, rgba(255,77,77,0.2), rgba(255,77,77,0.1));
-    color: #ff6b6b;
-    border: 2px solid rgba(255,77,77,0.5);
-    padding: 9px 14px;
-    border-radius: 10px;
-    font-size: 0.85em;
-}
-
-.setup-actions .danger:hover {
-    background: linear-gradient(135deg, rgba(255,77,77,0.35), rgba(255,77,77,0.2));
-    border-color: var(--accent-hot);
-}
-
-.setup-actions .primary {
-    background: linear-gradient(135deg, var(--accent-phosphor), #00ff88);
-    color: #000;
-    border: none;
-    padding: 9px 18px;
-    border-radius: 10px;
-}
-
-/* Make Cancel more visible and consistent */
-.setup-actions button:not(.primary) {
-    background: linear-gradient(135deg, rgba(0,245,255,0.25), rgba(0,255,136,0.25));
-    color: #eafcff;
-    border: 2px solid var(--accent-phosphor);
-    padding: 9px 14px;
-    border-radius: 10px;
-}
-
-.setup-actions button:not(.primary):hover {
-    background: linear-gradient(135deg, rgba(0,245,255,0.38), rgba(0,255,136,0.35));
-}
-
-/* Responsive readability tweaks */
-@media (max-width: 980px) {
-    .setup-grid { grid-template-columns: 1fr; gap: 12px; }
-}
-
 /* Compact layout for small screens */
 @media (max-width: 600px), (max-height: 700px) {
-    .modal-content.setup {
-        width: min(820px, 94vw);
-        padding: 14px;
-        border-radius: 14px;
-        font-size: 14px;
-    }
-    .modal-content.setup > h2 { font-size: clamp(18px, 4vw, 22px); margin-bottom: 8px; }
-    .setup-grid { gap: 10px; }
-    .setup-section { padding: 10px 8px; border-radius: 8px; }
-    .setup-section h3 { font-size: clamp(14px, 3.5vw, 16px); margin-bottom: 6px; }
-    .setup-section label { margin: 5px 0; }
-    .setup-section input[type="number"], .setup-section select { padding: 6px 8px; }
     .theme-previews { grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
     .theme-tile { height: 56px; }
-    .setup-actions { gap: 10px; padding-top: 8px; }
-    .setup-actions .primary { padding: 8px 14px; }
-    .setup-actions button:not(.primary) { padding: 8px 12px; }
     .slot-row input[type="color"] { width: 36px; height: 28px; }
     .slot-row { gap: 6px; padding: 6px; }
     .slot-row span { min-width: 56px; }
