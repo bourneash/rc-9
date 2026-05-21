@@ -37,6 +37,12 @@
     <meta name="twitter:image" content="https://rc-9.com/og-image.png" />
     <meta name="twitter:image:alt" content="Remote Command gameplay — tank firing across destructible terrain" />
 
+    <link rel="stylesheet" href="/styles/tokens.css" />
+    <link rel="stylesheet" href="/styles/typography.css" />
+    <link rel="stylesheet" href="/styles/hud.css" />
+    <link rel="stylesheet" href="/styles/modals.css" />
+    <link rel="stylesheet" href="/styles/title-screen.css" />
+    <link rel="stylesheet" href="/styles/canvas-overlays.css" />
     <link rel="stylesheet" href="/styles.css" />
 
     <!-- Structured data: VideoGame schema for Google rich results -->
@@ -65,6 +71,61 @@
     </script>
 </head>
 <body>
+<div id="title-screen" hidden aria-label="Remote Command — Main Menu">
+  <div class="ts-grid"></div>
+  <div class="ts-terrain"></div>
+  <div class="ts-sweep"></div>
+  <span class="ts-bracket tl"></span>
+  <span class="ts-bracket tr"></span>
+  <span class="ts-bracket bl"></span>
+  <span class="ts-bracket br"></span>
+
+  <div class="ts-boot" id="ts-boot">
+    <span class="dim">&gt;</span> <span class="ok">CONNECT</span> rc-9.command.net ............... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">UPLINK</span> handshake ........................ <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">TELEMETRY</span> bus armed .................... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> <span class="ok">SECTOR</span> table loaded ..................... <span class="ok">OK</span><br>
+    <span class="dim">&gt;</span> awaiting operator<span class="ts-cursor"></span>
+  </div>
+
+  <div class="ts-uplink">
+    <div class="live">UPLINK · LIVE</div>
+    <div id="ts-utc">UTC 00:00:00</div>
+    <div id="ts-op">OP // OPERATOR</div>
+  </div>
+
+  <div class="ts-title">
+    <div class="ts-callsign">CALLSIGN · RC-9</div>
+    <div class="ts-name">REMOTE</div>
+    <div class="ts-name"><span class="glow">COMMAND</span></div>
+    <div class="ts-subtitle">ARTILLERY <span class="div">·</span> DESTRUCTIBLE TERRAIN <span class="div">·</span> 1-8 OPS</div>
+  </div>
+
+  <nav class="ts-menu" aria-label="Main menu">
+    <button class="ts-item primary" data-action="new" data-key="N">
+      <span class="ts-item-key">N</span>
+      <span class="ts-item-label">NEW ENGAGEMENT</span>
+      <span class="ts-item-meta">▸</span>
+    </button>
+    <button class="ts-item" data-action="briefing" data-key="B">
+      <span class="ts-item-key">B</span>
+      <span class="ts-item-label">BRIEFING</span>
+      <span class="ts-item-meta">HOW-TO</span>
+    </button>
+    <button class="ts-item dim" data-action="archive" data-key="A" disabled>
+      <span class="ts-item-key">A</span>
+      <span class="ts-item-label">ARCHIVE</span>
+      <span class="ts-item-meta">SOON</span>
+    </button>
+  </nav>
+
+  <div class="ts-foot">
+    <div class="group"><span class="key">↑↓</span> NAVIGATE</div>
+    <div class="group"><span class="key">↵</span> SELECT</div>
+    <div class="group"><span class="key">ESC</span> EXIT</div>
+    <div class="build" id="ts-build">RC-9 v—</div>
+  </div>
+</div>
     <header class="sr-only">
         <h1>Remote Command — Free Online Artillery Tank Game</h1>
         <p>
@@ -109,6 +170,20 @@
     </noscript>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
+                <div id="canvas-overlays" aria-hidden="true" style="pointer-events:none">
+                  <div id="co-grid" class="co-grid"></div>
+                  <div id="co-corner-tl" class="co-corner tl">RC-9 // SECTOR 00</div>
+                  <div id="co-corner-tr" class="co-corner tr">ROUND 00</div>
+                </div>
+                <!-- Empty-state CTA shown when no game is running and no other UI surface is up -->
+                <div id="empty-state-cta" hidden aria-label="Start a new game">
+                  <div class="esc-card">
+                    <div class="esc-label">RC-9 // STANDBY</div>
+                    <div class="esc-title">AWAITING <span class="accent">ORDERS</span></div>
+                    <div class="esc-sub">NO ENGAGEMENT IN PROGRESS</div>
+                    <button id="empty-state-new-game" class="btn-primary">▶ NEW ENGAGEMENT</button>
+                  </div>
+                </div>
                 <!-- Post FX overlay (PixiJS renders here on top of the canvas) -->
                 <div id="fx-overlay" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></div>
                 <!-- HUD overlay controls (desktop + mobile responsive) -->
@@ -180,35 +255,57 @@
                 <!-- Hidden staging container (holds content that modals move into place) -->
                 <div id="ui-staging" style="display:none" aria-hidden="true"></div>
                 <!-- Left edge tabs: Game Options, Debug, Game Log, Volume, Restart -->
-                <div id="options-tab" class="edge-tab" title="Open Game Options" role="button" tabindex="0" aria-label="Open game options">▸ Game Options</div>
-                <div id="debug-tab" class="edge-tab secondary" title="Open Debug / Cheats" role="button" tabindex="0" aria-label="Open debug and cheats">Debug</div>
-                <div id="log-tab" class="edge-tab secondary" title="Open Game Log" role="button" tabindex="0" aria-label="Open game log">Game Log</div>
-                <div id="volume-tab" class="edge-tab secondary" title="Open Volume Controls" role="button" tabindex="0" aria-label="Open volume controls">🔊 Volume</div>
-                <div id="restart-tab" class="edge-tab secondary" title="Restart Game Options" role="button" tabindex="0" aria-label="Open restart options">↻ Restart</div>
+                <div id="new-game-tab" class="edge-tab" role="button" tabindex="0" aria-label="Start a new game"><span class="icon">＋</span><span class="label">NEW GAME</span></div>
+                <div id="debug-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open debug and cheats"><span class="icon">▣</span><span class="label">DEBUG</span></div>
+                <div id="log-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open game log"><span class="icon">≡</span><span class="label">LOG</span></div>
+                <div id="volume-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open volume controls"><span class="icon">♪</span><span class="label">AUDIO</span></div>
+                <div id="restart-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open restart options"><span class="icon">↻</span><span class="label">RESTART</span></div>
                 <a href="/help" id="help-link" style="position:fixed; right:14px; bottom:14px; z-index:1100; text-decoration:none;">
                     <button title="Help / How to Play">Help</button>
                 </a>
     </div>
 
     <dialog id="game-over-modal" class="modal hidden" aria-labelledby="winner-text">
-        <div class="modal-content">
-            <button id="game-over-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="winner-text">Player X Wins!</h2>
-            <div id="game-over-stats" aria-live="polite"></div>
-            <button id="new-game-button">New Game</button>
+      <div class="modal-content engagement-report">
+        <div class="modal-titlebar">
+          <div class="h">ENGAGEMENT <span class="accent">REPORT</span></div>
+          <div class="sub" id="er-subtitle">ROUND COMPLETE</div>
+          <button id="game-over-close" class="modal-close" aria-label="Close">ESC</button>
         </div>
+        <div class="modal-body">
+          <div class="er">
+            <div class="er-banner" id="er-banner">VICTORY · OPERATOR</div>
+            <div class="er-winner"><span class="accent" id="winner-text">—</span><span id="er-standing"> STANDING</span></div>
+            <div class="er-tag" id="er-tag">—</div>
+            <div class="er-stats">
+              <div class="er-stat"><div class="lab">ROUNDS</div><div class="val" id="er-rounds">—</div></div>
+              <div class="er-stat"><div class="lab">HITS</div><div class="val"><span id="er-hits">—</span> <span class="small">/ <span id="er-shots">—</span></span></div></div>
+              <div class="er-stat"><div class="lab">DAMAGE</div><div class="val" id="er-damage">—</div></div>
+              <div class="er-stat"><div class="lab">ACCURACY</div><div class="val"><span id="er-accuracy">—</span><span class="small">%</span></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button id="er-return" class="btn-ghost">RETURN TO COMMAND</button>
+          <button id="new-game-button" class="btn-primary" style="margin-left:auto">&#9654; NEW ENGAGEMENT</button>
+        </div>
+      </div>
     </dialog>
 
 
     <!-- Debug modal (container for existing #debug-menu content) -->
     <dialog id="debug-modal" class="modal hidden" aria-labelledby="debug-title">
         <div class="modal-content">
-            <button id="debug-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="debug-title">Debug / Cheats</h2>
-            <div id="debug-modal-body"></div>
-            <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
-                <button id="copy-error-report" style="font-size: 0.85em; padding: 6px 12px; cursor: pointer;">Copy Error Report</button>
-                <span id="copy-report-status" style="margin-left: 8px; font-size: 0.8em; opacity: 0.7;"></span>
+            <div class="modal-titlebar">
+                <div class="h" id="debug-title">DEBUG <span class="accent">CHEATS</span></div>
+                <button id="debug-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="debug-modal-body"></div>
+                <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button id="copy-error-report" class="btn-ghost" style="font-size: 0.85em; cursor: pointer;">Copy Error Report</button>
+                    <span id="copy-report-status" style="margin-left: 8px; font-size: 0.8em; opacity: 0.7;"></span>
+                </div>
             </div>
         </div>
     </dialog>
@@ -216,58 +313,66 @@
     <!-- Game Log modal (moves existing #game-log into this body on open) -->
     <dialog id="log-modal" class="modal hidden" aria-labelledby="log-title">
         <div class="modal-content">
-            <button id="log-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="log-title">Game Log</h2>
-            <div id="log-modal-body"></div>
+            <div class="modal-titlebar">
+                <div class="h" id="log-title">GAME <span class="accent">LOG</span></div>
+                <button id="log-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="log-modal-body"></div>
+            </div>
         </div>
     </dialog>
 
     <!-- Volume modal (proper audio controls) -->
     <dialog id="volume-modal" class="modal hidden" aria-labelledby="volume-title">
         <div class="modal-content">
-            <h2 id="volume-title">Volume & Audio</h2>
-            <button id="volume-modal-close" class="modal-close-inline" title="Close" aria-label="Close">✖</button>
-            <div id="volume-modal-body">
-                <div class="volume-controls">
-                    <div class="volume-section">
-                        <label for="master-volume-slider">
-                            <span class="volume-icon">🔊</span>
-                            <span>Master Volume</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="master-volume-slider" min="0" max="100" value="70" step="1" />
-                            <span id="master-volume-value">70%</span>
+            <div class="modal-titlebar">
+                <div class="h" id="volume-title">AUDIO <span class="accent">CONTROL</span></div>
+                <button id="volume-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="volume-modal-body">
+                    <div class="volume-controls">
+                        <div class="volume-section">
+                            <label for="master-volume-slider">
+                                <span class="volume-icon">🔊</span>
+                                <span>Master Volume</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="master-volume-slider" min="0" max="100" value="70" step="1" />
+                                <span id="master-volume-value">70%</span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="volume-section">
-                        <label for="sfx-volume-slider">
-                            <span class="volume-icon">💥</span>
-                            <span>Sound Effects</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="sfx-volume-slider" min="0" max="100" value="70" step="1" />
-                            <span id="sfx-volume-value">70%</span>
+                        <div class="volume-section">
+                            <label for="sfx-volume-slider">
+                                <span class="volume-icon">💥</span>
+                                <span>Sound Effects</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="sfx-volume-slider" min="0" max="100" value="70" step="1" />
+                                <span id="sfx-volume-value">70%</span>
+                            </div>
+                            <button id="test-sound-btn" class="btn-ghost">Test Sound</button>
                         </div>
-                        <button id="test-sound-btn" class="secondary">🔈 Test Sound</button>
-                    </div>
 
-                    <div class="volume-section">
-                        <label for="music-volume-slider">
-                            <span class="volume-icon">🎵</span>
-                            <span>Music</span>
-                        </label>
-                        <div class="volume-slider-group">
-                            <input type="range" id="music-volume-slider" min="0" max="100" value="50" step="1" />
-                            <span id="music-volume-value">50%</span>
+                        <div class="volume-section">
+                            <label for="music-volume-slider">
+                                <span class="volume-icon">🎵</span>
+                                <span>Music</span>
+                            </label>
+                            <div class="volume-slider-group">
+                                <input type="range" id="music-volume-slider" min="0" max="100" value="50" step="1" />
+                                <span id="music-volume-value">50%</span>
+                            </div>
+                            <button id="music-toggle-new" class="btn-ghost">Music: ON</button>
                         </div>
-                        <button id="music-toggle-new" class="secondary">Music: ON</button>
-                    </div>
 
-                    <div class="volume-section">
-                        <div class="volume-actions">
-                            <button id="mute-all-btn" class="secondary">🔇 Mute All</button>
-                            <button id="unmute-all-btn" class="secondary">🔊 Unmute All</button>
+                        <div class="volume-section">
+                            <div class="volume-actions">
+                                <button id="mute-all-btn" class="btn-ghost">Mute All</button>
+                                <button id="unmute-all-btn" class="btn-ghost">Unmute All</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -276,59 +381,20 @@
     </dialog>
 
     <!-- Auto-restart countdown modal -->
-    <dialog id="auto-restart-modal" class="modal hidden" aria-labelledby="auto-restart-title">
-        <div class="modal-content">
-            <h2 id="auto-restart-title">Game Restarting</h2>
-            <p>The game will automatically restart in:</p>
-            <div id="auto-restart-countdown">5</div>
-            <button id="cancel-auto-restart" class="secondary">Cancel Auto-Restart</button>
-        </div>
-    </dialog>
-
     <!-- Restart modal -->
     <dialog id="restart-modal" class="modal hidden" aria-labelledby="restart-title">
         <div class="modal-content">
-            <button id="restart-modal-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="restart-title">Restart Game</h2>
-            <div id="restart-modal-body">
-                <div class="restart-options">
-                    <button id="restart-now-button" class="primary">Restart Now</button>
-                    <div class="auto-restart-section">
-                        <label for="auto-restart-checkbox" title="Automatically restart the game after it ends">
-                            <input type="checkbox" id="auto-restart-checkbox" />
-                            <span>Auto-restart after game ends (5s countdown)</span>
-                        </label>
-                    </div>
+            <div class="modal-titlebar">
+                <div class="h" id="restart-title">RESTART <span class="accent">ENGAGEMENT</span></div>
+                <button id="restart-modal-close" class="modal-close" title="Close" aria-label="Close">ESC</button>
+            </div>
+            <div class="modal-body">
+                <div id="restart-modal-body">
+                    <p style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); letter-spacing: 1px; margin: 0;">Restart the current engagement with the same configuration?</p>
                 </div>
             </div>
-        </div>
-    </dialog>
-
-    <!-- Game Options modal (migrated from Remote Command sidebar) -->
-    <dialog id="options-modal" class="modal hidden" aria-labelledby="options-title">
-        <div class="modal-content">
-            <button id="options-close" class="modal-close" title="Close" aria-label="Close">✖</button>
-            <h2 id="options-title">Game Options</h2>
-            <div id="options-modal-body">
-                <!-- Populated by moving the existing sidebar Game Options row controls here at open time -->
-                <div class="options-grid">
-                    <button id="open-setup" class="secondary">New Game…</button>
-                    <button id="restart-button" class="secondary">Restart Game</button>
-                    <button id="resume-saved-button" class="secondary">Resume Last Game</button>
-                    <button id="clear-saved-button" class="secondary">Clear Saved Game</button>
-                </div>
-                <div class="auto-restart-section">
-                    <label for="auto-restart-toggle" title="Automatically restart the game after it ends">
-                        <input type="checkbox" id="auto-restart-toggle" />
-                        <span>Auto-restart after game ends (5s countdown)</span>
-                    </label>
-                </div>
-                <div class="auto-restore-section" style="margin-top:12px;">
-                    <label for="restore-state-toggle" title="On launch, return to what you were doing last time (resume game, keep Options open, or open New Game setup)">
-                        <input type="checkbox" id="restore-state-toggle" />
-                        <span>Restore last session on launch</span>
-                    </label>
-                </div>
+            <div class="modal-actions">
+                <button id="restart-now-button" class="btn-primary">Restart Now</button>
             </div>
         </div>
     </dialog>
@@ -337,218 +403,300 @@
 
         <!-- New Game setup modal -->
         <dialog id="new-game-modal" class="modal hidden" aria-labelledby="new-game-title">
-            <div class="modal-content setup">
-                <h2 id="new-game-title">New Game Setup</h2>
-                <div class="setup-grid">
-                    <div class="setup-section">
-                        <h3>Mode</h3>
-                        <label><input type="radio" name="mode" value="classic" checked> Classic</label>
-                        <label><input type="radio" name="mode" value="solo"> Solo (Target Practice)</label>
-                        <label><input type="radio" name="mode" value="teams"> Teams (2×4)</label>
-                        <label><input type="radio" name="mode" value="realtime"> Realtime (No Turns)</label>
-                    </div>
-                    <div class="setup-section">
-                        <h3>Environment</h3>
-                        <label>
-                            Environment Preset:
-                            <select id="setup-environment">
-                                <option value="random">🎲 Random</option>
-                                <optgroup label="Earth">
-                                    <option value="forest">🌲 Forest (Hilly, Day)</option>
-                                    <option value="desert">🏜️ Desert (Flat, Day)</option>
-                                    <option value="canyon">🏜️ Canyon (Canyon, Dusk)</option>
-                                    <option value="arctic">❄️ Arctic (Hilly, Day)</option>
-                                    <option value="ocean">🌊 Ocean (Underwater, Day)</option>
-                                </optgroup>
-                                <optgroup label="Underground">
-                                    <option value="cave">🕳️ Cave (Mountain, Dark)</option>
-                                </optgroup>
-                                <optgroup label="Space">
-                                    <option value="moon">🌙 Moon (Hilly, Night)</option>
-                                    <option value="mars">🔴 Mars (Mountain, Dusk)</option>
-                                </optgroup>
-                                <optgroup label="Sci-Fi">
-                                    <option value="futuristic">🚀 Futuristic (Flat, Night)</option>
-                                </optgroup>
-                                <optgroup label="Custom">
-                                    <option value="custom">⚙️ Custom (Advanced)</option>
-                                </optgroup>
-                            </select>
-                        </label>
-
-                        <!-- Advanced options (hidden by default) -->
-                        <div id="advanced-environment" style="display:none;">
-                            <label style="margin-top:12px;">
-                                Terrain Type:
-                                <select id="setup-terrain">
-                                    <option value="random">Random</option>
-                                    <option value="flat">Flat</option>
-                                    <option value="hilly">Hilly</option>
-                                    <option value="mountain">Mountain</option>
-                                    <option value="valley">Valley</option>
-                                    <option value="ocean">Ocean (Underwater)</option>
-                                </select>
-                            </label>
-                            <label>
-                                Theme:
-                                <select id="setup-theme">
-                                    <option value="random">Random</option>
-                                    <option value="forest">Forest</option>
-                                    <option value="desert">Desert</option>
-                                    <option value="cave">Cave</option>
-                                    <option value="moon">Moon</option>
-                                    <option value="mars">Mars</option>
-                                    <option value="arctic">Arctic</option>
-                                    <option value="ocean">Ocean</option>
-                                    <option value="canyon">Desert Canyon</option>
-                                    <option value="futuristic">Futuristic</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <label style="margin-top:12px;">
-                            <input type="checkbox" id="setup-static-time" />
-                            Static Time (no day/night cycle)
-                        </label>
-                        <label id="time-select-wrap">
-                            Time of Day:
-                            <select id="setup-time">
-                                <option value="auto">Auto/Random</option>
-                                <option value="day">Day</option>
-                                <option value="dusk">Dusk</option>
-                                <option value="night">Night</option>
-                            </select>
-                        </label>
-
-                    </div>
-                    <div class="setup-section">
-                        <h3>Players</h3>
-                        <label>
-                            Total Players:
-                            <input id="setup-total-players" type="number" min="1" max="8" value="2" />
-                        </label>
-
-                        
-                        <label id="solo-rounds-wrap" style="display:none">
-                            Solo Targets:
-                            <input id="setup-solo-targets" type="number" min="1" max="50" value="10" />
-                        </label>
-                        <label id="solo-shots-wrap" style="display:none">
-                            Solo Shots:
-                            <select id="setup-solo-shots">
-                                <option value="10" selected>10 shots</option>
-                                <option value="20">20 shots</option>
-                                <option value="unlimited">Unlimited</option>
-                            </select>
-                        </label>
-                                    <div id="setup-roster" class="roster"></div>
-                                    <div id="setup-slots" class="slots"></div>
-                    </div>
-                                            <div class="setup-section" id="setup-teams-section" style="display:none;">
-                                                <h3>Teams (A/B)</h3>
-                                                <div class="debug-sublabel">Assign each slot to Team A or Team B. Max 4 per team.</div>
-                                                <div id="setup-teams" class="teams"></div>
-                                            </div>
-                    <div class="setup-section">
-                        <h3>Wind</h3>
-                        <label><input type="radio" name="wind" value="none"> No Wind</label>
-                        <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
-                        <label><input type="radio" name="wind" value="high"> High Wind</label>
-                        <label><input type="radio" name="wind" value="random-per-turn"> Random Each Turn</label>
-                    </div>
-
-                    <div class="setup-section">
-                        <h3>Tank Health</h3>
-                        <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
-                        <label><input type="radio" name="health" value="150"> Increased (150%)</label>
-                        <label><input type="radio" name="health" value="200"> High (200%)</label>
-                        <label><input type="radio" name="health" value="300"> Very High (300%)</label>
-                    </div>
-
-                    <div class="setup-section" id="setup-display-section">
-                        <h3>Display</h3>
-                        <label title="Hide name tags for all other tanks. Only your own tank's label is shown.">
-                            <input id="setup-disable-names" type="checkbox" /> Hide other players' names (streamer mode)
-                        </label>
-                    </div>
-
-                    <div class="setup-section" id="setup-gameplay-section">
-                        <h3>Gameplay</h3>
-                        <label title="Allow all players to drive their tanks even when it's not their turn. Only the current player can fire.">
-                            <input id="setup-allow-drive-anytime" type="checkbox" /> Allow driving during other players' turns
-                        </label>
-                    </div>
-
-                    <div class="setup-section" id="setup-ammo-section">
-                        <h3>Ammo</h3>
-                        <label>
-                            Ammo Mode:
-                            <select id="setup-ammo-mode">
-                                <option value="unlimited" selected>Unlimited</option>
-                                <option value="standard">Standard</option>
-                                <option value="no-heavy">No Heavy Weapons</option>
-                                <option value="missile-only">Missile Only</option>
-                                <option value="laser-only">Laser Only</option>
-                                <option value="explosive-only">Explosives Only</option>
-                                <option value="marker-only">Markers Only</option>
-                                <option value="basic-weapons">Basic Weapons (Missile, Homing, Cluster)</option>
-                                <option value="custom">Custom…</option>
-                            </select>
-                        </label>
-                        <div id="setup-ammo-custom" style="display:none; margin-top:8px;">
-                            <div class="debug-sublabel">Per-weapon counts (leave blank for 0)</div>
-                            <div class="ammo-grid">
-                                <label>Missile <input type="number" id="ammo-missile" min="0" value="" placeholder="∞" /></label>
-                                <label>Homing <input type="number" id="ammo-homing" min="0" value="" /></label>
-                                <label>Heavy <input type="number" id="ammo-heavy" min="0" value="" /></label>
-                                <label>Nuke <input type="number" id="ammo-nuke" min="0" value="" /></label>
-                                <label>EMP <input type="number" id="ammo-emp" min="0" value="" /></label>
-                                <label>Laser <input type="number" id="ammo-laser" min="0" value="" /></label>
-                                <label>Cluster <input type="number" id="ammo-cluster" min="0" value="" /></label>
-                                <label>Bunker <input type="number" id="ammo-bunker" min="0" value="" /></label>
-                                <label>MIRV <input type="number" id="ammo-mirv" min="0" value="" /></label>
-                                <label>Funky <input type="number" id="ammo-funky" min="0" value="" /></label>
-                                <label>Drill <input type="number" id="ammo-drill" min="0" value="" /></label>
-                                <label>Acid <input type="number" id="ammo-acid" min="0" value="" /></label>
-                                <label>Napalm <input type="number" id="ammo-napalm" min="0" value="" /></label>
-                                <label>Tracer Round <input type="number" id="ammo-tracer" min="0" value="" /></label>
-                                <label>Smoke Bomb <input type="number" id="ammo-smoke_bomb" min="0" value="" /></label>
-                                <label>Flare <input type="number" id="ammo-flare" min="0" value="" /></label>
-                                <label>Parachute Flare <input type="number" id="ammo-parachute_flare" min="0" value="" /></label>
-                                <label>Marker: Paratroopers <input type="number" id="ammo-marker_attack" min="0" value="" /></label>
-                                <label>Marker: Medics <input type="number" id="ammo-marker_medic" min="0" value="" /></label>
-                                <label>Marker: Airstrike <input type="number" id="ammo-marker_airstrike" min="0" value="" /></label>
-                                <label>Marker: Air Nukes <input type="number" id="ammo-marker_airnukes" min="0" value="" /></label>
-                                <label>Bouncing Bomb <input type="number" id="ammo-bouncing_bomb" min="0" value="" /></label>
-                                <label>Supply Crate <input type="number" id="ammo-supply_crate" min="0" value="" /></label>
-                                <label>Shield <input type="number" id="ammo-shield" min="0" value="" /></label>
-                                <label>Land Mine <input type="number" id="ammo-land_mine" min="0" value="" /></label>
-                                <label>Toxic Gas <input type="number" id="ammo-toxic_gas" min="0" value="" /></label>
-                            </div>
-                        </div>
-                    </div>
-
-                        <!-- Skip modal when no humans remain -->
-                        <div id="skip-modal" class="modal hidden" aria-labelledby="skip-title" aria-modal="true">
-                            <div class="modal-content">
-                                <h2 id="skip-title">All human players are eliminated</h2>
-                                <p>Do you want to skip the remaining AI-only turns and see the result now?</p>
-                                <div style="margin-top:16px; display:flex; gap:10px; justify-content:center;">
-                                    <button id="skip-continue">Keep Watching</button>
-                                    <button id="skip-to-result" class="primary">Skip to Result</button>
-                                </div>
-                            </div>
-                        </div>
-                </div>
-                <div class="setup-actions">
-                    <button id="setup-reset" class="danger">Reset All</button>
-                    <div class="setup-actions-right">
-                        <button id="setup-cancel">Cancel</button>
-                        <button id="setup-start" class="primary">Start Game</button>
-                    </div>
-                </div>
+          <div class="modal-content setup briefing">
+            <div class="modal-titlebar">
+              <div class="h" id="new-game-title">OPERATIONAL <span class="accent">BRIEFING</span></div>
+              <div class="sub">CONFIGURE ENGAGEMENT · PRESS [↵] TO COMMIT</div>
+              <button id="briefing-close" class="modal-close" aria-label="Close">ESC</button>
             </div>
+            <div class="modal-body briefing-body">
+              <div class="briefing-grid">
+                <div class="briefing-col left">
+                  <section class="briefing-panel" data-panel="mode">
+                    <div class="panel-label">▸ MODE</div>
+                    <div class="mode-tiles">
+                      <button class="mode-tile" data-mode="classic">
+                        <div class="em">⚔</div>
+                        <div class="nm">CLASSIC</div>
+                        <div class="meta">FREE FOR ALL</div>
+                      </button>
+                      <button class="mode-tile" data-mode="teams">
+                        <div class="em">⛨</div>
+                        <div class="nm">TEAMS</div>
+                        <div class="meta">2 × 4</div>
+                      </button>
+                      <button class="mode-tile" data-mode="solo">
+                        <div class="em">⊙</div>
+                        <div class="nm">SOLO</div>
+                        <div class="meta">TARGET PRACTICE</div>
+                      </button>
+                      <button class="mode-tile" data-mode="realtime">
+                        <div class="em">⚡</div>
+                        <div class="nm">REALTIME</div>
+                        <div class="meta">NO TURNS</div>
+                      </button>
+                    </div>
+                    <!-- Existing radio inputs preserved for JS compatibility (hidden via CSS) -->
+                    <label style="display:none"><input type="radio" name="mode" value="classic" checked> Classic</label>
+                    <label style="display:none"><input type="radio" name="mode" value="solo"> Solo (Target Practice)</label>
+                    <label style="display:none"><input type="radio" name="mode" value="teams"> Teams (2×4)</label>
+                    <label style="display:none"><input type="radio" name="mode" value="realtime"> Realtime (No Turns)</label>
+                  </section>
+                  <section class="briefing-panel" data-panel="terrain">
+                    <div class="panel-label">▸ TERRAIN</div>
+                    <div class="env-tiles">
+                      <button class="env-tile" data-env="forest"><div class="em">🌲</div><div class="nm">FOREST</div></button>
+                      <button class="env-tile" data-env="desert"><div class="em">🏜</div><div class="nm">DESERT</div></button>
+                      <button class="env-tile" data-env="canyon"><div class="em">🏜</div><div class="nm">CANYON</div></button>
+                      <button class="env-tile" data-env="arctic"><div class="em">❄</div><div class="nm">ARCTIC</div></button>
+                      <button class="env-tile" data-env="ocean"><div class="em">🌊</div><div class="nm">OCEAN</div></button>
+                      <button class="env-tile" data-env="cave"><div class="em">🕳</div><div class="nm">CAVE</div></button>
+                      <button class="env-tile" data-env="moon"><div class="em">🌙</div><div class="nm">MOON</div></button>
+                      <button class="env-tile" data-env="mars"><div class="em">🔴</div><div class="nm">MARS</div></button>
+                      <button class="env-tile" data-env="futuristic"><div class="em">🚀</div><div class="nm">FUTURIST</div></button>
+                      <button class="env-tile" data-env="random"><div class="em">🎲</div><div class="nm">RANDOM</div></button>
+                    </div>
+                    <!-- existing select element preserved for JS — hidden in Task 10 -->
+                    <label style="display:none">
+                      Environment Preset:
+                      <select id="setup-environment">
+                        <option value="random">🎲 Random</option>
+                        <optgroup label="Earth">
+                          <option value="forest">🌲 Forest (Hilly, Day)</option>
+                          <option value="desert">🏜️ Desert (Flat, Day)</option>
+                          <option value="canyon">🏜️ Canyon (Canyon, Dusk)</option>
+                          <option value="arctic">❄️ Arctic (Hilly, Day)</option>
+                          <option value="ocean">🌊 Ocean (Underwater, Day)</option>
+                        </optgroup>
+                        <optgroup label="Underground">
+                          <option value="cave">🕳️ Cave (Mountain, Dark)</option>
+                        </optgroup>
+                        <optgroup label="Space">
+                          <option value="moon">🌙 Moon (Hilly, Night)</option>
+                          <option value="mars">🔴 Mars (Mountain, Dusk)</option>
+                        </optgroup>
+                        <optgroup label="Sci-Fi">
+                          <option value="futuristic">🚀 Futuristic (Flat, Night)</option>
+                        </optgroup>
+                        <optgroup label="Custom">
+                          <option value="custom">⚙️ Custom (Advanced)</option>
+                        </optgroup>
+                      </select>
+                    </label>
+                    <!-- existing advanced custom terrain section, kept hidden by default -->
+                    <div id="advanced-environment" style="display:none">
+                      <label>
+                        Terrain Type:
+                        <select id="setup-terrain">
+                          <option value="random">Random</option>
+                          <option value="flat">Flat</option>
+                          <option value="hilly">Hilly</option>
+                          <option value="mountain">Mountain</option>
+                          <option value="valley">Valley</option>
+                          <option value="ocean">Ocean (Underwater)</option>
+                        </select>
+                      </label>
+                      <label>
+                        Theme:
+                        <select id="setup-theme">
+                          <option value="random">Random</option>
+                          <option value="forest">Forest</option>
+                          <option value="desert">Desert</option>
+                          <option value="cave">Cave</option>
+                          <option value="moon">Moon</option>
+                          <option value="mars">Mars</option>
+                          <option value="arctic">Arctic</option>
+                          <option value="ocean">Ocean</option>
+                          <option value="canyon">Desert Canyon</option>
+                          <option value="futuristic">Futuristic</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label class="checkbox-row" style="margin-top:10px">
+                      <input type="checkbox" id="setup-static-time" />
+                      <span>STATIC TIME (no day/night)</span>
+                    </label>
+                    <div id="time-select-wrap" style="margin-top:8px">
+                      <div class="t-micro" style="margin-bottom:6px">TIME</div>
+                      <div class="pill-row" data-pill-group="time">
+                        <button type="button" class="pill" data-pill="auto">RANDOM</button>
+                        <button type="button" class="pill" data-pill="day">DAY</button>
+                        <button type="button" class="pill" data-pill="dusk">DUSK</button>
+                        <button type="button" class="pill" data-pill="night">NIGHT</button>
+                      </div>
+                      <select id="setup-time" style="display:none">
+                        <option value="auto">RANDOM</option>
+                        <option value="day">DAY</option>
+                        <option value="dusk">DUSK</option>
+                        <option value="night">NIGHT</option>
+                      </select>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="roster">
+                    <div class="panel-label">▸ ROSTER</div>
+                    <div class="roster-controls">
+                      <span class="t-mono" style="font-size:10px; color:var(--text-muted); letter-spacing:2px">SLOTS</span>
+                      <div class="stepper">
+                        <button type="button" id="setup-slots-minus">−</button>
+                        <span class="val" id="setup-slots-value">4</span>
+                        <button type="button" id="setup-slots-plus">+</button>
+                      </div>
+                      <span class="t-mono" style="font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-left:auto">MAX 8</span>
+                    </div>
+                    <!-- hidden legacy inputs preserved -->
+                    <div style="display:none">
+                      <label>
+                        Total Players:
+                        <input id="setup-total-players" type="number" min="1" max="8" value="2" />
+                      </label>
+                      <label id="solo-rounds-wrap">
+                        Solo Targets:
+                        <input id="setup-solo-targets" type="number" min="1" max="50" value="10" />
+                      </label>
+                      <label id="solo-shots-wrap">
+                        Solo Shots:
+                        <select id="setup-solo-shots">
+                          <option value="10" selected>10 shots</option>
+                          <option value="20">20 shots</option>
+                          <option value="unlimited">Unlimited</option>
+                        </select>
+                      </label>
+                    </div>
+                    <div id="setup-roster" class="roster"></div>
+                    <div id="setup-slots" class="slots"></div>
+                    <div id="setup-teams-section" style="display:none;">
+                      <div class="debug-sublabel">Assign each slot to Team A or Team B. Max 4 per team.</div>
+                      <div id="setup-teams" class="teams"></div>
+                    </div>
+                  </section>
+                </div>
+                <div class="briefing-col right">
+                  <section class="briefing-panel" data-panel="wind">
+                    <div class="panel-label">▸ WIND</div>
+                    <div class="pill-row" data-pill-group="wind">
+                      <button type="button" class="pill" data-pill="none">NONE</button>
+                      <button type="button" class="pill" data-pill="low">LOW</button>
+                      <button type="button" class="pill" data-pill="high">HIGH</button>
+                      <button type="button" class="pill" data-pill="random-per-turn">RANDOM</button>
+                    </div>
+                    <!-- existing radios preserved hidden -->
+                    <div style="display:none">
+                      <label><input type="radio" name="wind" value="none"> No Wind</label>
+                      <label><input type="radio" name="wind" value="low" checked> Low Wind</label>
+                      <label><input type="radio" name="wind" value="high"> High Wind</label>
+                      <label><input type="radio" name="wind" value="random-per-turn"> Random Each Turn</label>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="health">
+                    <div class="panel-label">▸ TANK HEALTH</div>
+                    <div class="pill-row" data-pill-group="health">
+                      <button type="button" class="pill" data-pill="100">100</button>
+                      <button type="button" class="pill" data-pill="150">150</button>
+                      <button type="button" class="pill" data-pill="200">200</button>
+                      <button type="button" class="pill" data-pill="300">300</button>
+                    </div>
+                    <!-- existing radios preserved hidden -->
+                    <div style="display:none">
+                      <label><input type="radio" name="health" value="100" checked> Normal (100%)</label>
+                      <label><input type="radio" name="health" value="150"> Increased (150%)</label>
+                      <label><input type="radio" name="health" value="200"> High (200%)</label>
+                      <label><input type="radio" name="health" value="300"> Very High (300%)</label>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="ammo">
+                    <div class="panel-label">▸ AMMO</div>
+                    <div class="pill-row" data-pill-group="ammo-mode" style="margin-bottom:8px">
+                      <button type="button" class="pill" data-pill="unlimited">UNLIMITED</button>
+                      <button type="button" class="pill" data-pill="standard">STANDARD</button>
+                      <button type="button" class="pill" data-pill="custom">CUSTOM</button>
+                    </div>
+                    <div class="pill-row" data-pill-group="ammo-preset">
+                      <button type="button" class="pill" data-pill="no-heavy">NO HEAVY</button>
+                      <button type="button" class="pill" data-pill="missile-only">MISSILE ONLY</button>
+                      <button type="button" class="pill" data-pill="laser-only">LASER ONLY</button>
+                      <button type="button" class="pill" data-pill="basic-weapons">BASIC ONLY</button>
+                    </div>
+                    <!-- existing select preserved hidden -->
+                    <div style="display:none">
+                      <label>
+                        Ammo Mode:
+                        <select id="setup-ammo-mode">
+                          <option value="unlimited" selected>Unlimited</option>
+                          <option value="standard">Standard</option>
+                          <option value="no-heavy">No Heavy Weapons</option>
+                          <option value="missile-only">Missile Only</option>
+                          <option value="laser-only">Laser Only</option>
+                          <option value="explosive-only">Explosives Only</option>
+                          <option value="marker-only">Markers Only</option>
+                          <option value="basic-weapons">Basic Weapons (Missile, Homing, Cluster)</option>
+                          <option value="custom">Custom…</option>
+                        </select>
+                      </label>
+                      <div id="setup-ammo-custom" style="margin-top:8px;">
+                        <div class="debug-sublabel">Per-weapon counts (leave blank for 0)</div>
+                        <div class="ammo-grid">
+                          <label>Missile <input type="number" id="ammo-missile" min="0" value="" placeholder="∞" /></label>
+                          <label>Homing <input type="number" id="ammo-homing" min="0" value="" /></label>
+                          <label>Heavy <input type="number" id="ammo-heavy" min="0" value="" /></label>
+                          <label>Nuke <input type="number" id="ammo-nuke" min="0" value="" /></label>
+                          <label>EMP <input type="number" id="ammo-emp" min="0" value="" /></label>
+                          <label>Laser <input type="number" id="ammo-laser" min="0" value="" /></label>
+                          <label>Cluster <input type="number" id="ammo-cluster" min="0" value="" /></label>
+                          <label>Bunker <input type="number" id="ammo-bunker" min="0" value="" /></label>
+                          <label>MIRV <input type="number" id="ammo-mirv" min="0" value="" /></label>
+                          <label>Funky <input type="number" id="ammo-funky" min="0" value="" /></label>
+                          <label>Drill <input type="number" id="ammo-drill" min="0" value="" /></label>
+                          <label>Acid <input type="number" id="ammo-acid" min="0" value="" /></label>
+                          <label>Napalm <input type="number" id="ammo-napalm" min="0" value="" /></label>
+                          <label>Tracer Round <input type="number" id="ammo-tracer" min="0" value="" /></label>
+                          <label>Smoke Bomb <input type="number" id="ammo-smoke_bomb" min="0" value="" /></label>
+                          <label>Flare <input type="number" id="ammo-flare" min="0" value="" /></label>
+                          <label>Parachute Flare <input type="number" id="ammo-parachute_flare" min="0" value="" /></label>
+                          <label>Marker: Paratroopers <input type="number" id="ammo-marker_attack" min="0" value="" /></label>
+                          <label>Marker: Medics <input type="number" id="ammo-marker_medic" min="0" value="" /></label>
+                          <label>Marker: Airstrike <input type="number" id="ammo-marker_airstrike" min="0" value="" /></label>
+                          <label>Marker: Air Nukes <input type="number" id="ammo-marker_airnukes" min="0" value="" /></label>
+                          <label>Bouncing Bomb <input type="number" id="ammo-bouncing_bomb" min="0" value="" /></label>
+                          <label>Supply Crate <input type="number" id="ammo-supply_crate" min="0" value="" /></label>
+                          <label>Shield <input type="number" id="ammo-shield" min="0" value="" /></label>
+                          <label>Land Mine <input type="number" id="ammo-land_mine" min="0" value="" /></label>
+                          <label>Toxic Gas <input type="number" id="ammo-toxic_gas" min="0" value="" /></label>
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                  <section class="briefing-panel" data-panel="options">
+                    <div class="panel-label">▸ OPTIONS</div>
+                    <label class="checkbox-row"><input type="checkbox" id="setup-allow-drive-anytime" /><span>DRIVE ANYTIME <span class="ck-meta">non-turn movement</span></span></label>
+                    <label class="checkbox-row"><input type="checkbox" id="restore-state-toggle" /><span>RESTORE LAST SESSION <span class="ck-meta">resume on launch</span></span></label>
+                    <label class="checkbox-row" style="display:none"><input type="checkbox" id="setup-disable-names" /><span>HIDE OTHER NAMES <span class="ck-meta">streamer mode</span></span></label>
+                  </section>
+                </div>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button id="setup-reset" class="btn-ghost danger">RESET ALL</button>
+              <button id="setup-start" class="btn-primary" style="margin-left:auto">▶ START ENGAGEMENT</button>
+              <button id="setup-cancel" class="btn-ghost">CANCEL</button>
+            </div>
+          </div>
         </dialog>
+
+    <!-- Skip modal when no humans remain -->
+    <dialog id="skip-modal" class="modal hidden" aria-labelledby="skip-title">
+        <div class="modal-content">
+            <div class="modal-titlebar">
+                <div class="h" id="skip-title">ALL HUMANS <span class="accent">ELIMINATED</span></div>
+            </div>
+            <div class="modal-body">
+                <p>Do you want to skip the remaining AI-only turns and see the result now?</p>
+            </div>
+            <div class="modal-actions">
+                <button id="skip-continue" class="btn-ghost">Keep Watching</button>
+                <button id="skip-to-result" class="btn-primary">Skip to Result</button>
+            </div>
+        </div>
+    </dialog>
 
     <!-- Load init module which handles all dependencies and main game -->
     <script type="module" src="/js/init.js"></script>

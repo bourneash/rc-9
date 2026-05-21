@@ -4,6 +4,8 @@
 
 import { getMemoryManager, resetMemoryManager } from './memory-manager.js';
 import mobileFixes from './mobile-fixes.js';
+import * as TitleScreen from './title-screen.js';
+import * as Overlays from './canvas-overlays.js';
 
 // Global cleanup function for game restarts
 function cleanupGameResources() {
@@ -416,33 +418,35 @@ globalThis.hideNoGameOverlay = hideNoGameOverlay;
       } catch {}
     });
 
-    // Always open New Game setup on page load — snapshot restore is too fragile
-    // (AI timers, animation state, event listeners don't survive page reload)
-    const openNewGameSetup = () => {
+    // Title screen (Task 14) is now the entry point — it shows on boot and
+    // opens the New Game modal when the player chooses NEW ENGAGEMENT.
+    // Only fall back to opening the modal directly if the title screen element
+    // is absent (e.g. an older build or integration test that strips markup).
+    const openNewGameSetupFallback = () => {
       try {
+        if (document.getElementById('title-screen')) {
+          // Title screen present — it will handle first-boot modal opening.
+          console.info('[bootstrap] Title screen present; skipping auto-open of New Game modal');
+          return;
+        }
         const modal = document.getElementById('new-game-modal');
         if (!modal) {
           console.warn('[bootstrap] New Game modal element not found, retrying...');
-          // Retry after a short delay if modal doesn't exist yet
-          setTimeout(openNewGameSetup, 100);
+          setTimeout(openNewGameSetupFallback, 100);
           return;
         }
-
         openNewGameModal();
-        console.info('[bootstrap] Opened New Game setup modal');
+        console.info('[bootstrap] Opened New Game setup modal (title screen absent)');
       } catch (err) {
         console.error('[bootstrap] Failed to open New Game modal:', err);
-        // Fallback: show a simple start screen overlay
         showNoGameOverlay();
       }
     };
 
-    // Always open the New Game modal on first visit or when no game exists
-    // This provides a clear, intentional start to gameplay
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', openNewGameSetup);
+      document.addEventListener('DOMContentLoaded', openNewGameSetupFallback);
     } else {
-      openNewGameSetup();
+      openNewGameSetupFallback();
     }
   } catch (e) {
     console.error('[main] bootstrapSessionRestore failed:', e);
@@ -786,6 +790,8 @@ function closeGameOverModal() {
   try {
     saveLastUIState('playing');
   } catch {}
+  // Game is now over and any modal is gone → centered CTA should reappear.
+  if (typeof refreshEmptyStateCTA === 'function') refreshEmptyStateCTA();
 }
 function ensureGameOverModalHandlers() {
   const modal = document.getElementById('game-over-modal');
@@ -814,28 +820,16 @@ function ensureGameOverModalHandlers() {
       e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
     if (!inside) closeGameOverModal();
   });
+  // Return to Command button — closes modal and shows title screen
+  document.getElementById('er-return')?.addEventListener('click', () => {
+    closeGameOverModal();
+    TitleScreen.show();
+  });
   modal.dataset.handlers = '1';
-}
-
-// Restart game helper function
-function hideOptionsModalShell() {
-  const modal = document.getElementById('options-modal');
-  if (!modal) return;
-  try {
-    modal.close?.();
-  } catch {}
-  modal.classList.add('hidden');
-  deactivateModalA11y(modal);
-  try {
-    saveLastUIState('playing');
-  } catch {}
 }
 
 function restartGame() {
   // Close any open modals
-  try {
-    hideOptionsModalShell();
-  } catch {}
   try {
     closeRestartModal();
   } catch {}
@@ -884,125 +878,6 @@ globalThis.openGameOverModal = openGameOverModal;
 globalThis.closeGameOverModal = closeGameOverModal;
 globalThis.restartGame = restartGame;
 
-// --- Auto-restart functionality ---
-let autoRestartTimer = null;
-let autoRestartCountdown = null;
-
-function syncAutoRestartCheckboxes(
-  checked,
-  checkbox1 = document.getElementById('auto-restart-toggle'),
-  checkbox2 = document.getElementById('auto-restart-checkbox')
-) {
-  if (checkbox1) checkbox1.checked = checked;
-  if (checkbox2) checkbox2.checked = checked;
-}
-
-function checkAutoRestart() {
-  // Check both checkboxes (old one in options modal and new one in restart modal)
-  const checkbox1 = document.getElementById('auto-restart-toggle');
-  const checkbox2 = document.getElementById('auto-restart-checkbox');
-
-  // Load saved preference
-  let saved = null;
-  try {
-    saved = localStorage.getItem('auto-restart-enabled');
-    if (saved === null) saved = localStorage.getItem('se.autoRestart'); // fallback to old key
-  } catch {}
-
-  const isEnabled = saved === 'true';
-
-  syncAutoRestartCheckboxes(isEnabled, checkbox1, checkbox2);
-
-  return isEnabled;
-}
-
-function startAutoRestartCountdown() {
-  if (!checkAutoRestart()) return;
-
-  // Close game over modal
-  closeGameOverModal();
-
-  // Open countdown modal
-  const modal = document.getElementById('auto-restart-modal');
-  if (!modal) return;
-
-  const countdownEl = document.getElementById('auto-restart-countdown');
-  let seconds = 5;
-
-  if (countdownEl) countdownEl.textContent = seconds;
-
-  try {
-    if ('showModal' in modal && !modal.open) modal.showModal();
-  } catch {}
-  modal.classList.remove('hidden');
-  activateModalA11y(modal, '#cancel-auto-restart');
-
-  // Countdown timer using memoryManager to prevent leaks
-  autoRestartCountdown = memoryManager.setInterval(() => {
-    seconds--;
-    if (countdownEl) countdownEl.textContent = seconds;
-
-    if (seconds <= 0) {
-      if (autoRestartCountdown) {
-        memoryManager.clearInterval(autoRestartCountdown);
-        autoRestartCountdown = null;
-      }
-      closeAutoRestartModal();
-      // Trigger restart
-      const restartBtn = document.getElementById('restart-button');
-      if (restartBtn) restartBtn.click();
-    }
-  }, 1000);
-}
-
-function closeAutoRestartModal() {
-  const modal = document.getElementById('auto-restart-modal');
-  if (!modal) return;
-
-  if (autoRestartCountdown) {
-    memoryManager.clearInterval(autoRestartCountdown);
-    autoRestartCountdown = null;
-  }
-
-  try {
-    modal.close?.();
-  } catch {}
-  modal.classList.add('hidden');
-  deactivateModalA11y(modal);
-}
-
-function setupAutoRestartHandlers() {
-  const checkbox1 = document.getElementById('auto-restart-toggle');
-  const checkbox2 = document.getElementById('auto-restart-checkbox');
-  const cancelBtn = document.getElementById('cancel-auto-restart');
-
-  // Save preference when either checkbox changes
-  const savePreference = checked => {
-    try {
-      localStorage.setItem('auto-restart-enabled', String(checked));
-      syncAutoRestartCheckboxes(checked, checkbox1, checkbox2);
-    } catch {}
-  };
-
-  checkbox1?.addEventListener('change', e => savePreference(e.target.checked));
-  checkbox2?.addEventListener('change', e => savePreference(e.target.checked));
-
-  // Cancel button
-  cancelBtn?.addEventListener('click', () => {
-    closeAutoRestartModal();
-    // Uncheck the auto-restart option
-    savePreference(false);
-  });
-
-  // Load saved preference on page load
-  checkAutoRestart();
-}
-
-// Initialize auto-restart handlers on page load
-document.addEventListener('DOMContentLoaded', setupAutoRestartHandlers);
-
-// Expose auto-restart function globally for game.js to call
-globalThis.startAutoRestartCountdown = startAutoRestartCountdown;
 // Expose openNewGameModal globally so victory toast can call it
 globalThis.openNewGameModal = function () {
   openNewGameModal();
@@ -1012,13 +887,6 @@ globalThis.openNewGameModal = function () {
 function openNewGameModal() {
   const modal = document.getElementById('new-game-modal');
   if (!modal) return;
-  // If the Game Options modal is open, close it first so it doesn't pop back up
-  try {
-    const opt = document.getElementById('options-modal');
-    if (opt && !opt.classList.contains('hidden')) {
-      hideOptionsModalShell();
-    }
-  } catch {}
   // Ensure close handlers are attached once
   ensureNewGameModalHandlers();
   // Remove hidden BEFORE showModal — dialog must be visible for showModal() to work
@@ -1046,16 +914,191 @@ function openNewGameModal() {
   // Apply mode-driven UI (Solo clamps players) before building slots
   renderTeamsUI();
   renderSlotsUI();
+  // Sync tile selections to reflect current radio/select state
+  syncModeTilesFromRadios();
+  syncEnvTilesFromSelect();
+  // Sync pill groups to reflect current hidden input/select state
+  syncWindPills();
+  syncHealthPills();
+  syncAmmoModePills();
+  syncAmmoPresetPills();
+  syncTimePills();
+  // Wire the Restore Last Session checkbox (moved here from removed Options modal)
+  const restoreCb = document.getElementById('restore-state-toggle');
+  if (restoreCb) {
+    restoreCb.checked = getRestoreEnabled();
+    if (restoreCb.dataset.bound !== '1') {
+      restoreCb.addEventListener('change', () => setRestoreEnabled(restoreCb.checked));
+      restoreCb.dataset.bound = '1';
+    }
+  }
+  refreshEmptyStateCTA();
 }
+
+// ===== Briefing: Mode tiles ↔ existing radio inputs =====
+function syncModeTilesFromRadios() {
+  const checked = document.querySelector('#new-game-modal input[name="mode"]:checked');
+  document.querySelectorAll('#new-game-modal .mode-tile').forEach(t => {
+    t.classList.toggle('selected', t.dataset.mode === (checked?.value || ''));
+  });
+}
+(function wireBriefingTiles() {
+  document.querySelectorAll('#new-game-modal .mode-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      const mode = tile.dataset.mode;
+      const radio = document.querySelector(`#new-game-modal input[name="mode"][value="${mode}"]`);
+      if (radio) {
+        radio.checked = true;
+        radio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      syncModeTilesFromRadios();
+    });
+  });
+
+  // ===== Briefing: Env tiles ↔ existing #setup-environment select =====
+  const envSelect = document.getElementById('setup-environment');
+  document.querySelectorAll('#new-game-modal .env-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      if (envSelect) {
+        envSelect.value = tile.dataset.env;
+        envSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      syncEnvTilesFromSelect();
+    });
+  });
+})();
+
+function syncEnvTilesFromSelect() {
+  const envSelect = document.getElementById('setup-environment');
+  const v = envSelect?.value;
+  document.querySelectorAll('#new-game-modal .env-tile').forEach(t => {
+    t.classList.toggle('selected', t.dataset.env === v);
+  });
+}
+
+// ===== Generic pill group sync — keeps hidden input/select in sync =====
+function wirePillGroup(group, getCurrent, setCurrent) {
+  const pills = document.querySelectorAll(`.pill-row[data-pill-group="${group}"] .pill`);
+  function reflect() {
+    const cur = String(getCurrent() ?? '');
+    pills.forEach(p => p.classList.toggle('selected', p.dataset.pill === cur));
+  }
+  pills.forEach(p => p.addEventListener('click', () => {
+    setCurrent(p.dataset.pill);
+    reflect();
+  }));
+  return reflect;
+}
+
+const syncWindPills = wirePillGroup('wind',
+  () => document.querySelector('#new-game-modal input[name="wind"]:checked')?.value,
+  v => {
+    const r = document.querySelector(`#new-game-modal input[name="wind"][value="${v}"]`);
+    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+);
+const syncHealthPills = wirePillGroup('health',
+  () => document.querySelector('#new-game-modal input[name="health"]:checked')?.value,
+  v => {
+    const r = document.querySelector(`#new-game-modal input[name="health"][value="${v}"]`);
+    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+  }
+);
+const ammoSelect = document.getElementById('setup-ammo-mode');
+const syncAmmoModePills = wirePillGroup('ammo-mode',
+  () => ammoSelect?.value,
+  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+const syncAmmoPresetPills = wirePillGroup('ammo-preset',
+  () => ammoSelect?.value,
+  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+
+const timeSelect = document.getElementById('setup-time');
+const syncTimePills = wirePillGroup('time',
+  () => timeSelect?.value,
+  v => { if (timeSelect) { timeSelect.value = v; timeSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+);
+
+// ===== Tank callsign helpers =====
+const CALLSIGNS = ['JAGUAR', 'VIPER', 'RAVEN', 'HAWK', 'COBRA', 'FALCON', 'GHOST', 'WOLF', 'OWL', 'BEAR'];
+
+function defaultCallsign(slotIdx) {
+  try {
+    const legacy = localStorage.getItem(`rc9.player.name.${slotIdx}`);
+    if (legacy) return legacy;
+  } catch {}
+  try {
+    const stored = localStorage.getItem(`rc9.callsign.slot.${slotIdx}`);
+    if (stored) return stored;
+  } catch {}
+  return CALLSIGNS[slotIdx % CALLSIGNS.length];
+}
+
+function saveCallsign(slotIdx, name) {
+  try { localStorage.setItem(`rc9.callsign.slot.${slotIdx}`, name); } catch {}
+}
+
+// ===== Briefing stepper (slot count) =====
+(function wireBriefingStepper() {
+  const totalInput = document.getElementById('setup-total-players');
+  const stepperVal = document.getElementById('setup-slots-value');
+  function setSlotCount(n) {
+    n = Math.max(1, Math.min(8, n));
+    if (totalInput) {
+      totalInput.value = String(n);
+      totalInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+    if (stepperVal) stepperVal.textContent = String(n).padStart(2, '0');
+  }
+  document.getElementById('setup-slots-minus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) - 1));
+  document.getElementById('setup-slots-plus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) + 1));
+  // Initial reflect on DOMContentLoaded
+  document.addEventListener('DOMContentLoaded', () => {
+    if (totalInput) setSlotCount(parseInt(totalInput.value || '4', 10));
+  });
+})();
+
+// ===== Briefing: Enter key commits Start Engagement =====
+(function wireBriefingEnter() {
+  const modal = document.getElementById('new-game-modal');
+  if (!modal) return;
+  modal.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    // Skip if focus is on a <select> (let the browser handle its own Enter behavior).
+    const t = e.target;
+    if (t && t.tagName === 'SELECT') return;
+    // Skip if focus is on the Reset/Cancel buttons — Enter on them should activate them, not Start.
+    if (t && (t.id === 'setup-reset' || t.id === 'setup-cancel' || t.id === 'briefing-close')) return;
+    e.preventDefault();
+    document.getElementById('setup-start')?.click();
+  });
+})();
 
 function hasActiveGame() {
   return !!(game?.tanks && Array.isArray(game.tanks) && game.tanks.length > 0 && !game.gameOver);
 }
 
-function closeNewGameModal() {
-  // Don't allow closing if no game is in progress — user must start a game
-  if (!hasActiveGame()) return;
+// Visibility for the centered "no engagement in progress" CTA panel.
+function refreshEmptyStateCTA() {
+  const cta = document.getElementById('empty-state-cta');
+  if (!cta) return;
+  const titleVisible = !document.getElementById('title-screen')?.hasAttribute('hidden');
+  const isOpen = id => {
+    const el = document.getElementById(id);
+    return !!(el && el.open && !el.classList.contains('hidden'));
+  };
+  const blockingModal = isOpen('new-game-modal') || isOpen('game-over-modal');
+  cta.hidden = titleVisible || hasActiveGame() || blockingModal;
+}
+globalThis.refreshEmptyStateCTA = refreshEmptyStateCTA;
 
+// Click the CTA → open Briefing
+document.getElementById('empty-state-new-game')?.addEventListener('click', () => {
+  openNewGameModal();
+});
+
+function closeNewGameModal() {
   const modal = document.getElementById('new-game-modal');
   try {
     modal?.close?.();
@@ -1071,6 +1114,8 @@ function closeNewGameModal() {
   try {
     saveLastUIState('playing');
   } catch {}
+  // If there's no game running, the centered CTA takes over.
+  refreshEmptyStateCTA();
 }
 
 function renderThemePreviews() {
@@ -1360,8 +1405,9 @@ function bindNewGameModalEvents() {
   document.getElementById('setup-solo-shots')?.addEventListener('change', () => {
     persistSetupSelection();
   });
-  document.getElementById('setup-disable-names')?.addEventListener('change', () => {
+  document.getElementById('setup-disable-names')?.addEventListener('change', e => {
     persistSetupSelection();
+    Overlays.setStreamerMode(!!e.target.checked);
   });
   document.getElementById('setup-allow-drive-anytime')?.addEventListener('change', () => {
     persistSetupSelection();
@@ -1532,27 +1578,15 @@ function ensureNewGameModalHandlers() {
   modal._escHandler = escHandler;
   globalThis.addEventListener('keydown', escHandler);
 
-  // Native dialog cancel event (Esc) — prevent if no active game
+  // Native dialog cancel event (Esc) — route through closeNewGameModal so
+  // post-close cleanup (return to title screen if no active game) runs.
   modal.addEventListener('cancel', e => {
-    if (!hasActiveGame()) {
-      e.preventDefault();
-      return;
-    }
     e.preventDefault();
     closeNewGameModal();
   });
 
-  // Native dialog close event — re-open if no active game
-  modal.addEventListener('close', () => {
-    if (!hasActiveGame()) {
-      // Dialog was closed but no game is running — force it back open
-      setTimeout(() => openNewGameModal(), 0);
-    }
-  });
-
-  // Click outside modal-content closes (only if game is active)
+  // Click outside modal-content closes.
   modal.addEventListener('click', e => {
-    if (!hasActiveGame()) return;
     const content = modal.querySelector('.modal-content');
     if (!content) return;
     const r = content.getBoundingClientRect();
@@ -1842,7 +1876,7 @@ function renderSlotsUI() {
     nameInput.type = 'text';
     nameInput.className = 'slot-name';
     nameInput.placeholder = `Player ${i + 1} Name`;
-    nameInput.value = prev[i]?.name || stored?.[i]?.name || (i === 0 ? 'Player 1' : '');
+    nameInput.value = prev[i]?.name || stored?.[i]?.name || defaultCallsign(i);
 
     // Tank style with left/right arrows + live preview glyph
     const styleWrap = document.createElement('span');
@@ -2002,7 +2036,10 @@ function renderSlotsUI() {
       syncVisibility();
       persist();
     });
-    nameInput.addEventListener('input', persist);
+    nameInput.addEventListener('input', () => {
+      saveCallsign(i, nameInput.value);
+      persist();
+    });
     // style buttons and palette update persist via their handlers
     syncVisibility();
 
@@ -2153,12 +2190,7 @@ function bindUI() {
   const mobileFireBtn = document.getElementById('mobile-fire');
   const clearLogBtn = document.getElementById('clear-log-button');
   const newGameBtn = document.getElementById('new-game-button');
-  const openSetupBtn = document.getElementById('open-setup');
   const debugTab = document.getElementById('debug-tab');
-  const restartBtn = document.getElementById('restart-button');
-  // Pause button removed
-  const resumeSavedBtn = document.getElementById('resume-saved-button');
-  const clearSavedBtn = document.getElementById('clear-saved-button');
   // Audio controls
   const muteBtn = document.getElementById('audio-mute');
   const musicBtn = document.getElementById('music-toggle');
@@ -2521,7 +2553,18 @@ function bindUI() {
       'land_mine',
       'toxic_gas',
     ];
-    weaponMenu.innerHTML = '';
+    weaponMenu.replaceChildren();
+    // Header row
+    const titleBar = document.createElement('div');
+    titleBar.className = 'menu-title';
+    const titleText = document.createElement('span');
+    titleText.textContent = 'SELECT WEAPON';
+    titleBar.appendChild(titleText);
+    weaponMenu.appendChild(titleBar);
+    // Tile grid container
+    const grid = document.createElement('div');
+    grid.className = 'menu-grid';
+    weaponMenu.appendChild(grid);
     const waterOnly =
       game.waterOnlyWeapons ||
       new Set([
@@ -2586,9 +2629,15 @@ function bindUI() {
         }
       }
       // Highlight current selection
-      if (t.weapon === w) item.style.outline = '2px solid #00f5ff';
-      weaponMenu.appendChild(item);
+      if (t.weapon === w) item.classList.add('selected');
+      grid.appendChild(item);
     }
+    // Add available-count to title bar now that we know how many tiles were rendered
+    const availCount = grid.querySelectorAll('.weapon-item:not(.disabled)').length;
+    const countSpan = document.createElement('span');
+    countSpan.className = 'count';
+    countSpan.textContent = String(availCount) + ' AVAILABLE';
+    titleBar.appendChild(countSpan);
   }
 
   function syncWeaponMenuState() {
@@ -2611,7 +2660,7 @@ function bindUI() {
         : isEmpty
           ? 'Out of ammo'
           : '';
-      item.style.outline = t.weapon === weaponKey ? '2px solid #00f5ff' : '';
+      item.classList.toggle('selected', t.weapon === weaponKey);
 
       const badge = item.querySelector('.weapon-ammo');
       if (badge) {
@@ -2758,14 +2807,6 @@ function bindUI() {
     // Delegate gating to game.fire() for consistency
     game.fire();
   });
-  restartBtn?.addEventListener('click', e => {
-    e.preventDefault();
-    // Close modal UI first to remove any overlays/backdrops
-    try {
-      closeOptionsModal();
-    } catch {}
-    performGameReset();
-  });
   clearLogBtn?.addEventListener('click', e => {
     e.preventDefault();
     game.clearLog();
@@ -2775,41 +2816,6 @@ function bindUI() {
     document.getElementById('game-over-modal')?.classList.add('hidden');
     openNewGameModal();
   });
-  openSetupBtn?.addEventListener('click', e => {
-    e.preventDefault();
-    // Close Options before opening New Game to avoid it resurfacing after Start
-    closeOptionsModal();
-    openNewGameModal();
-  });
-  resumeSavedBtn?.addEventListener('click', e => {
-    e.preventDefault();
-    try {
-      const raw = localStorage.getItem('se.lastGame.v1');
-      if (!raw) return;
-      const ok = game.loadSnapshot(JSON.parse(raw));
-      if (ok) {
-        document.getElementById('options-modal')?.classList.add('hidden');
-        try {
-          document.getElementById('options-modal')?.close?.();
-        } catch {}
-        try {
-          saveLastUIState('playing');
-        } catch {}
-      }
-    } catch (err) {
-      console.warn('[options] resume failed', err);
-    }
-  });
-  clearSavedBtn?.addEventListener('click', e => {
-    e.preventDefault();
-    try {
-      localStorage.removeItem('se.lastGame.v1');
-    } catch {}
-    // Disable resume until a new save exists
-    const btn = document.getElementById('resume-saved-button');
-    if (btn) btn.disabled = true;
-  });
-
   // Initialize audio controls from AV state (fallback to storage)
   try {
     const vol =
@@ -2849,121 +2855,7 @@ function bindUI() {
 
   // Remote Command 'Game Controls…' button removed; HUD provides controls on main screen.
 
-  // --- Game Options modal wiring ---
-  function openOptionsModal() {
-    const modal = document.getElementById('options-modal');
-    if (!modal) return;
-    try {
-      if ('showModal' in modal && !modal.open) modal.showModal();
-    } catch {}
-    modal.classList.remove('hidden');
-    activateModalA11y(modal, '#options-close');
-    // Pause gameplay while Options is open
-    try {
-      game.setPaused(true, 'options-modal');
-    } catch {}
-    attachOptionsModalHandlers();
-    try {
-      saveLastUIState('options');
-    } catch {}
-  }
-  function closeOptionsModal() {
-    const modal = document.getElementById('options-modal');
-    if (!modal) return;
-    try {
-      modal.close?.();
-    } catch {}
-    modal.classList.add('hidden');
-    deactivateModalA11y(modal);
-    // Clear the options pause reason. Other active reasons (blur/hidden) stay in effect.
-    try {
-      game.setPaused(false, 'options-modal');
-    } catch {}
-    try {
-      saveLastUIState('playing');
-    } catch {}
-  }
-  function attachOptionsModalHandlers() {
-    const modal = document.getElementById('options-modal');
-    if (!modal || modal.dataset.handlers === '1') return;
-    attachModalInteractions(modal, closeOptionsModal, {
-      closeButtonId: 'options-close',
-      cancelable: true,
-    });
-    // Ensure buttons inside the modal are wired even if bindUI hasn't run yet
-    const openSetup = document.getElementById('open-setup');
-    if (openSetup && openSetup.dataset.bound !== '1') {
-      openSetup.addEventListener('click', e => {
-        e.preventDefault();
-        // Close Options before opening New Game to avoid it resurfacing after Start
-        closeOptionsModal();
-        openNewGameModal();
-      });
-      openSetup.dataset.bound = '1';
-    }
-    const restart = document.getElementById('restart-button');
-    if (restart && restart.dataset.bound !== '1') {
-      restart.addEventListener('click', e => {
-        e.preventDefault();
-        try {
-          closeOptionsModal();
-        } catch {}
-        performGameReset();
-      });
-      restart.dataset.bound = '1';
-    }
-    // Resume/Clear saved game
-    const resumeSaved = document.getElementById('resume-saved-button');
-    if (resumeSaved && resumeSaved.dataset.bound !== '1') {
-      resumeSaved.addEventListener('click', e => {
-        e.preventDefault();
-        try {
-          const raw = localStorage.getItem('se.lastGame.v1');
-          if (!raw) return;
-          const ok = game.loadSnapshot(JSON.parse(raw));
-          if (ok) {
-            try {
-              modal.close?.();
-            } catch {}
-            modal.classList.add('hidden');
-          }
-        } catch (err) {
-          console.warn('[options] resume failed', err);
-        }
-      });
-      resumeSaved.dataset.bound = '1';
-    }
-    const clearSaved = document.getElementById('clear-saved-button');
-    if (clearSaved && clearSaved.dataset.bound !== '1') {
-      clearSaved.addEventListener('click', e => {
-        e.preventDefault();
-        try {
-          localStorage.removeItem('se.lastGame.v1');
-        } catch {}
-        const btn = document.getElementById('resume-saved-button');
-        if (btn) btn.disabled = true;
-      });
-      clearSaved.dataset.bound = '1';
-    }
-    // Toggle resume button enabled state based on presence of saved snapshot
-    try {
-      const hasSave = !!localStorage.getItem('se.lastGame.v1');
-      const rbtn = document.getElementById('resume-saved-button');
-      if (rbtn) rbtn.disabled = !hasSave;
-    } catch {}
-    // Restore preference toggle
-    try {
-      const cb = document.getElementById('restore-state-toggle');
-      if (cb && cb.dataset.bound !== '1') {
-        cb.checked = getRestoreEnabled();
-        cb.addEventListener('change', () => setRestoreEnabled(cb.checked));
-        cb.dataset.bound = '1';
-      }
-    } catch {}
-    modal.dataset.handlers = '1';
-  }
-  // Left edge tabs: Game Options and Game Log
-  const optionsTab = document.getElementById('options-tab');
+  // Left edge tabs
   const bindEdgeTabAction = (el, action) => {
     if (!el) return;
     const invoke = e => {
@@ -3009,9 +2901,9 @@ function bindUI() {
       if (!inside) closeFn();
     });
   };
-  bindEdgeTabAction(optionsTab, () => {
-    if (Date.now() < suppressOptionsUntil) return;
-    openOptionsModal();
+  const newGameTab = document.getElementById('new-game-tab');
+  bindEdgeTabAction(newGameTab, () => {
+    openNewGameModal();
   });
   const logTab = document.getElementById('log-tab');
   bindEdgeTabAction(logTab, () => {
@@ -3026,28 +2918,14 @@ function bindUI() {
     openRestartModal();
   });
 
-  // Global ESC: open Game Options during gameplay when no modal is open
+  // Global ESC: close the weapon menu if it's open
   globalThis.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
-    // If any modal is open, let its own ESC handler close it instead
-    const anyOpen = [
-      'options-modal',
-      'debug-modal',
-      'log-modal',
-      'volume-modal',
-      'restart-modal',
-      'new-game-modal',
-      'game-over-modal',
-      'auto-restart-modal',
-    ].some(id => {
-      const m = document.getElementById(id);
-      return m && !m.classList.contains('hidden');
-    });
-    if (anyOpen) return;
-    // Don’t open Options immediately after closing to avoid flicker
-    if (Date.now() < suppressOptionsUntil) return;
-    e.preventDefault();
-    openOptionsModal();
+    const wm = document.getElementById('weapon-menu');
+    if (wm && !wm.classList.contains('hidden')) {
+      closeWeaponMenu();
+      e.preventDefault();
+    }
   });
   // Debug modal using <dialog>
   let debugMenuOriginalParent = null;
@@ -3063,6 +2941,7 @@ function bindUI() {
     const body = document.getElementById('debug-modal-body');
     const menu = document.getElementById('debug-menu');
     if (!modal || !body || !menu) return;
+    document.getElementById('debug-tab')?.classList.add('active');
     // Move the existing #debug-menu into the dialog body
     if (menu.parentElement !== body) {
       debugMenuOriginalParent = menu.parentElement;
@@ -3093,6 +2972,7 @@ function bindUI() {
     const body = document.getElementById('log-modal-body');
     const log = document.getElementById('game-log');
     if (!modal || !body || !log) return;
+    document.getElementById('log-tab')?.classList.add('active');
     // Move #game-log into the dialog body
     if (log.parentElement !== body) {
       gameLogOriginalParent = log.parentElement;
@@ -3114,6 +2994,7 @@ function bindUI() {
     const modal = document.getElementById('log-modal');
     const log = document.getElementById('game-log');
     if (!modal || !log) return;
+    document.getElementById('log-tab')?.classList.remove('active');
     // Restore #game-log back to its original sidebar location
     if (gameLogOriginalParent) {
       try {
@@ -3268,6 +3149,7 @@ function bindUI() {
   function openVolumeModal() {
     const modal = document.getElementById('volume-modal');
     if (!modal) return;
+    document.getElementById('volume-tab')?.classList.add('active');
     try {
       if ('showModal' in modal && !modal.open) modal.showModal();
     } catch {}
@@ -3279,6 +3161,7 @@ function bindUI() {
   function closeVolumeModal() {
     const modal = document.getElementById('volume-modal');
     if (!modal) return;
+    document.getElementById('volume-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
@@ -3307,24 +3190,19 @@ function bindUI() {
   function openRestartModal() {
     const modal = document.getElementById('restart-modal');
     if (!modal) return;
+    document.getElementById('restart-tab')?.classList.add('active');
     try {
       if ('showModal' in modal && !modal.open) modal.showModal();
     } catch {}
     modal.classList.remove('hidden');
     activateModalA11y(modal, '#restart-modal-close');
     attachRestartModalHandlers();
-
-    // Sync checkbox with current setting
-    const checkbox = document.getElementById('auto-restart-checkbox');
-    if (checkbox) {
-      const saved = localStorage.getItem('auto-restart-enabled');
-      checkbox.checked = saved === 'true';
-    }
   }
 
   function closeRestartModal() {
     const modal = document.getElementById('restart-modal');
     if (!modal) return;
+    document.getElementById('restart-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}
@@ -3336,6 +3214,7 @@ function bindUI() {
     const modal = document.getElementById('debug-modal');
     const menu = document.getElementById('debug-menu');
     if (!modal || !menu) return;
+    document.getElementById('debug-tab')?.classList.remove('active');
     try {
       modal.close?.();
     } catch {}

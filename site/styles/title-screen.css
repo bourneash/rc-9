@@ -1,0 +1,208 @@
+/* site/styles/title-screen.css — Tactical Command title screen */
+
+#title-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--surface-ink);
+  z-index: 2000;
+  font-family: var(--font-mono);
+  color: var(--text-body);
+  overflow: hidden;
+}
+#title-screen[hidden] { display: none; }
+
+.ts-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: var(--grid-size) var(--grid-size);
+  opacity: 0.7;
+}
+.ts-terrain {
+  position: absolute; bottom: 60px; left: 0; right: 0; height: 22vh;
+  background: linear-gradient(180deg, transparent, rgba(80, 220, 130, 0.05));
+  clip-path: polygon(0 70%, 8% 40%, 18% 55%, 30% 30%, 42% 50%, 55% 25%, 68% 45%, 80% 35%, 92% 50%, 100% 38%, 100% 100%, 0 100%);
+  border-top: 1px solid rgba(80, 220, 130, 0.3);
+}
+.ts-sweep {
+  position: absolute; top: 0; bottom: 0; left: 0;
+  width: 2px;
+  background: linear-gradient(180deg, transparent, rgba(80, 220, 130, 0.5), transparent);
+  opacity: 0.4;
+  animation: ts-sweep 8s linear infinite;
+  pointer-events: none;
+}
+@keyframes ts-sweep { 0% { left: -5%; } 100% { left: 105%; } }
+
+.ts-bracket {
+  position: absolute; width: 16px; height: 16px;
+  border-color: var(--accent-phosphor); border-style: solid;
+}
+.ts-bracket.tl { top: 14px; left: 14px; border-width: 1px 0 0 1px; }
+.ts-bracket.tr { top: 14px; right: 14px; border-width: 1px 1px 0 0; }
+.ts-bracket.bl { bottom: 50px; left: 14px; border-width: 0 0 1px 1px; }
+.ts-bracket.br { bottom: 50px; right: 14px; border-width: 0 1px 1px 0; }
+
+.ts-boot {
+  position: absolute; top: 18px; left: 24px;
+  font-size: 10px;
+  color: var(--accent-phosphor);
+  opacity: 0.7;
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+.ts-boot .dim { color: var(--text-dim); }
+.ts-boot .ok { color: var(--accent-phosphor); }
+.ts-cursor {
+  display: inline-block;
+  width: 8px; height: 11px;
+  background: var(--accent-phosphor);
+  vertical-align: middle;
+  margin-left: 2px;
+  animation: ts-blink 1s steps(2) infinite;
+}
+@keyframes ts-blink { 0%, 50% { opacity: 1 } 51%, 100% { opacity: 0 } }
+
+.ts-uplink {
+  position: absolute; top: 18px; right: 24px;
+  text-align: right;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  letter-spacing: 1px;
+}
+.ts-uplink .live { color: var(--accent-phosphor); }
+.ts-uplink .live::before { content: '●'; margin-right: 4px; animation: ts-pulse 1.6s ease-in-out infinite; }
+@keyframes ts-pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.3 } }
+
+.ts-title {
+  position: absolute;
+  left: clamp(24px, 6vw, 80px);
+  top: 50%;
+  transform: translateY(-58%);
+}
+.ts-callsign {
+  font-size: 11px;
+  color: var(--accent-phosphor);
+  letter-spacing: 6px;
+  margin-bottom: 8px;
+}
+.ts-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 0.92;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+}
+.ts-name .glow {
+  color: var(--accent-phosphor);
+  text-shadow: 0 0 16px rgba(80, 220, 130, 0.5);
+}
+.ts-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  margin-top: 16px;
+}
+.ts-subtitle .div { color: var(--text-dim); margin: 0 8px; }
+
+.ts-menu {
+  position: absolute;
+  right: clamp(24px, 6vw, 80px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 260px;
+}
+.ts-item {
+  background: var(--surface-panel);
+  border: var(--border-line);
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  border-radius: var(--radius-sharp);
+}
+.ts-item:hover {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+  box-shadow: 0 0 16px rgba(80, 220, 130, 0.15);
+}
+.ts-item.primary {
+  border-color: var(--accent-phosphor);
+  background: var(--surface-raised);
+  box-shadow: inset 3px 0 0 var(--accent-phosphor);
+  padding-left: 16px;
+}
+.ts-item-key {
+  font-size: 10px;
+  color: var(--accent-phosphor);
+  background: var(--surface-deep);
+  border: 1px solid var(--accent-phosphor);
+  padding: 2px 6px;
+  min-width: 18px;
+  text-align: center;
+  border-radius: var(--radius-sharp);
+}
+.ts-item-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-primary);
+  letter-spacing: 2px;
+  flex: 1;
+}
+.ts-item-meta {
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.ts-item.dim,
+.ts-item:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ts-item.dim .ts-item-key { color: var(--text-dim); border-color: var(--text-dim); }
+.ts-item:disabled:hover {
+  border-color: #1a2a1c;
+  background: var(--surface-panel);
+  box-shadow: none;
+}
+
+.ts-foot {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 36px;
+  background: var(--surface-panel);
+  border-top: var(--border-line);
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  gap: 24px;
+  font-size: 9px;
+  color: var(--text-muted);
+  letter-spacing: 2px;
+}
+.ts-foot .group { display: flex; gap: 14px; align-items: center; }
+.ts-foot .key {
+  background: var(--surface-deep);
+  border: var(--border-line);
+  color: var(--accent-phosphor);
+  padding: 2px 5px;
+  letter-spacing: 0;
+}
+.ts-foot .build { margin-left: auto; color: var(--text-dim); }
+
+@media (max-width: 760px) {
+  .ts-title { left: 24px; top: 30%; transform: none; }
+  .ts-menu { left: 24px; right: 24px; top: auto; bottom: 80px; transform: none; min-width: 0; }
+  .ts-uplink { font-size: 9px; }
+}

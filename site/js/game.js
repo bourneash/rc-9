@@ -1,4 +1,5 @@
 import { Terrain } from './terrain.js';
+import * as Overlays from './canvas-overlays.js';
 import { renderMetaballs } from './metaballs.js';
 import { massFromRadius, mergeDroplets } from './liquid.js';
 import { Tank } from './tank.js';
@@ -31,6 +32,54 @@ import {
   chooseAIWeapon as _chooseAIWeapon,
 } from './game-ai.js';
 
+// ---------------------------------------------------------------------------
+// Tank label tag renderer (Phase 2 visual redesign)
+// Draws a framed "CALLSIGN · HP" tag above each tank with a connector tick.
+// Colors: friend = phosphor green, enemy = hot red, ocean override = signal blue.
+// ---------------------------------------------------------------------------
+function drawTankLabel(ctx, tank, opts = {}) {
+  if (!tank || tank.dead) return;
+  const isOcean = !!opts.isOcean;
+  const isEnemy = !!opts.isEnemy;
+  const color = isOcean ? '#4d9fff' : isEnemy ? '#ff5544' : '#50dc82';
+  ctx.save();
+  ctx.font = '500 10px "JetBrains Mono", ui-monospace, monospace';
+  ctx.textBaseline = 'alphabetic';
+  const nameTxt = String(tank.name || '').toUpperCase();
+  const sepTxt = ' · ';
+  const hpTxt = String(Math.max(0, Math.round(tank.health)));
+  const fullText = nameTxt + sepTxt + hpTxt;
+  const metrics = ctx.measureText(fullText);
+  const padX = 5;
+  const padY = 2;
+  const w = Math.ceil(metrics.width + padX * 2);
+  const h = 14;
+  const x = Math.round(tank.x - w / 2);
+  const y = Math.round(tank.y - 32);
+  // Connector tick from tank to label
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(tank.x, tank.y - 18);
+  ctx.lineTo(tank.x, y + h);
+  ctx.stroke();
+  // Background
+  ctx.fillStyle = 'rgba(13, 20, 16, 0.85)';
+  ctx.fillRect(x, y, w, h);
+  // Border
+  ctx.strokeStyle = color;
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+  // Text — name + sep in color, HP in white
+  const nameW = ctx.measureText(nameTxt).width;
+  const sepW = ctx.measureText(sepTxt).width;
+  ctx.fillStyle = color;
+  ctx.fillText(nameTxt, x + padX, y + h - padY - 1);
+  ctx.fillText(sepTxt, x + padX + nameW, y + h - padY - 1);
+  ctx.fillStyle = '#fff';
+  ctx.fillText(hpTxt, x + padX + nameW + sepW, y + h - padY - 1);
+  ctx.restore();
+}
+
 export class Game {
   constructor(canvas, ctx) {
     this.canvas = canvas;
@@ -61,6 +110,8 @@ export class Game {
     this.smokeScreens = [];
     // Last tracer round trajectory for display on next turn
     this.lastTracerTrail = null;
+    // Floating damage popups { x, y, amount, color, startedAt }
+    this.damagePopups = [];
     // Screen shake effect state
     this.screenShake = { intensity: 0, x: 0, y: 0 };
 
@@ -279,6 +330,16 @@ export class Game {
 
   loadSnapshot(snapshot) {
     return snapshotLoad(this, snapshot);
+  }
+
+  spawnDamagePopup(x, y, amount, opts = {}) {
+    if (!Number.isFinite(amount) || amount === 0) return;
+    this.damagePopups.push({
+      x, y,
+      amount: Math.round(amount),
+      color: opts.color || (amount > 0 ? '#ff5544' : '#50dc82'),
+      startedAt: performance.now(),
+    });
   }
 
   // --- Testing API for automated gameplay testing ---
@@ -622,7 +683,11 @@ export class Game {
     this.fireLocked = false;
     // Ensure any lingering AI-skip modal is hidden when starting a new game
     try {
-      document.getElementById('skip-modal')?.classList.add('hidden');
+      const skipEl = document.getElementById('skip-modal');
+      if (skipEl) {
+        try { skipEl.close?.(); } catch {}
+        skipEl.classList.add('hidden');
+      }
     } catch {}
     // Hide the no-game overlay when starting a game
     try {
@@ -866,6 +931,15 @@ export class Game {
       // Human starts: make sure inputs are enabled
       this.enableControls();
     }
+    // Canvas overlays: sync theme, streamer mode, and show grid
+    Overlays.setTheme(this.themeName || null);
+    Overlays.setStreamerMode(!!this.hideOtherNames);
+    Overlays.setGridVisible(true);
+    Overlays.updateCorners({
+      sector: this.turnCount || 0,
+      round: this.turnCount || 0,
+      activeCallsign: this.getCurrentTank()?.name || null,
+    });
     // Autosave right after a new game is configured
     try {
       this.saveSnapshotToStorage('newGame');
@@ -1778,6 +1852,7 @@ export class Game {
     this.renderMines(this.ctx);
 
     // Draw tanks with glow
+    const _currentTank = this.getCurrentTank();
     for (let i = 0; i < this.tanks.length; i++) {
       const tank = this.tanks[i];
       if (tank.health > 0) {
@@ -1806,6 +1881,18 @@ export class Game {
         }
         if (this.tanks[this.currentTankIndex] === tank) {
           this.drawAimLine(tank);
+        }
+        // Tank label tag (framed callsign + HP)
+        // Streamer mode: only show label for the current (active) tank
+        // Dark mode: same restriction — only show label for current tank
+        const isCurrentTank = tank === _currentTank;
+        const streamerHide = this.hideOtherNames && !isCurrentTank;
+        const darkHide = this.themeName === 'dark' && !isCurrentTank;
+        if (!streamerHide && !darkHide) {
+          drawTankLabel(this.ctx, tank, {
+            isOcean: !!(this.terrain?._isOceanTerrain || this.terrain?.isOcean),
+            isEnemy: !isCurrentTank,
+          });
         }
       }
     }
@@ -1859,6 +1946,29 @@ export class Game {
     if (this.soloActive) {
       this.drawSoloTarget();
       this.drawSoloHUD();
+    }
+
+    // Damage popups — drift up + fade over 600ms
+    const _popupNow = performance.now();
+    if (this.damagePopups.length > 0) {
+      this.damagePopups = this.damagePopups.filter(p => {
+        const age = _popupNow - p.startedAt;
+        if (age > 600) return false;
+        const t = age / 600;
+        const drift = 30 * t;
+        const op = 1 - t;
+        this.ctx.save();
+        this.ctx.globalAlpha = op;
+        this.ctx.fillStyle = p.color;
+        this.ctx.font = '700 18px "Saira Condensed", "Oswald", system-ui, sans-serif';
+        this.ctx.textAlign = 'center';
+        this.ctx.shadowColor = p.color;
+        this.ctx.shadowBlur = 6;
+        const sign = p.amount > 0 ? '−' : '+';
+        this.ctx.fillText(`${sign}${Math.abs(p.amount)}`, p.x, p.y - drift);
+        this.ctx.restore();
+        return true;
+      });
     }
 
     this.ctx.restore();
@@ -4896,6 +5006,7 @@ export class Game {
 
             if (actualHeal > 0) {
               healsApplied++;
+              this.spawnDamagePopup(t.x, t.y - 22, -actualHeal);
               this.addLog(`${t.name} healed for ${actualHeal} HP`, 'info');
 
               // Visual feedback: green healing particles rising from tank
@@ -5319,6 +5430,7 @@ export class Game {
 
           if (actualDamage > 0) {
             tank.takeDamage(actualDamage);
+            this.spawnDamagePopup(tank.x, tank.y - 22, actualDamage);
             hitAny = true;
 
             if (directHitTank === tank) {
@@ -5653,6 +5765,14 @@ export class Game {
     try {
       this.saveSnapshotToStorage('endTurn');
     } catch {}
+    // Canvas overlays: update corner readouts for the new active tank
+    try {
+      Overlays.updateCorners({
+        sector: this.turnCount || 0,
+        round: this.turnCount || 0,
+        activeCallsign: this.getCurrentTank()?.name || null,
+      });
+    } catch {}
   }
 
   addWreck(x, y, color) {
@@ -5951,8 +6071,13 @@ export class Game {
       const skip = !anyHumanAlive && !!this.hadHumansAtStart;
       const el = document.getElementById('skip-modal');
       if (el) {
-        if (skip) el.classList.remove('hidden');
-        else el.classList.add('hidden');
+        if (skip) {
+          el.classList.remove('hidden');
+          try { if (!el.open) el.showModal(); } catch {}
+        } else {
+          try { el.close?.(); } catch {}
+          el.classList.add('hidden');
+        }
       }
     } catch {}
     if (this.mode === 'teams' && this.teams && this.teams.length === this.tanks.length) {
@@ -5973,17 +6098,6 @@ export class Game {
 
   showWinnerTeam(team) {
     const label = team === 'A' ? 'Team A' : 'Team B';
-
-    // Check if auto-restart is enabled
-    const autoRestartEnabled = localStorage.getItem('auto-restart-enabled') === 'true';
-    if (autoRestartEnabled && typeof globalThis.startAutoRestartCountdown === 'function') {
-      try {
-        globalThis.startAutoRestartCountdown();
-        return;
-      } catch (e) {
-        console.error('[showWinnerTeam] Auto-restart failed:', e);
-      }
-    }
 
     // Use toast instead of modal
     const victoryMessage = 'Teamwork makes the dream work!';
@@ -6342,24 +6456,27 @@ export class Game {
       });
     }
 
-    const winnerText = document.getElementById('winner-text');
-    if (winnerText) {
-      winnerText.textContent = 'Solo Complete!';
+    const accuracy = used > 0 ? Math.round((hits / used) * 100) : 0;
+
+    // Populate engagement-report IDs used by the new game-over modal structure
+    const setText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = String(val);
+    };
+    const banner = document.getElementById('er-banner');
+    if (banner) {
+      banner.textContent = 'SOLO COMPLETE';
+      banner.className = 'er-banner';
     }
-    const statsEl = document.getElementById('game-over-stats');
-    if (statsEl) {
-      const accuracy = used > 0 ? Math.round((hits / used) * 100) : 0;
-      statsEl.innerHTML = `
-                                <table class="score-table" role="table" aria-label="Solo results">
-                                    <tbody>
-                                        <tr><th scope="row">Score</th><td>${this.soloScore}</td></tr>
-                                        <tr><th scope="row">Hits</th><td>${hits}</td></tr>
-                                        <tr><th scope="row">Misses</th><td>${misses}</td></tr>
-                                        <tr><th scope="row">Shots Used</th><td>${used}</td></tr>
-                                        <tr><th scope="row">Accuracy</th><td>${accuracy}%</td></tr>
-                                    </tbody>
-                                </table>`;
-    }
+    setText('er-subtitle', `SOLO RUN · ${this.soloTargetsHit ?? 0} / ${this.soloTargetGoal ?? 0} TARGETS`);
+    setText('winner-text', String(this.soloScore));
+    setText('er-standing', ' PTS');
+    setText('er-tag', total === '∞' ? 'UNLIMITED AMMO' : `${total} SHOTS ALLOWED`);
+    setText('er-rounds', used);
+    setText('er-hits', hits);
+    setText('er-shots', used);
+    setText('er-damage', misses);
+    setText('er-accuracy', accuracy);
     // Always use the shared helper so close handlers (ESC/click-outside/X) are attached
     if (typeof globalThis.openGameOverModal === 'function') {
       try {
@@ -6637,20 +6754,23 @@ export class Game {
       nameEl.textContent = currentTank.name;
       nameEl.style.color = currentTank.color;
     }
-    if (healthEl) healthEl.textContent = `Health: ${currentTank.health}`;
+    if (healthEl) healthEl.textContent = String(currentTank.health);
     if (fuelEl) {
       const pct =
         currentTank.maxFuel > 0 ? Math.round((currentTank.fuel / currentTank.maxFuel) * 100) : 0;
       fuelEl.textContent = String(Math.max(0, Math.min(100, pct)));
     }
 
-    // Drive button state: disabled if not a human player's turn or inputs are blocked
+    // Drive button state: disabled if not a human player's turn, inputs are
+    // blocked, or the current tank is out of fuel.
     const notHumanTurn = !currentTank || currentTank.isAI;
     const blocked = this.isInputBlocked();
+    const outOfFuel = !!currentTank && Number.isFinite(currentTank.fuel) && currentTank.fuel <= 0;
     const drv = document.getElementById('drive-toggle');
     const drvM = document.getElementById('drive-toggle-modal');
-    if (drv) drv.disabled = notHumanTurn || blocked;
-    if (drvM) drvM.disabled = notHumanTurn || blocked;
+    const disabled = notHumanTurn || blocked || outOfFuel;
+    if (drv) drv.disabled = disabled;
+    if (drvM) drvM.disabled = disabled;
 
     // Solo shots indicator: show only in Solo mode when active
     if (soloShotsStat && soloShotsValue) {
@@ -6824,14 +6944,16 @@ export class Game {
   }
 
   toggleDriveMode() {
+    // Block toggle when current tank has no fuel.
+    const currentTank = this.tanks[this.currentTankIndex];
+    if (currentTank && Number.isFinite(currentTank.fuel) && currentTank.fuel <= 0 && !this.driveMode) {
+      return;
+    }
     this.driveMode = !this.driveMode;
     const button = document.getElementById('drive-toggle');
-    if (this.driveMode) {
-      button.textContent = 'Drive Mode: ON';
-      button.classList.add('active');
-    } else {
-      button.textContent = 'Drive Mode: OFF';
-      button.classList.remove('active');
+    if (button) {
+      button.classList.toggle('active', this.driveMode);
+      button.textContent = `Drive Mode: ${this.driveMode ? 'ON' : 'OFF'}`;
     }
   }
 

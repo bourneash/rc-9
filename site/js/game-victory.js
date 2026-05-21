@@ -26,12 +26,13 @@ export function checkGameOver(game) {
 
 export function showGameOver(game, winner) {
   // Calculate stats for victory message
-  let victoryMessage, winnerName;
+  let victoryMessage, winnerName, outcome;
 
   if (!winner) {
     // Draw case
     victoryMessage = 'Mutual Destruction!';
     winnerName = 'Draw';
+    outcome = 'tie';
   } else {
     // Calculate game stats for contextual victory message
     const stats = {
@@ -46,6 +47,7 @@ export function showGameOver(game, winner) {
     // Get contextual victory message
     victoryMessage = VictoryMessages.getVictoryMessage(winner.name, stats);
     winnerName = winner.name;
+    outcome = winner.isAI ? 'defeat' : 'victory';
   }
 
   // Check if auto-restart is enabled
@@ -63,143 +65,72 @@ export function showGameOver(game, winner) {
     }
   }
 
-  // Create single victory toast with message and New Game button
-  game.showVictoryToast(winnerName, victoryMessage, winner);
+  // Build state object for the engagement report
+  const state = {
+    outcome,
+    winnerName,
+    contextualMessage: victoryMessage,
+    turns: game.turnCount || 0,
+    durationStr: null,
+    hits: winner ? (winner.shotsHit ?? null) : null,
+    shots: winner ? (winner.shotsFired ?? null) : null,
+    damage: winner ? (winner.damageDealt || 0) : null,
+  };
+
+  fillEngagementReport(state);
+  if (typeof globalThis.openGameOverModal === 'function') {
+    globalThis.openGameOverModal();
+  }
 }
 
-export function showVictoryToast(game, winnerName, victoryMessage, winner) {
-  // Create toast container
-  const toast = document.createElement('div');
-  toast.className = 'victory-toast';
-  toast.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10000;
-            text-align: center;
-            background: linear-gradient(135deg, rgba(0,50,0,0.95), rgba(0,0,0,0.9));
-            border: 3px solid #00ff00;
-            border-radius: 15px;
-            padding: 30px 40px;
-            box-shadow: 0 0 40px rgba(0,255,0,0.3);
-            animation: victoryToastAppear 0.5s ease-out;
-            min-width: 400px;
-        `;
-
-  // Winner text
-  const winnerText = document.createElement('h1');
-  winnerText.textContent = winnerName === 'Draw' ? 'Draw!' : `${winnerName} Wins!`;
-  winnerText.style.cssText = `
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 42px;
-            font-weight: bold;
-            color: #00ff00;
-            text-shadow:
-                2px 2px 4px rgba(0,0,0,0.8),
-                0 0 20px rgba(0,255,0,0.5);
-            margin: 0 0 15px 0;
-        `;
-
-  // Victory message text
-  const messageText = document.createElement('p');
-  messageText.textContent = victoryMessage;
-  messageText.style.cssText = `
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 24px;
-            color: #aaffaa;
-            margin: 0 0 25px 0;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-        `;
-
-  // Stats text (if winner exists)
-  let statsText;
-  if (winner) {
-    statsText = document.createElement('p');
-    statsText.textContent = `Turns: ${game.turnCount || 0} | Health Remaining: ${winner.health}%`;
-    statsText.style.cssText = `
-                font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 16px;
-                color: #888;
-                margin: 0 0 25px 0;
-            `;
-  }
-
-  // New Game button
-  const newGameButton = document.createElement('button');
-  newGameButton.textContent = 'New Game';
-  newGameButton.style.cssText = `
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 18px;
-            font-weight: bold;
-            color: #000;
-            background: linear-gradient(135deg, #00ff00, #00cc00);
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            transition: all 0.2s;
-        `;
-
-  // Button hover effect
-  newGameButton.addEventListener('mouseenter', () => {
-    newGameButton.style.background = 'linear-gradient(135deg, #00ff33, #00dd00)';
-    newGameButton.style.transform = 'scale(1.05)';
-  });
-  newGameButton.addEventListener('mouseleave', () => {
-    newGameButton.style.background = 'linear-gradient(135deg, #00ff00, #00cc00)';
-    newGameButton.style.transform = 'scale(1)';
-  });
-
-  // Button click handler
-  newGameButton.addEventListener('click', () => {
-    toast.remove();
-    if (typeof globalThis.openNewGameModal === 'function') {
-      globalThis.openNewGameModal();
-    }
-  });
-
-  // Build toast
-  toast.appendChild(winnerText);
-  toast.appendChild(messageText);
-  if (statsText) toast.appendChild(statsText);
-  toast.appendChild(newGameButton);
-
-  // Add CSS animation if not already present
-  if (!document.querySelector('#victory-toast-styles')) {
-    const style = document.createElement('style');
-    style.id = 'victory-toast-styles';
-    style.textContent = `
-                @keyframes victoryToastAppear {
-                    0% {
-                        transform: translate(-50%, -50%) scale(0.5);
-                        opacity: 0;
-                    }
-                    60% {
-                        transform: translate(-50%, -50%) scale(1.05);
-                    }
-                    100% {
-                        transform: translate(-50%, -50%) scale(1);
-                        opacity: 1;
-                    }
-                }
-            `;
-    document.head.appendChild(style);
-  }
-
-  // Add to page
-  document.body.appendChild(toast);
-
-  // Allow closing with ESC key — opens setup modal after dismissal
-  const handleEscape = e => {
-    if (e.key === 'Escape') {
-      toast.remove();
-      document.removeEventListener('keydown', handleEscape);
-      if (typeof globalThis.openNewGameModal === 'function') {
-        globalThis.openNewGameModal();
-      }
-    }
+function fillEngagementReport(state) {
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(val);
   };
-  document.addEventListener('keydown', handleEscape);
+
+  const banner = document.getElementById('er-banner');
+  if (banner) {
+    banner.textContent = state.outcome === 'victory' ? 'VICTORY · OPERATOR'
+                       : state.outcome === 'tie'     ? 'STALEMATE'
+                       :                               'DEFEAT · ENEMY';
+    banner.className = 'er-banner ' + (state.outcome === 'victory' ? '' : state.outcome);
+  }
+
+  const subtitleParts = [`ROUND COMPLETE · ${state.turns ?? 0} TURNS`];
+  if (state.durationStr) subtitleParts.push(state.durationStr);
+  setText('er-subtitle', subtitleParts.join(' · '));
+
+  setText('winner-text', (state.winnerName || '—').toUpperCase());
+  setText('er-standing', state.outcome === 'victory' ? ' STANDING' : '');
+  setText('er-tag', (state.contextualMessage || '').toUpperCase());
+  setText('er-rounds', state.turns ?? '—');
+  setText('er-hits',   state.hits  != null ? state.hits  : '—');
+  setText('er-shots',  state.shots != null ? state.shots : '—');
+  setText('er-damage', state.damage != null ? state.damage : '—');
+  setText('er-accuracy',
+    state.shots != null && state.hits != null
+      ? Math.round((state.hits / Math.max(1, state.shots)) * 100)
+      : '—'
+  );
+}
+
+// Kept for backward-compat; no longer primary display path
+export function showVictoryToast(game, winnerName, victoryMessage, winner) {
+  // Delegate to the engagement report modal
+  const outcome = !winner ? 'tie' : winner.isAI ? 'defeat' : 'victory';
+  const state = {
+    outcome,
+    winnerName,
+    contextualMessage: victoryMessage,
+    turns: game.turnCount || 0,
+    durationStr: null,
+    hits: winner ? (winner.shotsHit ?? null) : null,
+    shots: winner ? (winner.shotsFired ?? null) : null,
+    damage: winner ? (winner.damageDealt || 0) : null,
+  };
+  fillEngagementReport(state);
+  if (typeof globalThis.openGameOverModal === 'function') {
+    globalThis.openGameOverModal();
+  }
 }

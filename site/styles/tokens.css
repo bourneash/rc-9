@@ -1,0 +1,44 @@
+/* site/styles/tokens.css — Tactical Command design tokens */
+
+:root {
+  /* Surfaces */
+  --surface-ink: #0a0f08;
+  --surface-panel: #0d1410;
+  --surface-raised: #142018;
+  --surface-deep: #050a06;
+
+  /* Accents */
+  --accent-phosphor: #50dc82;
+  --accent-amber: #ffb000;
+  --accent-hot: #ff5544;
+  --accent-signal: #4d9fff;
+
+  /* Text */
+  --text-primary: #e8f5ec;
+  --text-body: #c5d2c8;
+  --text-muted: #9fc4a8;
+  --text-dim: #5a7a64;
+
+  /* Lines */
+  --border-line: 1px solid #1a2a1c;
+  --border-phosphor: 1px solid var(--accent-phosphor);
+  --border-hot: 1px solid var(--accent-hot);
+
+  /* Typography */
+  --font-display: 'Saira Condensed', 'Oswald', system-ui, sans-serif;
+  --font-body: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Radii */
+  --radius-sharp: 2px;
+  --radius-soft: 6px;
+
+  /* FX */
+  --glow-phosphor: 0 0 12px rgba(80, 220, 130, 0.4);
+  --glow-hot: 0 0 16px rgba(255, 85, 68, 0.5);
+  --glow-signal: 0 0 12px rgba(77, 159, 255, 0.4);
+
+  /* Grid overlay */
+  --grid-color: rgba(80, 220, 130, 0.06);
+  --grid-size: 24px;
+}

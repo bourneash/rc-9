@@ -1,6 +1,50 @@
 // game-physics.js — extracted from game.js
 // Trajectory simulation + underwater physics for the aim guide.
 
+function drawTrajectoryDot(ctx, x, y, t, totalSteps, themeTint = '#50dc82') {
+  // Opacity ramp — faint→bright→peak→fade across the arc
+  const norm = totalSteps > 1 ? (t / (totalSteps - 1)) : 0; // 0..1
+  // bell curve, peaks mid-arc (~0.55 norm = brightest)
+  const op = Math.max(0.15, 1 - Math.abs(norm - 0.55) * 1.8);
+  // Sample every other step → dashed appearance
+  if (t % 2 !== 0) return;
+  ctx.save();
+  ctx.globalAlpha = op;
+  ctx.fillStyle = themeTint;
+  ctx.shadowColor = themeTint;
+  ctx.shadowBlur = 4;
+  ctx.beginPath();
+  ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawImpactReticle(ctx, x, y, label = '') {
+  ctx.save();
+  ctx.strokeStyle = '#ff5544';
+  ctx.fillStyle = '#ff5544';
+  ctx.lineWidth = 1;
+  // Outer circle
+  ctx.beginPath();
+  ctx.arc(x, y, 8, 0, Math.PI * 2);
+  ctx.stroke();
+  // Crosshair — 4 short ticks pointing inward
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y); ctx.lineTo(x - 4, y);
+  ctx.moveTo(x + 4, y); ctx.lineTo(x + 12, y);
+  ctx.moveTo(x, y - 12); ctx.lineTo(x, y - 4);
+  ctx.moveTo(x, y + 4); ctx.lineTo(x, y + 12);
+  ctx.stroke();
+  // Optional label above
+  if (label) {
+    ctx.font = '500 9px "JetBrains Mono", ui-monospace, monospace';
+    ctx.fillStyle = '#ff5544';
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y - 18);
+  }
+  ctx.restore();
+}
+
 export function drawTrajectoryGuide(game) {
   if (!game.trajectoryGuide) return;
   if (game.gameOver || game.isAnimating) return;
@@ -25,21 +69,14 @@ export function drawTrajectoryGuide(game) {
     const g = game.gravityOverride ?? game.gravity;
     let apex = null;
     const steps = 140;
+    const homingTint = game.themeName === 'mars' ? '#ff5544' : '#50dc82';
     for (let i = 0; i < steps; i++) {
       vx += windAccel;
       vy += g;
       x += vx;
       y += vy;
-      // draw path dot
-      ctx.fillStyle = 'rgba(0,0,0,0.95)';
-      ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-      ctx.lineWidth = 1.2;
-      ctx.shadowColor = 'rgba(255,255,255,0.45)';
-      ctx.shadowBlur = 2;
-      ctx.beginPath();
-      ctx.arc(x, y, 2.2, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      // draw path dot — dashed phosphor style
+      drawTrajectoryDot(ctx, x, y, i, steps, homingTint);
       // Apex when vertical velocity flips to downward (vy >= 0 after integrating g)
       if (vy >= 0) {
         apex = { x, y };
@@ -177,10 +214,7 @@ export function drawTrajectoryGuide(game) {
     ctx.lineTo(impact.x, impact.y);
     ctx.stroke();
     // Impact marker
-    ctx.fillStyle = impact.hitTank ? 'rgba(255,0,0,0.95)' : 'rgba(255,120,0,0.95)';
-    ctx.beginPath();
-    ctx.arc(impact.x, impact.y, 4, 0, Math.PI * 2);
-    ctx.fill();
+    drawImpactReticle(ctx, impact.x, impact.y, '');
     ctx.restore();
     ctx.restore();
     return;
@@ -199,6 +233,11 @@ export function drawTrajectoryGuide(game) {
   const isOceanMode = game.terrain._isOceanTerrain;
   const waterSurfaceY = game.terrain.waterSurfaceY;
   const isTorpedo = tank.weapon === 'torpedo' || tank.weapon === 'homing_torpedo';
+
+  // Theme tint for trajectory dots
+  const themeTint = isOceanMode ? '#4d9fff'
+    : (game.themeName === 'mars') ? '#ff5544'
+    : '#50dc82';
 
   const steps = 90;
   for (let i = 0; i < steps; i++) {
@@ -234,34 +273,14 @@ export function drawTrajectoryGuide(game) {
     const ground = game.terrain.getHeight(x);
     const onGround = y >= ground - 1;
 
-    // Visual distinction for underwater vs air vs impact
-    let size = 2.2;
-    let fillColor = 'rgba(0,0,0,0.95)';
-    let strokeColor = 'rgba(255,255,255,0.9)';
-
     if (onGround) {
-      // Impact point - red
-      size = 2.8;
-      fillColor = 'rgba(255,0,0,0.95)';
-      strokeColor = 'rgba(0,0,0,0.95)';
-    } else if (isUnderwater) {
-      // Underwater trajectory - cyan/blue tint
-      fillColor = 'rgba(0,180,255,0.85)';
-      strokeColor = 'rgba(255,255,255,0.7)';
-      size = 2.0;
+      drawImpactReticle(ctx, x, y, '');
+      break;
     }
 
-    ctx.fillStyle = fillColor;
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1.2;
-    // subtle shadow to stand out on mixed backgrounds
-    ctx.shadowColor = onGround ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.45)';
-    ctx.shadowBlur = 2;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    if (onGround) break;
+    // Dashed phosphor dots with opacity ramp + theme tint
+    const dotTint = isUnderwater ? '#4d9fff' : themeTint;
+    drawTrajectoryDot(ctx, x, y, i, steps, dotTint);
   }
   ctx.restore();
   // If a stored tracer preview exists for this shooter, overlay it faintly
