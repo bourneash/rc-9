@@ -790,6 +790,8 @@ function closeGameOverModal() {
   try {
     saveLastUIState('playing');
   } catch {}
+  // Game is now over and any modal is gone → centered CTA should reappear.
+  if (typeof refreshEmptyStateCTA === 'function') refreshEmptyStateCTA();
 }
 function ensureGameOverModalHandlers() {
   const modal = document.getElementById('game-over-modal');
@@ -930,6 +932,7 @@ function openNewGameModal() {
       restoreCb.dataset.bound = '1';
     }
   }
+  refreshEmptyStateCTA();
 }
 
 // ===== Briefing: Mode tiles ↔ existing radio inputs =====
@@ -1076,9 +1079,27 @@ function hasActiveGame() {
   return !!(game?.tanks && Array.isArray(game.tanks) && game.tanks.length > 0 && !game.gameOver);
 }
 
+// Visibility for the centered "no engagement in progress" CTA panel.
+function refreshEmptyStateCTA() {
+  const cta = document.getElementById('empty-state-cta');
+  if (!cta) return;
+  const titleVisible = !document.getElementById('title-screen')?.hasAttribute('hidden');
+  const isOpen = id => {
+    const el = document.getElementById(id);
+    return !!(el && el.open && !el.classList.contains('hidden'));
+  };
+  const blockingModal = isOpen('new-game-modal') || isOpen('game-over-modal');
+  cta.hidden = titleVisible || hasActiveGame() || blockingModal;
+}
+globalThis.refreshEmptyStateCTA = refreshEmptyStateCTA;
+
+// Click the CTA → open Briefing
+document.getElementById('empty-state-new-game')?.addEventListener('click', () => {
+  openNewGameModal();
+});
+
 function closeNewGameModal() {
   const modal = document.getElementById('new-game-modal');
-  const hadActiveGame = hasActiveGame();
   try {
     modal?.close?.();
   } catch {}
@@ -1093,13 +1114,8 @@ function closeNewGameModal() {
   try {
     saveLastUIState('playing');
   } catch {}
-
-  // If ESC'd out without an active game, show the title screen instead
-  // of dropping the user onto an empty canvas.
-  if (!hadActiveGame) {
-    const titleEl = document.getElementById('title-screen');
-    if (titleEl) titleEl.removeAttribute('hidden');
-  }
+  // If there's no game running, the centered CTA takes over.
+  refreshEmptyStateCTA();
 }
 
 function renderThemePreviews() {

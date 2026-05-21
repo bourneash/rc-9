@@ -12,6 +12,7 @@ export function show() {
   refreshBuild();
   startUtcTick();
   focusMenu();
+  globalThis.refreshEmptyStateCTA?.();
 }
 
 export function hide() {
@@ -19,6 +20,7 @@ export function hide() {
   if (!el) return;
   el.setAttribute('hidden', '');
   stopUtcTick();
+  globalThis.refreshEmptyStateCTA?.();
 }
 
 function refreshOperator() {
@@ -146,7 +148,10 @@ export function mount() {
     hasSave = !!(localStorage.getItem('se.lastGame.v1') || localStorage.getItem('rc9.save'));
   } catch {}
   if (restore && hasSave) {
-    // Skip title — let existing app boot continue into saved state
+    // Skip title — let existing app boot continue into saved state.
+    // Still kick the empty-state CTA so if no game ends up active we
+    // show the centered "no engagement" panel.
+    globalThis.refreshEmptyStateCTA?.();
     return;
   }
   show();

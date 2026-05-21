@@ -175,6 +175,15 @@
                   <div id="co-corner-tl" class="co-corner tl">RC-9 // SECTOR 00</div>
                   <div id="co-corner-tr" class="co-corner tr">ROUND 00</div>
                 </div>
+                <!-- Empty-state CTA shown when no game is running and no other UI surface is up -->
+                <div id="empty-state-cta" hidden aria-label="Start a new game">
+                  <div class="esc-card">
+                    <div class="esc-label">RC-9 // STANDBY</div>
+                    <div class="esc-title">AWAITING <span class="accent">ORDERS</span></div>
+                    <div class="esc-sub">NO ENGAGEMENT IN PROGRESS</div>
+                    <button id="empty-state-new-game" class="btn-primary">▶ NEW ENGAGEMENT</button>
+                  </div>
+                </div>
                 <!-- Post FX overlay (PixiJS renders here on top of the canvas) -->
                 <div id="fx-overlay" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></div>
                 <!-- HUD overlay controls (desktop + mobile responsive) -->
