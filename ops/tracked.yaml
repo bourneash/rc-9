@@ -1,0 +1,22 @@
+# tools/site-tracker tracking config for rc-9.com.
+#
+# Read by /work/tools/site-tracker (the central dashboard) to know
+# what facts to collect/render for this site and what manual facts
+# have been recorded.
+#
+# Edit by hand or via the dashboard's edit-cell UI.
+
+extends: /work/tools/site-tracker/registry/standard.yaml
+
+# Which fact families to render in the matrix.
+applies_to: [cf, http, sitemap, tls, git, github, manual]
+
+# Site-specific facts not in the base catalog (rarely needed).
+# adds: []
+
+# Hand-entered facts. Null entries are prompts — fill in via the dashboard.
+manual:
+  monetization: null            # e.g. "ads+affiliate", "subscription", "rewarded_ads"
+  niche: null                   # short label, e.g. "ufo-disclosure"
+  amazon_associates_id: null
+  notes: null
