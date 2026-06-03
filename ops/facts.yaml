@@ -1,158 +1,158 @@
-last_updated: '2026-06-03T00:33:06Z'
+last_updated: '2026-06-03T11:45:00Z'
 facts:
   fs.last_commit_age_hours:
-    value: 0.26
+    value: 11.14
     state: green
     source: filesystem
-    verified_at: '2026-06-03T00:30:00Z'
+    verified_at: '2026-06-03T11:45:00Z'
     ttl_hours: 1
   cf.zone_active:
     value: true
     state: green
     source: cf_api
-    verified_at: '2026-06-03T00:33:05Z'
+    verified_at: '2026-06-03T11:33:06Z'
     ttl_hours: 6
   cf.worker_bound:
     value: false
     state: yellow
     source: cf_api
-    verified_at: '2026-06-03T00:33:06Z'
+    verified_at: '2026-06-03T11:33:07Z'
     ttl_hours: 6
   cf.email_routing:
     value: true
     state: green
     source: cf_api
-    verified_at: '2026-06-03T00:33:06Z'
+    verified_at: '2026-06-03T11:33:08Z'
     ttl_hours: 24
   github.last_push_age_hours:
-    value: 14.17
+    value: 3.39
     state: green
     source: github_api
-    verified_at: '2026-06-02T04:00:02Z'
+    verified_at: '2026-06-03T04:00:01Z'
     ttl_hours: 24
   github.commits_ahead:
     value: null
     state: unknown
     source: github_api
-    verified_at: '2026-06-02T04:00:02Z'
+    verified_at: '2026-06-03T04:00:01Z'
     ttl_hours: 24
   http.ga4_present:
     value: true
     state: green
     source: http_scrape
-    verified_at: '2026-06-03T00:17:01Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.adsense_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.meta_pixel_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.gtm_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.sitemap_200:
     value: false
     state: red
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.robots_present:
     value: true
     state: green
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.tls_expiry_days:
-    value: 55
+    value: 54
     state: green
     source: http_scrape
-    verified_at: '2026-06-03T00:17:02Z'
+    verified_at: '2026-06-03T11:17:01Z'
     ttl_hours: 24
   http.has_canonical:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_og_tags:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_schema_org:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_viewport_meta:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_rss:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_ads_txt:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_contact_email:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_privacy_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_terms_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_security_txt:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_affiliate_disclosure:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_favicon:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
   http.has_about_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-02T23:43:03Z'
+    verified_at: '2026-06-03T11:43:02Z'
     ttl_hours: 24
