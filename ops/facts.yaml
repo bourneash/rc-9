@@ -1,28 +1,28 @@
-last_updated: '2026-06-03T00:00:00Z'
+last_updated: '2026-06-03T00:33:06Z'
 facts:
   fs.last_commit_age_hours:
-    value: 34.17
+    value: 0.26
     state: green
     source: filesystem
-    verified_at: '2026-06-03T00:00:00Z'
+    verified_at: '2026-06-03T00:30:00Z'
     ttl_hours: 1
   cf.zone_active:
     value: true
     state: green
     source: cf_api
-    verified_at: '2026-06-02T23:33:03Z'
+    verified_at: '2026-06-03T00:33:05Z'
     ttl_hours: 6
   cf.worker_bound:
     value: false
     state: yellow
     source: cf_api
-    verified_at: '2026-06-02T23:33:03Z'
+    verified_at: '2026-06-03T00:33:06Z'
     ttl_hours: 6
   cf.email_routing:
     value: true
     state: green
     source: cf_api
-    verified_at: '2026-06-02T23:33:04Z'
+    verified_at: '2026-06-03T00:33:06Z'
     ttl_hours: 24
   github.last_push_age_hours:
     value: 14.17
@@ -40,43 +40,43 @@ facts:
     value: true
     state: green
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:01Z'
     ttl_hours: 24
   http.adsense_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.meta_pixel_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.gtm_present:
     value: false
     state: yellow
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.sitemap_200:
     value: false
     state: red
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.robots_present:
     value: true
     state: green
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.tls_expiry_days:
     value: 55
     state: green
     source: http_scrape
-    verified_at: '2026-06-02T23:17:02Z'
+    verified_at: '2026-06-03T00:17:02Z'
     ttl_hours: 24
   http.has_canonical:
     value: true
