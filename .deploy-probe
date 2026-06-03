@@ -1,0 +1,5 @@
+# deploy-probe — managed by tools/deployment-tester. Safe to delete.
+# Bumping the serial and pushing to main triggers a Cloudflare Workers Build,
+# letting us confirm push-to-deploy is wired correctly for this repo.
+serial=1
+updated=2026-06-03T11:57:41Z
