@@ -8,13 +8,24 @@
     <!-- Security headers are now set via CloudFlare Pages _headers file -->
     <meta name="referrer" content="no-referrer-when-downgrade" />
     <meta name="google-site-verification" content="llV2Gj2sVlK6BIr0_pDzkxUyVsCBVmc5RahQgOxL1TQ" />
-    <!-- GA4: SRI intentionally omitted — gtag.js is dynamically versioned by Google -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-R2H86NCJ2F"></script>
+    <!-- GA4: consent-gated -->
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-R2H86NCJ2F', { anonymize_ip: true });
+    (function () {
+      var STORAGE_KEY = 'rc9_analytics_consent';
+      var trackingId = 'G-R2H86NCJ2F';
+      function loadGa4() {
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + trackingId;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', trackingId, { anonymize_ip: true });
+      }
+      if (localStorage.getItem(STORAGE_KEY) === 'true') { loadGa4(); return; }
+      window.addEventListener('rc9-consent-granted', loadGa4, { once: true });
+    })();
     </script>
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -710,8 +721,33 @@
     <script type="module" src="/js/init.js"></script>
 
     <div id="version-display" style="position: fixed; bottom: 4px; right: 8px; font-size: 10px; opacity: 0.3; color: #888; pointer-events: none; z-index: 999; font-family: monospace;"></div>
-    <a href="/privacy" style="position: fixed; bottom: 4px; left: 8px; font-size: 10px; opacity: 0.3; color: #888; z-index: 999; font-family: monospace; text-decoration: none;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.3'">Privacy</a>
+    <div style="position: fixed; bottom: 4px; left: 8px; z-index: 999; display: flex; gap: 10px;">
+      <a href="/privacy" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.3'">Privacy</a>
+      <a href="/terms" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.3'">Terms</a>
+      <a href="#" onclick="localStorage.removeItem('rc9_analytics_consent');location.reload();return false;" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.3'">Cookie prefs</a>
+    </div>
 
     <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
+
+    <div id="rc9-cookie-banner" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#0a0f08;border-top:1px solid rgba(80,220,130,0.3);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:monospace;font-size:11px;color:#aaa;opacity:0;transform:translateY(8px);transition:opacity 0.3s,transform 0.3s;pointer-events:none;">
+      <span>We use analytics cookies. <a href="/privacy" style="color:#50dc82;text-decoration:none;border-bottom:1px solid rgba(80,220,130,0.3)">Details</a>.</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="rc9Decline()" style="background:none;border:1px solid rgba(80,220,130,0.3);color:#777;font-family:monospace;font-size:10px;letter-spacing:0.15em;padding:4px 10px;cursor:pointer;text-transform:uppercase;">Decline</button>
+        <button onclick="rc9Accept()" style="background:rgba(80,220,130,0.15);border:1px solid #50dc82;color:#50dc82;font-family:monospace;font-size:10px;letter-spacing:0.15em;padding:4px 10px;cursor:pointer;text-transform:uppercase;">Accept</button>
+      </div>
+    </div>
+    <script>
+    (function(){
+      var KEY='rc9_analytics_consent';
+      var el=document.getElementById('rc9-cookie-banner');
+      if(localStorage.getItem(KEY)!==null){el&&el.remove();return;}
+      requestAnimationFrame(function(){
+        if(el){el.style.opacity='1';el.style.transform='translateY(0)';el.style.pointerEvents='auto';}
+      });
+      function hide(){if(el){el.style.opacity='0';el.style.transform='translateY(8px)';setTimeout(function(){el&&el.remove();},300);}}
+      window.rc9Accept=function(){localStorage.setItem(KEY,'true');window.dispatchEvent(new CustomEvent('rc9-consent-granted'));hide();};
+      window.rc9Decline=function(){localStorage.setItem(KEY,'false');hide();};
+    })();
+    </script>
 </body>
 </html>
