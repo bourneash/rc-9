@@ -2798,14 +2798,12 @@ function bindUI() {
   fireBtn?.addEventListener('click', e => {
     e.preventDefault();
     // try { console.debug('[ui] fire button clicked', { disabled: fireBtn.disabled }); } catch (err) {}
-    // Delegate gating to game.fire() for consistency
-    game.fire();
+    humanFire();
   });
   mobileFireBtn?.addEventListener('click', e => {
     e.preventDefault();
     // try { console.debug('[ui] mobile fire clicked', { disabled: mobileFireBtn.disabled }); } catch (err) {}
-    // Delegate gating to game.fire() for consistency
-    game.fire();
+    humanFire();
   });
   clearLogBtn?.addEventListener('click', e => {
     e.preventDefault();
@@ -3587,7 +3585,7 @@ function isFormTarget(target) {
 }
 
 function syncAnglePowerUI() {
-  const currentTank = game.getCurrentTank();
+  const currentTank = game.getActivePlayerTank();
   if (!currentTank) return;
   const angleEl = document.getElementById('angle-input');
   const angleValEl = document.getElementById('angle-value');
@@ -3624,6 +3622,10 @@ function getCurrentHumanTank() {
   const t = game.getCurrentTank();
   if (!t || t.isAI) return null;
   return t;
+}
+
+function humanFire() {
+  game.fire();
 }
 
 function onKeyDown(e) {
@@ -3664,7 +3666,7 @@ function onKeyDown(e) {
 
   // Fire is only allowed for the current player's turn
   if (isFire) {
-    game.fire();
+    humanFire();
     return;
   }
 

@@ -2,7 +2,9 @@
 // AI turn execution: movement planning, shot calculation, weapon selection, and shield decisions.
 
 export function performAITurn(game) {
-  if (game.gameOver || game.isAnimating || game.turnEnding) return;
+  if (game.gameOver) return;
+  // In realtime mode each tank fires on its own cooldown; don't block on global animation state.
+  if (game.mode !== 'realtime' && (game.isAnimating || game.turnEnding)) return;
 
   const aiTank = game.tanks[game.currentTankIndex];
   if (!aiTank?.isAI || aiTank.health <= 0) return;
@@ -72,17 +74,19 @@ export function performAITurn(game) {
             setTimeout(() => tryFire(retries), 250);
             return;
           }
-          if (!game.isAnimating && !game.turnEnding) {
+          const readyToFire = game.mode === 'realtime'
+            ? !aiTank._fireLocked
+            : (!game.isAnimating && !game.turnEnding);
+          if (readyToFire) {
             game.aiTurnInProgress = false;
-            game.fire();
+            game.fire(aiTank);
           } else if (retries > 0) {
             setTimeout(() => tryFire(retries - 1), 120);
           } else {
-            // Force through stuck animation/turn-ending gates after retry budget.
-            game.isAnimating = false;
-            game.turnEnding = false;
+            // Force through stuck gates after retry budget.
+            if (game.mode !== 'realtime') { game.isAnimating = false; game.turnEnding = false; }
             game.aiTurnInProgress = false;
-            game.fire();
+            game.fire(aiTank);
           }
         };
         tryFire();

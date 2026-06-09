@@ -1573,9 +1573,9 @@ export class Game {
           if (this.mode !== 'realtime') {
             this.scheduleEndTurn(250);
           } else {
-            // In realtime, reset firing latch so humans can act again
             if (this.turnEnding) this.turnEnding = false;
             if (this.fireLocked) this.fireLocked = false;
+            for (const t of this.tanks) t._fireLocked = false;
           }
         }
         continue;
@@ -1749,8 +1749,8 @@ export class Game {
       if (this.isAnimating) this.isAnimating = false;
       if (this.mode === 'realtime') {
         if (this.turnEnding) this.turnEnding = false;
-        // Allow humans to fire again immediately
         if (this.fireLocked) this.fireLocked = false;
+        for (const t of this.tanks) t._fireLocked = false;
       }
     }
 
@@ -5547,13 +5547,13 @@ export class Game {
   updateRealtimeAI() {
     if (this.mode !== 'realtime') return;
     if (this.gameOver) return;
-    if (this.isAnimating && this.projectiles.length > 0) return;
 
     const now = performance.now?.() || Date.now();
 
     // Check each AI tank to see if it can act
     for (const tank of this.tanks) {
       if (!tank.isAI || tank.health <= 0) continue;
+      if (tank._fireLocked) continue; // already has a shot in flight
 
       // Check if AI is on cooldown
       const lastShotTime = this.aiCooldowns.get(tank) || 0;
@@ -5566,10 +5566,12 @@ export class Game {
         continue;
       }
 
-      // AI can act! Set it as current and perform its turn
-      this.currentTankIndex = this.tanks.indexOf(tank);
+      // AI can act — fire via tankOverride so currentTankIndex stays on the human.
       this.aiCooldowns.set(tank, now);
+      const savedIndex = this.currentTankIndex;
+      this.currentTankIndex = this.tanks.indexOf(tank);
       this.performAITurn();
+      this.currentTankIndex = savedIndex;
       break; // Only one AI acts per frame
     }
   }
@@ -6173,8 +6175,11 @@ export class Game {
     );
   }
 
-  fire() {
-    if (this.isInputBlocked() || this.fireLocked) {
+  fire(tankOverride = null) {
+    const currentTank = tankOverride ?? this.tanks[this.currentTankIndex];
+    // In realtime each tank has its own _fireLocked; in turn-based use the global.
+    const locked = this.mode === 'realtime' ? !!currentTank?._fireLocked : this.fireLocked;
+    if (this.isInputBlocked() || locked) {
       const reason = this.getInputBlockedReason(true);
 
       if (reason) {
@@ -6187,8 +6192,7 @@ export class Game {
       return;
     }
 
-    const currentTank = this.tanks[this.currentTankIndex];
-    if (currentTank.health <= 0) return;
+    if (!currentTank || currentTank.health <= 0) return;
 
     // Solo mode: prevent firing if out of shots; only count after a projectile is successfully spawned
     if (this.mode === 'solo' && this.soloActive) {
@@ -6229,10 +6233,12 @@ export class Game {
       }
     }
 
-    // Latch immediately to avoid double-firing via rapid inputs
-    this.fireLocked = true;
-    // In realtime mode, keep controls enabled for human players
-    if (this.mode !== 'realtime') {
+    // Latch immediately to avoid double-firing via rapid inputs.
+    // In realtime each tank has its own lock; in turn-based use the global.
+    if (this.mode === 'realtime') {
+      currentTank._fireLocked = true;
+    } else {
+      this.fireLocked = true;
       this.disableControls();
     }
     this.isAnimating = true;
@@ -6525,21 +6531,21 @@ export class Game {
   }
 
   setAngle(angle) {
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank && !currentTank.isAI) {
       currentTank.angle = ((angle % 360) + 360) % 360;
     }
   }
 
   setPower(power) {
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank && !currentTank.isAI) {
       currentTank.power = Math.max(0, Math.min(100, power));
     }
   }
 
   setWeapon(weapon) {
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank && !currentTank.isAI) {
       const restrictionReason = this.getWeaponRestrictionReason(weapon, currentTank, {
         ignoreAmmo: true,
@@ -6700,7 +6706,7 @@ export class Game {
   }
 
   adjustAngle(delta) {
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank && !currentTank.isAI) {
       const next = currentTank.angle + delta;
       currentTank.angle = ((next % 360) + 360) % 360;
@@ -6708,13 +6714,17 @@ export class Game {
   }
 
   adjustPower(delta) {
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank && !currentTank.isAI) {
       currentTank.power = Math.max(0, Math.min(100, currentTank.power + delta));
     }
   }
 
   getCurrentTank() {
+    return this.tanks[this.currentTankIndex];
+  }
+
+  getActivePlayerTank() {
     return this.tanks[this.currentTankIndex];
   }
 
@@ -6734,7 +6744,8 @@ export class Game {
   }
 
   _updateUIImmediate() {
-    const currentTank = this.tanks[this.currentTankIndex];
+    // In realtime mode currentTankIndex may point at an AI tank; always show the human's stats.
+    const currentTank = this.getActivePlayerTank();
     const nameEl = document.getElementById('player-name');
     const healthEl = document.getElementById('player-health');
     const fuelEl = document.getElementById('fuel-value');
@@ -6960,7 +6971,7 @@ export class Game {
   moveTank(direction) {
     if (!this.driveMode || this.isAnimating || this.gameOver || this.turnEnding) return;
 
-    const currentTank = this.tanks[this.currentTankIndex];
+    const currentTank = this.getActivePlayerTank();
     if (currentTank.isAI) return;
 
     // Canyon traversal is enforced in Terrain.canMoveTo() (single source of
