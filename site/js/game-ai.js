@@ -17,6 +17,18 @@ export function performAITurn(game) {
 
   game.aiTurnInProgress = true;
 
+  // Guards against a deferred AI action (think timer / move callback) firing into a
+  // *different* game after a fast "New Game". On reset the tanks array is replaced,
+  // so an old closure's aiTank is no longer a member. Returns:
+  //   'stale' — belongs to a prior game; do nothing, don't touch the new game's flags
+  //   'over'  — same game but it ended; clear our in-progress flag and stop
+  //   null    — still valid, proceed
+  const aiTurnStatus = () => {
+    if (!game.tanks.includes(aiTank)) return 'stale';
+    if (game.gameOver || aiTank.health <= 0) return 'over';
+    return null;
+  };
+
   try {
     const targets = game.tanks.filter(t => t !== aiTank && t.health > 0);
     if (targets.length === 0) {
@@ -31,7 +43,9 @@ export function performAITurn(game) {
 
     const plan = planAIMovement(game, aiTank, target, initialDistance);
     const afterMove = () => {
-      if (game.gameOver) {
+      const st = aiTurnStatus();
+      if (st === 'stale') return; // new game started mid-move; leave its state alone
+      if (st === 'over') {
         game.aiTurnInProgress = false;
         return;
       }
@@ -63,7 +77,9 @@ export function performAITurn(game) {
       const thinkTime = game.config?.ai?.[aiTank.aiSkill]?.thinkTime || 1500;
       setTimeout(() => {
         const tryFire = (retries = 25) => {
-          if (game.gameOver) {
+          const st = aiTurnStatus();
+          if (st === 'stale') return; // a new game replaced this one; never fire into it
+          if (st === 'over') {
             game.aiTurnInProgress = false;
             return;
           }
@@ -74,9 +90,8 @@ export function performAITurn(game) {
             setTimeout(() => tryFire(retries), 250);
             return;
           }
-          const readyToFire = game.mode === 'realtime'
-            ? !aiTank._fireLocked
-            : (!game.isAnimating && !game.turnEnding);
+          const readyToFire =
+            game.mode === 'realtime' ? !aiTank._fireLocked : !game.isAnimating && !game.turnEnding;
           if (readyToFire) {
             game.aiTurnInProgress = false;
             game.fire(aiTank);
@@ -84,7 +99,10 @@ export function performAITurn(game) {
             setTimeout(() => tryFire(retries - 1), 120);
           } else {
             // Force through stuck gates after retry budget.
-            if (game.mode !== 'realtime') { game.isAnimating = false; game.turnEnding = false; }
+            if (game.mode !== 'realtime') {
+              game.isAnimating = false;
+              game.turnEnding = false;
+            }
             game.aiTurnInProgress = false;
             game.fire(aiTank);
           }

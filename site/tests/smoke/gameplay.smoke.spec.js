@@ -2,10 +2,14 @@ import { test, expect } from '@playwright/test';
 
 // Seed localStorage so the title screen auto-skips in test env.
 // se.ui.restoreEnabled=true + a fake save causes mount() to return early.
+// Also record a cookie-consent decision: a returning user (which this state
+// simulates) would have answered the banner on the title screen before reaching
+// gameplay, so the banner is dismissed and never overlays the bottom controls.
 async function skipTitleScreen(page) {
   await page.addInitScript(() => {
     localStorage.setItem('se.ui.restoreEnabled', 'true');
     localStorage.setItem('se.lastGame.v1', JSON.stringify({ round: 1, tanks: [] }));
+    localStorage.setItem('rc9_analytics_consent', 'false');
   });
 }
 
@@ -29,7 +33,7 @@ async function startDeterministicGame(page) {
       humanPlayers: 2,
       slots: [
         { type: 'human', name: 'Player 1', color: '#00ff00', style: 'classic' },
-        { type: 'human', name: 'Player 2', color: '#ff0000', style: 'classic' }
+        { type: 'human', name: 'Player 2', color: '#ff0000', style: 'classic' },
       ],
       windMode: 'low',
       healthMultiplier: 100,
@@ -38,15 +42,19 @@ async function startDeterministicGame(page) {
       ammoMode: 'unlimited',
       ammoCounts: {},
       disableNames: false,
-      allowDriveAnytime: false
+      allowDriveAnytime: false,
     });
 
     const modal = document.getElementById('new-game-modal');
     if (modal) {
-      try { modal.close?.(); } catch {}
+      try {
+        modal.close?.();
+      } catch {}
       modal.classList.add('hidden');
     }
-    try { game.setPaused(false); } catch {}
+    try {
+      game.setPaused(false);
+    } catch {}
   });
 
   await page.waitForFunction(() => {
@@ -76,13 +84,13 @@ test.describe('Gameplay smoke', () => {
       const game = window.__SE_GAME__ || window.game || window.mainGame;
       return {
         currentTankIndex: game.currentTankIndex,
-        projectileCount: game.projectiles?.length || 0
+        projectileCount: game.projectiles?.length || 0,
       };
     });
 
     await page.click('#fire-button');
 
-    await page.waitForFunction((prev) => {
+    await page.waitForFunction(prev => {
       const game = window.__SE_GAME__ || window.game || window.mainGame;
       if (!game) return false;
       const projectileCount = game.projectiles?.length || 0;
@@ -103,12 +111,16 @@ test.describe('Gameplay smoke', () => {
 
     await page.click('#fire-button');
 
-    await page.waitForFunction((initialTurn) => {
-      const game = window.__SE_GAME__ || window.game || window.mainGame;
-      if (!game) return false;
-      const projectilesDone = !game.projectiles || game.projectiles.length === 0;
-      return projectilesDone && game.currentTankIndex !== initialTurn;
-    }, startTurn, { timeout: 15000 });
+    await page.waitForFunction(
+      initialTurn => {
+        const game = window.__SE_GAME__ || window.game || window.mainGame;
+        if (!game) return false;
+        const projectilesDone = !game.projectiles || game.projectiles.length === 0;
+        return projectilesDone && game.currentTankIndex !== initialTurn;
+      },
+      startTurn,
+      { timeout: 15000 }
+    );
   });
 
   test('reaches game over state when one tank remains', async ({ page }) => {

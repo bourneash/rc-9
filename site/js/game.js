@@ -18,11 +18,7 @@ import {
   showVictoryToast as _showVictoryToast,
 } from './game-victory.js';
 import { drawTrajectoryGuide as _drawTrajectoryGuide } from './game-physics.js';
-import {
-  HEAVY_WEAPONS,
-  WATER_ONLY_WEAPONS,
-  LAND_ONLY_WEAPONS,
-} from './game-state.js';
+import { HEAVY_WEAPONS, WATER_ONLY_WEAPONS, LAND_ONLY_WEAPONS } from './game-state.js';
 import {
   performAITurn as _performAITurn,
   shouldAIUseShield as _shouldAIUseShield,
@@ -335,7 +331,8 @@ export class Game {
   spawnDamagePopup(x, y, amount, opts = {}) {
     if (!Number.isFinite(amount) || amount === 0) return;
     this.damagePopups.push({
-      x, y,
+      x,
+      y,
       amount: Math.round(amount),
       color: opts.color || (amount > 0 ? '#ff5544' : '#50dc82'),
       startedAt: performance.now(),
@@ -446,7 +443,9 @@ export class Game {
     toast.appendChild(label);
     document.body.appendChild(toast);
     setTimeout(() => {
-      try { toast.remove(); } catch {}
+      try {
+        toast.remove();
+      } catch {}
     }, 6000);
   }
 
@@ -685,7 +684,9 @@ export class Game {
     try {
       const skipEl = document.getElementById('skip-modal');
       if (skipEl) {
-        try { skipEl.close?.(); } catch {}
+        try {
+          skipEl.close?.();
+        } catch {}
         skipEl.classList.add('hidden');
       }
     } catch {}
@@ -999,8 +1000,11 @@ export class Game {
     }
     if (mode === 'custom') {
       const counts = cfg?.ammoCounts || {};
+      const validKeys = new Set(Object.keys(tank.ammo));
       for (const [k, v] of Object.entries(counts)) {
-        tank.ammo[k] = Math.max(0, Math.trunc(Number(v)));
+        if (validKeys.has(k)) {
+          tank.ammo[k] = Math.max(0, Math.trunc(Number(v)));
+        }
       }
       if (!Object.keys(tank.ammo).length) tank.ammo.missile = 20;
       return;
@@ -1387,11 +1391,11 @@ export class Game {
             projectile._emitAccum = (projectile._emitAccum || 0) + (this._frameDtMs || 16);
             // Prevent large catch-up bursts after a slow frame
             if (projectile._emitAccum > 150) projectile._emitAccum = 150;
-            const emitEveryMs = 80; // Performance: reduced from 50ms (12.5 droplets/sec instead of 20)
+            const emitEveryMs = 26; // dense emission so droplets overlap into a continuous stream
             while (projectile._emitAccum >= emitEveryMs) {
               projectile._emitAccum -= emitEveryMs;
               const hz = projectile._napalmHazard;
-              if (hz?.nodes && hz.nodes.length < 90) {
+              if (hz?.nodes && hz.nodes.length < 120) {
                 // Spawn a droplet slightly behind current position for a streak look
                 const ang = Math.atan2(projectile.vy, projectile.vx);
                 const back = 6 + Math.random() * 4;
@@ -1553,7 +1557,13 @@ export class Game {
         this._lastUpdateAt != null ? (performance.now?.() || Date.now()) - this._lastUpdateAt : 16;
       this._frameDtMs = Math.max(1, Math.min(50, dtForFrame));
       this._lastUpdateAt = performance.now?.() || Date.now();
-      projectile.update(wind, g, this.windEffect, this.terrain, this.tanks);
+      // Homing torpedoes must only seek enemies — exclude the owner and friendlies
+      // so a fired torpedo never curves back into the shooter or an ally.
+      const homingTargets =
+        projectile.type === 'homing_torpedo'
+          ? this.tanks.filter(t => t && !this.isFriendly(projectile.owner, t))
+          : this.tanks;
+      projectile.update(wind, g, this.windEffect, this.terrain, homingTargets);
 
       // Offscreen culling to prevent indefinite flight / frozen turns
       // If a projectile leaves the playable area, remove it immediately.
@@ -2897,8 +2907,9 @@ export class Game {
   applyTheme(themeName, timeOfDay) {
     const lib = this.getThemeLibrary();
     // If themeName is no longer valid (e.g., desk removed), fall back to forest
-    const theme = lib[themeName] ? lib[themeName] : lib['forest'];
-    if (!lib[themeName]) this.themeName = 'forest';
+    const themeValid = Object.hasOwn(lib, themeName);
+    const theme = themeValid ? lib[themeName] : lib['forest'];
+    if (!themeValid) this.themeName = 'forest';
     else this.themeName = themeName;
     this.timeOfDay = timeOfDay || 'day';
     // Configure atmospheric features
@@ -6075,9 +6086,13 @@ export class Game {
       if (el) {
         if (skip) {
           el.classList.remove('hidden');
-          try { if (!el.open) el.showModal(); } catch {}
+          try {
+            if (!el.open) el.showModal();
+          } catch {}
         } else {
-          try { el.close?.(); } catch {}
+          try {
+            el.close?.();
+          } catch {}
           el.classList.add('hidden');
         }
       }
@@ -6377,11 +6392,13 @@ export class Game {
           const ty = tgt ? tgt.y - 10 : currentTank.y - 10 - Math.sin(angleRad) * 300;
           const straightDist = Math.hypot(tx - projectile._startX, ty - projectile._startY) || 1;
 
-          // Use a clamped displacement threshold so homing reliably engages
-          const minDisplacement = Math.max(100, Math.min(420, straightDist * 0.45));
+          // Engage the seeker early so it actually tracks the target for most of the
+          // flight (it used to wait ~45% of the way and just nose-dive past). A short
+          // gate still lets it clear the muzzle / nearby terrain first.
+          const minDisplacement = Math.max(60, Math.min(240, straightDist * 0.25));
           projectile._homeThreshold = minDisplacement;
-          // Add a frame-based fallback timer (e.g., ~300ms at 60fps)
-          projectile._homeDelayFrames = 18;
+          // Frame-based fallback (~170ms at 60fps) in case displacement is slow to build.
+          projectile._homeDelayFrames = 10;
           projectile._homeEnabled = false;
         } catch (error) {
           console.error('[homing] Failed to set up homing threshold:', error);
@@ -6474,7 +6491,10 @@ export class Game {
       banner.textContent = 'SOLO COMPLETE';
       banner.className = 'er-banner';
     }
-    setText('er-subtitle', `SOLO RUN · ${this.soloTargetsHit ?? 0} / ${this.soloTargetGoal ?? 0} TARGETS`);
+    setText(
+      'er-subtitle',
+      `SOLO RUN · ${this.soloTargetsHit ?? 0} / ${this.soloTargetGoal ?? 0} TARGETS`
+    );
     setText('winner-text', String(this.soloScore));
     setText('er-standing', ' PTS');
     setText('er-tag', total === '∞' ? 'UNLIMITED AMMO' : `${total} SHOTS ALLOWED`);
@@ -6957,7 +6977,12 @@ export class Game {
   toggleDriveMode() {
     // Block toggle when current tank has no fuel.
     const currentTank = this.tanks[this.currentTankIndex];
-    if (currentTank && Number.isFinite(currentTank.fuel) && currentTank.fuel <= 0 && !this.driveMode) {
+    if (
+      currentTank &&
+      Number.isFinite(currentTank.fuel) &&
+      currentTank.fuel <= 0 &&
+      !this.driveMode
+    ) {
       return;
     }
     this.driveMode = !this.driveMode;
@@ -7539,6 +7564,8 @@ export class Game {
         const isAcid = h.type === 'acid';
         const gravitySlide = (isAcid ? 0.018 : 0.035) * (dt / 16); // napalm flows faster downhill
         const maxSpeed = isAcid ? 1.2 : 2.5; // napalm can flow faster
+        // Napalm pools can grow larger so they fill crevices; acid stays tighter.
+        const rCap = isAcid ? 60 : 84;
         for (const n of h.nodes) {
           const x = Math.max(0, Math.min(this.width - 2, Math.floor(n.x)));
           // Sample terrain heights around node to infer slope
@@ -7562,12 +7589,20 @@ export class Game {
             const sampleAheadX = Math.max(0, Math.min(this.width - 1, x + (movingRight ? 1 : -1)));
             const hAheadSimple = this.terrain.getHeight(sampleAheadX);
             const downhill = hAheadSimple < ground;
-            if (downhill) {
-              // Accelerate downhill
-              n.vx += desiredVx * 1.5;
+            // Valley bottom: both sides rise away from the node (a crevice to fill).
+            const inBasin = hL > ground + 1 && hR > ground + 1;
+            if (inBasin || Math.abs(slopeX) < 0.5) {
+              // At/near a local minimum — settle and stop rolling so it pools and fills
+              // the low ground instead of sloshing back and forth across the basin.
+              n.vx *= isAcid ? 0.5 : 0.32;
+              n._settled = true;
+            } else if (downhill) {
+              // Accelerate downhill (gentler than before to avoid overshoot/oscillation)
+              n.vx += desiredVx * 1.25;
+              n._settled = false;
             } else {
-              // Stop uphill movement - liquid doesn't flow uphill
-              n.vx *= 0.5;
+              // Uphill ahead — bleed momentum fast so it doesn't climb the far wall and roll back
+              n.vx *= 0.3;
             }
             // Dribble downwards a bit to hug ground
             if (n.y < ground - 1) {
@@ -7600,7 +7635,7 @@ export class Game {
                     m: massFromRadius(rr),
                     falling: true,
                   });
-                  n.r = Math.min(60, n.r * 0.88);
+                  n.r = Math.min(rCap, n.r * 0.88);
                   n.m = massFromRadius(n.r);
                 }
               }
@@ -7614,7 +7649,8 @@ export class Game {
             n.vy = (n.vy / sp) * maxSpeed;
           }
           // Stronger damping to prevent oscillation - liquid flows smoothly
-          n.vx *= 0.92;
+          // (napalm settles faster so it stops rolling and pools).
+          n.vx *= isAcid ? 0.92 : 0.86;
           n.vy *= 0.95;
           n.x = Math.max(0, Math.min(this.width - 1, n.x + n.vx));
           n.y = n.y + n.vy;
@@ -7650,12 +7686,12 @@ export class Game {
             const dx = na.x - nb.x;
             const dy = na.y - nb.y;
             const d2 = dx * dx + dy * dy;
-            const rSum = Math.min(60, na.r + nb.r);
+            const rSum = Math.min(rCap, na.r + nb.r);
             // More aggressive merging when both nodes are grounded (pooling behavior)
-            const mergeThreshold = !na.falling && !nb.falling ? 0.55 : 0.42;
+            const mergeThreshold = !na.falling && !nb.falling ? 0.6 : 0.42;
             if (d2 < rSum * mergeThreshold * (rSum * mergeThreshold)) {
               const merged = mergeDroplets(na, nb);
-              merged.r = Math.min(60, merged.r);
+              merged.r = Math.min(rCap, merged.r);
               h.nodes[a] = merged;
               h.nodes.splice(b, 1);
               b--;
@@ -7663,21 +7699,23 @@ export class Game {
           }
         }
 
-        // Surface wetting: spread out grounded napalm on flat terrain
+        // Surface wetting: settled napalm spreads and thickens to FILL flat ground and
+        // valley bottoms, so a crevice reads as a filled molten pool rather than
+        // scattered little fires.
         if (h.type === 'napalm') {
           for (const n of h.nodes) {
-            if (!n.falling && Math.abs(n.vx) < 0.1) {
-              const x = Math.floor(n.x);
-              // Sample terrain around to check flatness
-              const hL = this.terrain.getHeight(Math.max(0, x - 3));
-              const hC = this.terrain.getHeight(x);
-              const hR = this.terrain.getHeight(Math.min(this.width - 1, x + 3));
-              const flatness = Math.abs(hL - hC) + Math.abs(hR - hC);
-              // On flat surfaces, slowly spread outward to wet the surface
-              if (flatness < 2 && n.r < 28) {
-                n.r += 0.08 * (dt / 16); // Grow radius to spread
-                n.m = massFromRadius(n.r);
-              }
+            if (n.falling || Math.abs(n.vx) >= 0.3) continue;
+            const x = Math.floor(n.x);
+            const hL = this.terrain.getHeight(Math.max(0, x - 4));
+            const hC = this.terrain.getHeight(x);
+            const hR = this.terrain.getHeight(Math.min(this.width - 1, x + 4));
+            const flatness = Math.abs(hL - hC) + Math.abs(hR - hC);
+            const inBasin = hL > hC + 1 && hR > hC + 1;
+            // Grow (spread) faster in basins so the low ground fills in; cap so it
+            // doesn't balloon past the pool size.
+            if ((flatness < 5 || inBasin) && n.r < 44) {
+              n.r += (inBasin ? 0.24 : 0.13) * (dt / 16);
+              n.m = massFromRadius(n.r);
             }
           }
         }
@@ -8215,38 +8253,94 @@ export class Game {
     // Blur the additive field to unify blobs
     blr.clearRect(0, 0, w, hgt);
     blr.save();
-    blr.filter = 'blur(6px)';
+    blr.filter = 'blur(8px)';
     blr.drawImage(h._blobCanvas, 0, 0);
     blr.restore();
-    // Tint with napalm color via source-in
+    // Tint the unified blob as MOLTEN liquid: a vertical gradient from a white-hot
+    // burning surface down to a deep, near-charred base — reads as burning fuel,
+    // not a flat orange splotch.
     blr.save();
     blr.globalCompositeOperation = 'source-in';
-    blr.fillStyle = '#ff6b2d';
-    blr.globalAlpha = 0.9;
+    const tg = blr.createLinearGradient(0, minY, 0, maxY);
+    tg.addColorStop(0, '#ffe27a'); // hot surface (top)
+    tg.addColorStop(0.3, '#ff8a1f');
+    tg.addColorStop(0.65, '#e8431a');
+    tg.addColorStop(1, '#7a1505'); // cooled / charred base
+    blr.fillStyle = tg;
+    blr.globalAlpha = 0.95;
     blr.fillRect(0, 0, w, hgt);
     blr.restore();
-    // Optional inner hot core highlight
+    // Inner hot cores so individual blobs still glow.
     blr.save();
     blr.globalCompositeOperation = 'lighter';
-    blr.globalAlpha = 0.25;
+    blr.globalAlpha = 0.3;
     for (const n of h.nodes) {
       const r = Math.max(4, n.r * 0.5);
       const cx = n.x - minX;
       const cy = n.y - minY;
       const g2 = blr.createRadialGradient(cx, cy, 0, cx, cy, r);
-      g2.addColorStop(0, 'rgba(255,230,160,0.8)');
-      g2.addColorStop(1, 'rgba(255,230,160,0)');
+      g2.addColorStop(0, 'rgba(255,240,190,0.85)');
+      g2.addColorStop(1, 'rgba(255,240,190,0)');
       blr.fillStyle = g2;
       blr.beginPath();
       blr.arc(cx, cy, r, 0, Math.PI * 2);
       blr.fill();
     }
     blr.restore();
-    // Draw to main canvas with subtle flicker
+    // Draw the molten body to the main canvas with subtle flicker.
     const flicker = 0.92 + Math.random() * 0.08;
     ctx.save();
     ctx.globalAlpha = flicker;
     ctx.drawImage(h._blurCanvas, minX, minY);
+    ctx.restore();
+
+    // --- Fire on top: flame tongues licking off the surface + rising embers. ---
+    const t = (h.ageMs || 0) * 0.012;
+    // Flame tongues: anchored to grounded (pooled) nodes, swaying and flickering.
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    let drawn = 0;
+    for (let ni = 0; ni < h.nodes.length && drawn < 28; ni++) {
+      const n = h.nodes[ni];
+      if (n.falling || n.r < 11) continue; // only the burning pool throws tongues
+      drawn++;
+      const baseX = n.x;
+      const baseY = n.y - n.r * 0.25;
+      const ph = t + ni * 1.7;
+      const flick = 0.7 + 0.3 * Math.sin(ph * 2.3) + (Math.random() - 0.5) * 0.18;
+      const fh = Math.max(10, n.r * (1.0 + 0.5 * Math.sin(ph)) * flick);
+      const fw = n.r * 0.7;
+      const tipX = baseX + Math.sin(ph * 1.3) * n.r * 0.22;
+      const tipY = baseY - fh;
+      const fg = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
+      fg.addColorStop(0, 'rgba(255,120,30,0)');
+      fg.addColorStop(0.18, 'rgba(255,140,30,0.55)');
+      fg.addColorStop(0.55, 'rgba(255,205,80,0.5)');
+      fg.addColorStop(1, 'rgba(255,255,220,0)');
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(baseX - fw * 0.5, baseY);
+      ctx.quadraticCurveTo(baseX - fw * 0.35, baseY - fh * 0.55, tipX, tipY);
+      ctx.quadraticCurveTo(baseX + fw * 0.35, baseY - fh * 0.55, baseX + fw * 0.5, baseY);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Embers drifting up off the pool.
+    const emberCount = Math.min(10, Math.max(3, Math.ceil(h.nodes.length * 0.4)));
+    for (let e = 0; e < emberCount; e++) {
+      const n = h.nodes[(e * 7) % h.nodes.length];
+      if (!n) continue;
+      const ph = t * 1.6 + e * 2.1;
+      const rise = (ph % 6.283) / 6.283; // 0..1 loop
+      const ex = n.x + Math.sin(ph * 1.7) * 6;
+      const ey = n.y - n.r * 0.3 - rise * (n.r + 26);
+      const ea = (1 - rise) * 0.8;
+      const er = 1.2 + (1 - rise) * 1.6;
+      ctx.fillStyle = `rgba(255,${160 + Math.floor(70 * rise)},70,${ea.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.arc(ex, ey, er, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   }
 

@@ -256,7 +256,9 @@ export class Projectile {
     this.size = stats.size;
     this.drillRadius = stats.drillRadius || 0;
     this.isDrill = this.type === 'drill';
-    this.gravityFactor = stats.gravityFactor === 0 ? 0 : 1;
+    // Respect per-weapon gravityFactor (e.g. 0.25 = floaty cruise, 1.2 = sinks fast).
+    // Previously this collapsed every non-zero value to 1, discarding all fractional tuning.
+    this.gravityFactor = stats.gravityFactor != null ? stats.gravityFactor : 1;
     this.isBunker = this.type === 'bunker';
     this.bunkerPenetrating = false;
     this.bunkerFrames = 0;
@@ -272,7 +274,7 @@ export class Projectile {
     this.framesAlive++;
 
     this.trail.push({ x: this.x, y: this.y });
-    const maxTrail = this.type === 'napalm' ? 10 : this.maxTrailLength;
+    const maxTrail = this.type === 'napalm' ? 16 : this.maxTrailLength;
     if (this.trail.length > maxTrail) {
       this.trail.shift();
     }
@@ -361,40 +363,39 @@ export class Projectile {
   render(ctx) {
     // Specialized trail rendering
     if (this.type === 'napalm') {
-      // Flame streak: short, hot core with orange/yellow gradient
-      const len = 18;
-      const angle = Math.atan2(this.vy, this.vx);
-      const x2 = this.x - Math.cos(angle) * len;
-      const y2 = this.y - Math.sin(angle) * len;
-      const grad = ctx.createLinearGradient(this.x, this.y, x2, y2);
-      grad.addColorStop(0, 'rgba(255,230,160,0.95)');
-      grad.addColorStop(0.4, 'rgba(255,160,60,0.8)');
-      grad.addColorStop(1, 'rgba(255,100,30,0)');
-      ctx.save();
-      ctx.globalCompositeOperation = 'lighter';
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.5;
-      ctx.stroke();
-      ctx.restore();
-      // Small droplet pips along recent trail points to imply liquid splatter
-      ctx.save();
-      ctx.globalAlpha = 0.8;
-      ctx.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < this.trail.length; i++) {
-        const point = this.trail[i];
-        const a = i / this.trail.length;
-        ctx.fillStyle = `rgba(255,160,60,${0.35 * a})`;
+      // Continuous trailing stream of burning fuel: a tapering molten ribbon drawn
+      // along the chronological trail points (oldest -> head), thickening toward the
+      // projectile, plus a bright hot core thread. Reads as a poured stream, not
+      // a string of separate fireballs.
+      const pts = this.trail.concat([{ x: this.x, y: this.y }]);
+      if (pts.length >= 2) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        // Soft molten body: overlapping radial blobs whose radius grows toward the head.
+        for (let i = 0; i < pts.length; i++) {
+          const a = i / (pts.length - 1); // 0 = tail, 1 = head
+          const r = 1.5 + a * (this.size * 1.7 + 4);
+          const alpha = 0.08 + a * 0.5;
+          const g = ctx.createRadialGradient(pts[i].x, pts[i].y, 0, pts[i].x, pts[i].y, r);
+          g.addColorStop(0, `rgba(255,210,120,${alpha})`);
+          g.addColorStop(0.5, `rgba(255,140,45,${alpha * 0.7})`);
+          g.addColorStop(1, 'rgba(255,90,20,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(pts[i].x, pts[i].y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Bright continuous hot core through the stream.
+        ctx.strokeStyle = 'rgba(255,236,184,0.9)';
+        ctx.lineWidth = Math.max(1.5, this.size * 0.7);
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.arc(point.x, point.y, Math.max(1, this.size * 0.4 * a), 0, Math.PI * 2);
-        ctx.fill();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+        ctx.stroke();
+        ctx.restore();
       }
-      ctx.restore();
     } else {
       ctx.globalAlpha = 0.3;
       for (let i = 0; i < this.trail.length; i++) {
@@ -485,6 +486,65 @@ export class Projectile {
       ctx.moveTo(-bodyLen * 0.25, bodyRad);
       ctx.lineTo(-bodyLen * 0.5, bodyRad * 1.5);
       ctx.lineTo(-bodyLen * 0.15, bodyRad * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    } else if (this.type === 'homing') {
+      // Guided missile: a sleek dart oriented to velocity with a flickering thruster.
+      const angle = Math.atan2(this.vy, this.vx);
+      const L = Math.max(13, this.size * 3.4);
+      const W = Math.max(2.2, this.size * 0.7);
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate(angle);
+      // Thruster flame behind the body (additive, flickers each frame)
+      const flLen = L * (0.75 + Math.random() * 0.6);
+      const fg = ctx.createLinearGradient(-L * 0.5, 0, -L * 0.5 - flLen, 0);
+      fg.addColorStop(0, 'rgba(255,235,160,0.95)');
+      fg.addColorStop(0.5, 'rgba(255,150,40,0.7)');
+      fg.addColorStop(1, 'rgba(255,80,20,0)');
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.fillStyle = fg;
+      ctx.beginPath();
+      ctx.moveTo(-L * 0.5, -W * 0.7);
+      ctx.lineTo(-L * 0.5 - flLen, 0);
+      ctx.lineTo(-L * 0.5, W * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalCompositeOperation = 'source-over';
+      // Metal body
+      const bg = ctx.createLinearGradient(0, -W, 0, W);
+      bg.addColorStop(0, '#e6edf4');
+      bg.addColorStop(0.5, '#9fb0c0');
+      bg.addColorStop(1, '#5f6f7e');
+      ctx.fillStyle = bg;
+      if (typeof ctx.roundRect === 'function') {
+        ctx.beginPath();
+        ctx.roundRect(-L * 0.5, -W, L, W * 2, W);
+        ctx.fill();
+      } else {
+        ctx.fillRect(-L * 0.5, -W, L, W * 2);
+      }
+      // Red nose cone
+      ctx.fillStyle = '#ff5252';
+      ctx.beginPath();
+      ctx.moveTo(L * 0.5, -W);
+      ctx.lineTo(L * 0.74, 0);
+      ctx.lineTo(L * 0.5, W);
+      ctx.closePath();
+      ctx.fill();
+      // Tail fins
+      ctx.fillStyle = '#39424c';
+      ctx.beginPath();
+      ctx.moveTo(-L * 0.4, -W);
+      ctx.lineTo(-L * 0.54, -W * 2);
+      ctx.lineTo(-L * 0.26, -W * 0.6);
+      ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-L * 0.4, W);
+      ctx.lineTo(-L * 0.54, W * 2);
+      ctx.lineTo(-L * 0.26, W * 0.6);
       ctx.closePath();
       ctx.fill();
       ctx.restore();

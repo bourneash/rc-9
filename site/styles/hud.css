@@ -290,8 +290,8 @@
 /* ===== Weapon menu ===== */
 .weapon-menu {
   position: fixed;
-  min-width: 320px;
-  max-width: 90vw;
+  min-width: 400px;
+  max-width: 92vw;
   background: var(--surface-panel);
   border: var(--border-phosphor);
   padding: 14px;
@@ -308,7 +308,7 @@
 
 .weapon-menu .menu-title {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--accent-phosphor);
   letter-spacing: 3px;
   margin-bottom: 12px;
@@ -319,8 +319,8 @@
 
 .weapon-menu .menu-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
 }
 @media (max-width: 600px) {
   .weapon-menu .menu-grid { grid-template-columns: repeat(3, 1fr); }
@@ -328,22 +328,24 @@
 
 /* Tile — alias existing JS class .weapon-item to new spec .menu-item */
 .weapon-menu .weapon-item {
-  aspect-ratio: 1;
+  min-height: 88px;
   background: var(--surface-deep);
   border: var(--border-line);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 6px;
   cursor: pointer;
-  padding: 4px;
+  padding: 12px 8px 10px;
   position: relative;
-  border-radius: var(--radius-sharp);
+  border-radius: var(--radius-soft);
+  transition: border-color 0.12s, background 0.12s, transform 0.12s;
 }
 .weapon-menu .weapon-item:hover {
   border-color: var(--accent-phosphor);
   background: var(--surface-raised);
+  transform: translateY(-1px);
 }
 .weapon-menu .weapon-item.selected {
   border-color: var(--accent-phosphor);
@@ -359,7 +361,8 @@
 
 /* Icon — alias .weapon-icon → .item-icon */
 .weapon-menu .weapon-icon {
-  font-size: 18px;
+  font-size: 30px;
+  line-height: 1;
   width: auto;
   height: auto;
   border-radius: 0;
@@ -367,6 +370,7 @@
   border: none;
   display: block;
   color: inherit;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
 }
 
 /* Name — alias .weapon-label .name → .item-name; hide .desc and old label layout */
@@ -375,27 +379,32 @@
 }
 .weapon-menu .weapon-label .name {
   font-family: var(--font-mono);
-  font-size: 8px;
-  color: var(--text-muted);
-  letter-spacing: 0.5px;
+  font-size: 10.5px;
+  line-height: 1.2;
+  color: var(--text-body);
+  letter-spacing: 0.4px;
   text-transform: uppercase;
   font-weight: normal;
+  text-align: center;
+  white-space: normal;
 }
+.weapon-menu .weapon-item:hover .weapon-label .name,
 .weapon-menu .weapon-item.selected .weapon-label .name { color: var(--text-primary); }
 .weapon-menu .weapon-label .desc { display: none; }
 
 /* Ammo badge — alias .weapon-ammo → .item-ammo */
 .weapon-menu .weapon-ammo {
   position: absolute;
-  top: 2px;
-  right: 4px;
+  top: 5px;
+  right: 5px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 10px;
+  line-height: 1;
   color: var(--accent-phosphor);
-  padding: 0;
-  border-radius: 0;
-  background: none;
-  border: none;
+  padding: 2px 5px;
+  border-radius: var(--radius-sharp);
+  background: rgba(5, 10, 6, 0.85);
+  border: 1px solid rgba(80, 220, 130, 0.25);
 }
 .weapon-menu .weapon-ammo.low  { color: var(--accent-amber); }
 .weapon-menu .weapon-ammo.empty { color: var(--accent-hot); }
