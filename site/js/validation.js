@@ -26,11 +26,10 @@ export function sanitizeText(input, maxLength = 100) {
   div.textContent = sanitized;
   sanitized = div.innerHTML;
 
-  // Additional safety: remove any remaining script-like patterns
-  sanitized = sanitized
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '');
+  // Additional safety: remove any remaining dangerous patterns.
+  // Note: div.innerHTML above already entity-encodes all '<', so a literal
+  // <script> tag can never appear here — no need to strip it with regex.
+  sanitized = sanitized.replace(/javascript:/gi, '').replace(/on\w+\s*=/gi, '');
 
   return sanitized;
 }
