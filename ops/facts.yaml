@@ -1,10 +1,10 @@
-last_updated: '2026-06-20T04:33:20Z'
+last_updated: '2026-06-20T05:00:01Z'
 facts:
   fs.last_commit_age_hours:
-    value: 258.32
-    state: yellow
+    value: 0.15
+    state: green
     source: filesystem
-    verified_at: '2026-06-20T04:30:01Z'
+    verified_at: '2026-06-20T05:00:01Z'
     ttl_hours: 1
   cf.zone_active:
     value: true
@@ -82,79 +82,79 @@ facts:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:07Z'
     ttl_hours: 24
   http.has_og_tags:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:07Z'
     ttl_hours: 24
   http.has_schema_org:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:07Z'
     ttl_hours: 24
   http.has_viewport_meta:
     value: true
     state: green
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:07Z'
     ttl_hours: 24
   http.has_rss:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_ads_txt:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_contact_email:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_privacy_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:10Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_terms_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:11Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_security_txt:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:11Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_affiliate_disclosure:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:11Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_favicon:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:11Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   http.has_about_page:
     value: false
     state: yellow
     source: recipes
-    verified_at: '2026-06-20T03:43:11Z'
+    verified_at: '2026-06-20T04:43:08Z'
     ttl_hours: 24
   canary.smoke_ok:
     value: true
