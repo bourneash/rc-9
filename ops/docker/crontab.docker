@@ -8,4 +8,4 @@
 
 # Engineer — every 4 hours. Bash-driven: render health-check (live site), npm-run-build
 # gate, sweeps engineering tasks, posts a Slack 👍 heartbeat when healthy+idle.
-0 */4 * * *   bash ops/scripts/run-worker.sh engineer
+25 */6 * * *   bash ops/scripts/run-worker.sh engineer
