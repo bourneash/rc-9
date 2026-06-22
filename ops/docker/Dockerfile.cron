@@ -1,0 +1,41 @@
+# Long-running cron driver. Reads /etc/crontab.docker and invokes
+# `docker compose run --rm worker <role>` on schedule.
+#
+# Uses supercronic (cron designed for containers — logs to stdout, no syslog).
+
+FROM alpine:3.20.6
+
+RUN apk add --no-cache \
+    bash \
+    curl \
+    python3 \
+    docker-cli \
+    docker-cli-compose \
+    tzdata \
+    ca-certificates
+
+# supercronic — small static binary, container-friendly cron
+RUN wget -O /usr/local/bin/supercronic \
+    https://github.com/aptible/supercronic/releases/download/v0.2.34/supercronic-linux-amd64 \
+    && echo "a51b340a83c5bd035742f0d7191555f9663876405e494dbf824537d64f3e39c6  /usr/local/bin/supercronic" | sha256sum -c \
+    && chmod +x /usr/local/bin/supercronic
+
+ENV TZ=America/New_York
+
+# Non-root user matching host UID 1000 (jesse) so bind-mounted files are
+# owned by jesse, not root. docker_host group (GID 1004) matches the host
+# docker group so this user can reach /var/run/docker.sock.
+RUN addgroup -g 1004 docker_host && \
+    addgroup -g 1000 ops && \
+    adduser -u 1000 -G ops -h /home/ops -s /bin/sh -D ops && \
+    adduser ops docker_host
+
+WORKDIR /etc
+
+COPY crontab.docker /etc/crontab.docker
+COPY entrypoint-cron.sh /usr/local/bin/entrypoint-cron.sh
+RUN chmod +x /usr/local/bin/entrypoint-cron.sh
+
+USER ops
+
+ENTRYPOINT ["/usr/local/bin/entrypoint-cron.sh"]

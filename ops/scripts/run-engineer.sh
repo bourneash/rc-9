@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+# run-engineer.sh — bash-driven Engineer cycle (mirrors run-update.sh).
+#
+# Called by run-role.sh with the log path as $1. Runs the full programmatic check
+# sweep with ZERO Claude turns; invokes claude -p (claude-sonnet-4-6) only when there is
+# work — queued engineer tasks or fixable issues. Healthy + empty queue → 👍 + exit.
+set -uo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+LOG="${1:-/dev/stderr}"
+BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
+MODEL="claude-sonnet-4-6"
+MAX_TURNS=25
+WORK_TIMEOUT=2400
+
+[[ -f "$REPO_ROOT/.env.shared" ]] && { set -a; . "$REPO_ROOT/.env.shared"; set +a; }
+NOTIFY="$REPO_ROOT/ops/scripts/notify-slack.sh"
+CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
+NOW_ET="$(TZ=America/New_York date +'%H:%M ET')"
+TODAY="$(date -u +%Y-%m-%d)"
+BOARD_LOG="$REPO_ROOT/ops/board/engineer-log.md"
+
+log() { echo "[$(date -Iseconds)] run-engineer: $*" | tee -a "$LOG"; }
+slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/null || true; }
+
+board_block() {  # $1=status-line  $2=detail
+  {
+    echo ""; echo "## Run — $(date -u +'%Y-%m-%d %H:%M') UTC"; echo ""; echo "$1"
+    [[ -n "${2:-}" ]] && { echo ""; echo "$2"; }
+  } >> "$BOARD_LOG"
+}
+
+# ---- 1. Check sweep (no Claude) ----
+log "running check sweep against $BASE_URL ..."
+# Safe ingest: NO eval (QUEUE_TASKS holds filenames — eval would be injectable).
+RENDER_PASS=0; RENDER_FAIL=0; GIT_CLEAN=1; GIT_DIRTY_SRC=0; GIT_AHEAD=0; GIT_BEHIND=0; CF_OK=0
+DEPLOY_PENDING=0; DEPLOY_STALE=0; QUEUE_COUNT=0; ISSUES_COUNT=0; ENGINEER_PAUSED=0
+RENDER_MODE=error; CF_MODE=edge; ENGINEER_STATUS=green; QUEUE_TASKS=""; ISSUES_FILE=""
+CHECK_OUT="$(bash "$REPO_ROOT/ops/scripts/engineer-check.sh" "$LOG" "$BASE_URL")"
+while IFS='=' read -r _k _v; do
+  [[ -z "$_k" ]] && continue
+  _v="${_v%\"}"; _v="${_v#\"}"
+  case "$_k" in
+    RENDER_PASS|RENDER_FAIL|GIT_CLEAN|GIT_DIRTY_SRC|GIT_AHEAD|GIT_BEHIND|CF_OK|DEPLOY_PENDING|DEPLOY_STALE|QUEUE_COUNT|ISSUES_COUNT|ENGINEER_PAUSED)
+      [[ "$_v" =~ ^[0-9]+$ ]] && printf -v "$_k" '%s' "$_v" ;;
+    RENDER_MODE|CF_MODE|ENGINEER_STATUS)
+      [[ "$_v" =~ ^[A-Za-z]+$ ]] && printf -v "$_k" '%s' "$_v" ;;
+    QUEUE_TASKS)
+      [[ "$_v" =~ ^[A-Za-z0-9,._-]*$ ]] && printf -v "$_k" '%s' "$_v" ;;
+    ISSUES_FILE)
+      [[ "$_v" =~ ^[A-Za-z0-9._/-]+$ ]] && printf -v "$_k" '%s' "$_v" ;;
+  esac
+done <<< "$CHECK_OUT"
+# Each tag is one clear, non-overlapping fact (these are separate axes, not the
+# same thing said twice):
+#   render  — did the key pages truly render in a real browser
+#   tree    — is the local WORKING TREE clean of uncommitted *source* (runtime
+#             churn in logs/board/facts is filtered out upstream and reads clean)
+#   main    — is local HEAD in sync with origin/main (pushed?)  [push axis]
+#   CF      — is Cloudflare serving the site                    [deploy axis]
+RENDER_TAG="${RENDER_PASS}/$((RENDER_PASS + RENDER_FAIL)) pages"
+[[ "$RENDER_MODE" == "degraded" ]] && RENDER_TAG="${RENDER_TAG} (curl)"
+TREE_TAG="tree clean"; [[ "${GIT_DIRTY_SRC:-0}" -gt 0 ]] && TREE_TAG="⚠ ${GIT_DIRTY_SRC} uncommitted src"
+SYNC_TAG="main synced"
+[[ "$GIT_AHEAD"  -gt 0 ]] && SYNC_TAG="main +${GIT_AHEAD} unpushed"
+[[ "$GIT_BEHIND" -gt 0 ]] && SYNC_TAG="main -${GIT_BEHIND} behind"
+CF_TAG="CF live"; [[ "$CF_OK" == "0" ]] && CF_TAG="CF DOWN"
+QUEUE_TAG="${QUEUE_COUNT} task(s)"; [[ "${ENGINEER_PAUSED:-0}" == "1" ]] && QUEUE_TAG="${QUEUE_COUNT} task(s, paused)"
+STATUS_LINE="render ${RENDER_TAG} · ${TREE_TAG} · ${SYNC_TAG} · ${CF_TAG} · ${QUEUE_TAG} · ${NOW_ET}"
+log "status=$ENGINEER_STATUS — $STATUS_LINE"
+
+# ---- 2. Healthy + empty queue → heartbeat, exit ----
+if [[ "$ENGINEER_STATUS" == "green" ]]; then
+  slack "👍 *rc-9* healthy — ${STATUS_LINE}" "good"
+  board_block "👍 **Healthy** — ${STATUS_LINE}"
+  log "green — heartbeat posted, no Claude turns used"
+  exit 0
+fi
+
+# ---- 3. Work pass (claude-sonnet-4-6) ----
+ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
+QUEUE_LIST="${QUEUE_TASKS:-}"
+RESULT_FILE="$(mktemp)"; trap 'rm -f "$RESULT_FILE"' EXIT
+
+PROMPT="You are the rc-9.com autonomous Engineer. Today is ${TODAY} (${NOW_ET}).
+Working directory: ${REPO_ROOT}. You run on a 4-hour cron and were woken because the
+programmatic check sweep found work. Your full role contract is in ops/roles/engineer.md
+— follow it. Be surgical and fast; you have ${MAX_TURNS} turns.
+
+## What the check sweep found
+Render:   ${RENDER_PASS} ok / ${RENDER_FAIL} fail (mode=${RENDER_MODE})
+Git:      clean=${GIT_CLEAN} ahead=${GIT_AHEAD} behind=${GIT_BEHIND}
+CF deploy: ok=${CF_OK} mode=${CF_MODE}
+Deploy flag: pending=${DEPLOY_PENDING} stale=${DEPLOY_STALE}
+Issues (severity-tagged — [warn]=you fix it, [block]=needs the owner):
+${ISSUES_TEXT}
+Queued engineer tasks (in ops/tasks/backlog/, up to 3): ${QUEUE_LIST:-none}
+
+## Your job this run
+1. Fix every [warn] issue you can safely fix, at the source.
+2. For each queued task: read it fully, implement, move it backlog/ → done/.
+3. After edits, run \`cd site && npm run build\` — it MUST pass. If it fails, REVERT your
+   change (don't leave the tree broken) and escalate it instead.
+4. Do NOT git commit or git push — the wrapper handles build-gating, commit, and push.
+5. Do NOT touch legal/disclosure pages, _headers CSP, or add runtime/third-party JS.
+   Anything risky or unresolved → escalate via the output line below.
+6. Append a concise run block to ops/board/engineer-log.md.
+
+## Output — your LAST THREE LINES, exact format, nothing after:
+ENGINEER_CHANGED=<0 if you edited no shippable files, 1 if you did>
+ENGINEER_SUMMARY=<one short line for Slack>
+ENGINEER_ESCALATE=<none, or one short line naming what needs the owner>"
+
+log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
+# Revoke git-push capability for the model pass (the wrapper does the build-gated
+# push). GIT_SSH_COMMAND=/bin/false means a misbehaving model can't reach the remote
+# despite --dangerously-skip-permissions + mounted SSH keys.
+set +e
+GIT_SSH_COMMAND='/bin/false' GIT_TERMINAL_PROMPT=0 \
+timeout "$WORK_TIMEOUT" claude -p "$PROMPT" --output-format text --model "$MODEL" \
+  --max-turns "$MAX_TURNS" --dangerously-skip-permissions > "$RESULT_FILE" 2>>"$LOG"
+CLAUDE_EXIT=$?
+set -e
+tee -a "$LOG" < "$RESULT_FILE" > /dev/null
+
+CHANGED=$(grep '^ENGINEER_CHANGED=' "$RESULT_FILE" | tail -1 | cut -d= -f2 | tr -d ' \r\n'); CHANGED="${CHANGED:-0}"
+SUMMARY=$(grep '^ENGINEER_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2-); SUMMARY="${SUMMARY:-engineer run complete}"
+ESCALATE=$(grep '^ENGINEER_ESCALATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2-); ESCALATE="${ESCALATE:-none}"
+
+if [[ "$CLAUDE_EXIT" == "124" ]]; then
+  log "engineer pass TIMED OUT after ${WORK_TIMEOUT}s"
+  slack "🔴 *rc-9 engineer* timed out after ${WORK_TIMEOUT}s · ${NOW_ET}" "danger"
+  board_block "🔴 **Timeout** — claude-sonnet-4-6 pass exceeded ${WORK_TIMEOUT}s. ${STATUS_LINE}"
+  exit 1
+fi
+
+# ---- 4. Authoritative build gate (bash, independent of the model's claim) ----
+PUSHED=0
+if [[ "$CHANGED" == "1" ]]; then
+  log "engineer reported changes — running authoritative build gate..."
+  if ( cd site && rm -rf dist && npm run build ) >>"$LOG" 2>&1; then
+    log "build OK — committing + pushing"
+    if [ -d "${HOME:-/root}/.ssh" ]; then
+      mkdir -p /tmp/ssh
+      cp -f "${HOME}/.ssh"/config      /tmp/ssh/config      2>/dev/null || true
+      cp -f "${HOME}/.ssh"/known_hosts /tmp/ssh/known_hosts 2>/dev/null || true
+      for k in "${HOME}/.ssh"/github-* "${HOME}/.ssh"/id_*; do [ -f "$k" ] && cp -f "$k" "/tmp/ssh/$(basename "$k")"; done
+      chmod 700 /tmp/ssh && chmod 600 /tmp/ssh/* 2>/dev/null || true
+      [ -f /tmp/ssh/config ] && export GIT_SSH_COMMAND="ssh -F /tmp/ssh/config -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/tmp/ssh/known_hosts"
+    fi
+    git config --global user.name  "${GIT_USER_NAME:-Engineer Bot}"
+    git config --global user.email "${GIT_USER_EMAIL:-bot@rc-9.com}"
+    git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
+    git add -A 2>/dev/null || true
+    if git diff --cached --quiet; then
+      log "nothing staged after all — skipping commit"
+    else
+      git -c commit.gpgsign=false commit -m "engineer: ${SUMMARY} — ${TODAY} ${NOW_ET}" >>"$LOG" 2>&1 || true
+      if timeout 120 git push origin main >>"$LOG" 2>&1; then
+        touch .deploy-needed; PUSHED=1; log "pushed to main — CF Workers Builds will deploy"
+      else
+        log "FAIL: git push failed"
+        slack "🔴 *rc-9 engineer* — fixes built but git push FAILED · ${NOW_ET}\n${SUMMARY}" "danger"
+        board_block "🔴 **Push failed** — ${SUMMARY}. ${STATUS_LINE}"; exit 1
+      fi
+    fi
+  else
+    log "FAIL: authoritative build gate FAILED — not shipping"
+    slack "🔴 *rc-9 engineer* — build FAILED on engineer changes, not deployed · ${NOW_ET}" "danger"
+    board_block "🔴 **Build gate failed** — engineer changes not shipped. ${STATUS_LINE}"; exit 1
+  fi
+fi
+
+# ---- 5. Final Slack + board log ----
+if [[ "$ESCALATE" != "none" && -n "$ESCALATE" ]]; then
+  slack "⚠️ *rc-9 engineer* — needs owner · ${NOW_ET}\n${ESCALATE}\n(did: ${SUMMARY})" "warning"
+  board_block "⚠️ **Escalation** — ${ESCALATE}" "Did: ${SUMMARY} · pushed=${PUSHED} · ${STATUS_LINE}"
+elif [[ "$PUSHED" == "1" ]]; then
+  slack "🔧 *rc-9 engineer* — ${SUMMARY} · ${NOW_ET}" "good"
+  board_block "🔧 **Work done (deployed)** — ${SUMMARY}" "${STATUS_LINE}"
+else
+  slack "🔧 *rc-9 engineer* — ${SUMMARY} (no deploy) · ${NOW_ET}" "good"
+  board_block "🔧 **Work done** — ${SUMMARY}" "${STATUS_LINE}"
+fi
+
+log "engineer run complete — changed=$CHANGED pushed=$PUSHED escalate='${ESCALATE}'"
+exit 0

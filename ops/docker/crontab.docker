@@ -1,0 +1,11 @@
+# rc-9.com autonomous ops schedule (supercronic, baked into the cron image).
+# TZ=America/New_York (set in Dockerfile.cron + docker-compose.yml).
+#
+# Each line invokes `docker compose run --rm worker <role>` via run-worker.sh, which
+# spawns a fresh one-shot worker container and exits.
+#
+# supercronic-compatible 5-field cron (no @reboot).
+
+# Engineer — every 4 hours. Bash-driven: render health-check (live site), npm-run-build
+# gate, sweeps engineering tasks, posts a Slack 👍 heartbeat when healthy+idle.
+0 */4 * * *   bash ops/scripts/run-worker.sh engineer

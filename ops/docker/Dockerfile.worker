@@ -1,0 +1,82 @@
+# One-shot worker container — runs a single role then exits.
+# Cron container invokes this via `docker compose run --rm worker <role>`.
+
+ARG NODE_MAJOR=22
+FROM node:${NODE_MAJOR}-alpine
+
+# System deps for git, ssh, scripts, the image pipeline, and image-processing.
+#
+# Fonts are REQUIRED: the editorial-card generator renders article headlines
+# via @resvg/resvg-js (loadSystemFonts). Alpine ships with NO fonts, so without
+# these packages resvg silently renders every <text> element as nothing —
+# producing blank motif-only cards (the "broken images" incident, 2026-06).
+#   font-dejavu    → DejaVu Serif/Sans (the card's primary faces)
+#   ttf-liberation → Arial/Times substitutes (defensive fallback)
+#   fontconfig     → so loadSystemFonts can actually discover them (fc-cache)
+RUN apk add --no-cache \
+    bash \
+    git \
+    openssh-client \
+    python3 \
+    py3-pip \
+    curl \
+    ca-certificates \
+    tzdata \
+    libc6-compat \
+    vips-dev \
+    fontconfig \
+    font-dejavu \
+    ttf-liberation \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ttf-freefont \
+    && fc-cache -f
+
+# Claude Code CLI — pinned to avoid surprise breakage on cold rebuilds after prune.
+# To upgrade: update the version here, rebuild, and smoke-test before committing.
+RUN npm install -g @anthropic-ai/claude-code@2.1.140
+
+# Playwright driver for the Engineer's true-render health check
+# (ops/scripts/engineer-render-check.mjs). We install ONLY the JS driver and
+# point it at Alpine's system chromium (above) — NOT Playwright's bundled browser,
+# which doesn't run on musl/Alpine. Installed into a dedicated dir with a fixed
+# absolute entry path the render script imports via PLAYWRIGHT_CORE_ENTRY (global
+# installs aren't resolvable from an ESM script run out of /work). The script
+# falls back to curl if these are absent (e.g. on the host), so this is additive.
+RUN mkdir -p /opt/engineer-tools \
+    && cd /opt/engineer-tools \
+    && npm init -y >/dev/null 2>&1 \
+    && npm install playwright-core@1.49.1
+# Installed as root; npm output is world-readable so the `ops` runtime user (created
+# below) can import it. No chown — `ops` doesn't exist yet at this layer.
+ENV CHROMIUM_PATH=/usr/bin/chromium-browser
+ENV PLAYWRIGHT_CORE_ENTRY=/opt/engineer-tools/node_modules/playwright-core/index.js
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# Wrangler is NOT installed here — CF Workers Builds handles deploys on
+# push to main. If the deployer role's fallback path is ever needed, it
+# can run `npx wrangler@latest deploy` from inside `site/` (npm cache mount).
+
+# Non-root user matching host UID 1000 (jesse). claude-code refuses
+# --dangerously-skip-permissions when running as root, so we run the
+# whole worker chain as `ops`. UID 1000 matches the host owner of the
+# bind-mounted ~/.claude/, ~/.ssh/, and project files so file
+# ownership stays clean across host and container.
+RUN deluser node && delgroup node 2>/dev/null || true; \
+    addgroup -g 1000 ops && \
+    adduser -u 1000 -G ops -h /home/ops -s /bin/bash -D ops && \
+    mkdir -p /home/ops/.ssh /home/ops/.claude/skills /home/ops/.claude/projects && \
+    ssh-keyscan -t rsa,ecdsa,ed25519 github.com 2>/dev/null >> /home/ops/.ssh/known_hosts && \
+    chown -R ops:ops /home/ops
+
+ENV HOME=/home/ops
+ENV TZ=America/New_York
+
+USER ops
+WORKDIR /work
+
+# Bootstrap installs site/ deps the first time we run, since they're bind-mounted.
+# This keeps the image lean — no node_modules baked in.
+ENTRYPOINT ["/work/ops/docker/entrypoint-worker.sh"]

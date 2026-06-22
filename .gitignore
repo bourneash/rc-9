@@ -8,3 +8,9 @@ dist/
 .claude/
 .superpowers/
 test-results/
+.env.shared
+ops/logs/*.log
+ops/.locks/
+ops/logs/engineer-issues-*.txt
+ops/logs/engineer-render-fail-*.png
+ops/logs/engineer-render-last.json

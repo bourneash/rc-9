@@ -1,0 +1,74 @@
+# rc-9.com autonomous ops — Docker Compose
+#
+# Two services:
+#   - cron:   long-running supercronic, drives the schedule from ops/docker/crontab.docker
+#   - worker: one-shot per role invocation. Spawns fresh, runs the role, exits.
+#
+# Bring up:    docker compose up -d cron
+# Manual run:  docker compose run --rm worker engineer
+# Logs:        docker compose logs -f cron
+# Tear down:   docker compose down
+#
+# Cloned from americastrikes.com (leaner: worker + cron only, no news scraper).
+
+name: rc-9-ops
+
+services:
+  worker:
+    build:
+      context: ./ops/docker
+      dockerfile: Dockerfile.worker
+    image: rc-9-worker:latest
+    # One-shot — only invoked via `docker compose run --rm worker <role>`.
+    profiles: ["manual"]
+    volumes:
+      # Project code (writable — roles commit/edit here)
+      - .:/work
+      # Claude Code auth — mount ONLY credentials, not the full ~/.claude.
+      - ${HOME}/.claude/.credentials.json:/home/ops/.claude/.credentials.json
+      - ${HOME}/.claude.json:/home/ops/.claude.json:ro
+      # Minimal settings: no plugins, no hooks, no status line.
+      - ./ops/docker/worker-claude-settings.json:/home/ops/.claude/settings.json:ro
+      # Git push via host SSH key (the github-bourneash alias)
+      - ${HOME}/.ssh:/home/ops/.ssh:ro
+      # Shared CF / affiliate / Slack creds across domain projects
+      - ${HOME}/projects/domains/.env:/work/.env.shared:ro
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
+      GIT_USER_NAME: "Remote Command Bot"
+      GIT_USER_EMAIL: "bot@rc-9.com"
+      # Engineer role throttle (tasks worked per run). Default 3.
+      ENGINEER_MAX_TASKS: ${ENGINEER_MAX_TASKS:-3}
+      GIT_SSH_COMMAND: "ssh -i /home/ops/.ssh/github-bourneash -o StrictHostKeyChecking=accept-new"
+    networks: [ops]
+
+  cron:
+    build:
+      context: ./ops/docker
+      dockerfile: Dockerfile.cron
+    image: rc-9-cron:latest
+    container_name: rc-9-cron
+    restart: unless-stopped
+    volumes:
+      # Docker socket so this container can invoke `docker compose run`.
+      - /var/run/docker.sock:/var/run/docker.sock
+      # CRITICAL: bind the host project at the SAME absolute path inside cron so
+      # `.` in the worker volume specs resolves consistently host ↔ container.
+      - ${PWD:-/home/jesse/projects/domains/sites/rc-9.com}:${PWD:-/home/jesse/projects/domains/sites/rc-9.com}
+      # Docker config dir — needed when run-worker.sh rebuilds the worker image.
+      - ${HOME:-/home/jesse}/.docker:${HOME:-/home/jesse}/.docker
+      # Shared credentials (Slack token, CF vars) — sourced at startup by entrypoint-cron.sh.
+      - ${HOME:-/home/jesse}/projects/domains/.env:${PWD:-/home/jesse/projects/domains/sites/rc-9.com}/.env.shared:ro
+    working_dir: ${PWD:-/home/jesse/projects/domains/sites/rc-9.com}
+    environment:
+      TZ: America/New_York
+      COMPOSE_PROJECT_NAME: rc-9-ops
+      HOME: ${HOME:-/home/jesse}
+    networks: [ops]
+    depends_on: []
+
+networks:
+  ops:
+    driver: bridge
