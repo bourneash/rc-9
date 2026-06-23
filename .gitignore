@@ -14,3 +14,5 @@ ops/.locks/
 ops/logs/engineer-issues-*.txt
 ops/logs/engineer-render-fail-*.png
 ops/logs/engineer-render-last.json
+ops/facts.yaml
+ops/board/last-run.json
