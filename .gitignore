@@ -16,3 +16,6 @@ ops/logs/engineer-render-fail-*.png
 ops/logs/engineer-render-last.json
 ops/facts.yaml
 ops/board/last-run.json
+
+# Engineer liveness pulse log (machine-readable, monitoring)
+ops/logs/engineer-heartbeat-*.jsonl

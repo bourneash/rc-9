@@ -8,8 +8,7 @@
 
 # Engineer — every 6h. Bash-driven: render health-check (live site), npm-run-build
 # gate, sweeps engineering tasks, posts a Slack 👍 heartbeat when healthy+idle.
-25 */6 * * *   bash ops/scripts/run-worker.sh engineer
-
+18,48 * * * *  bash ops/scripts/run-worker.sh engineer
 # Deployer — every 15 min if .deploy-needed flag exists.
 # NOTE: rc-9 deploys via `npx wrangler deploy` (Vite SPA), not git push.
 */15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer

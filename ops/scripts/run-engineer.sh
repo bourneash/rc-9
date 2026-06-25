@@ -14,6 +14,17 @@ BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
 MODEL="claude-sonnet-4-6"
 MAX_TURNS=25
 WORK_TIMEOUT=2400
+# --- Concurrency + heartbeat tuning (added: split model + work-lock) ---
+# The cheap sweep runs every */30 tick (zero Claude). The Claude WORK PASS is
+# serialized per-site by a time-based lock so two engineers never touch the same
+# site at once. Lock staleness is judged by AGE (not PID): each fire is a fresh
+# `docker compose run --rm` container, so a dead container's PID is meaningless.
+WORK_LOCK_DIR="$REPO_ROOT/ops/.locks/engineer-work.lock.d"
+LOCK_STALE_SECS=3000
+HEARTBEAT_FILE="$REPO_ROOT/ops/.locks/engineer-heartbeat.ts"          # gates the DAILY Slack summary only
+HEARTBEAT_THROTTLE_SECS="${ENGINEER_HEARTBEAT_THROTTLE_SECS:-86400}"  # 24h — once-a-day green summary
+PULSE_STATUS_FILE="$REPO_ROOT/ops/.locks/engineer-status.json"        # latest machine-readable status (overwritten every check)
+PULSE_LOG="$REPO_ROOT/ops/logs/engineer-heartbeat-$(date -u +%Y-%m-%d).jsonl"  # append-only daily pulse log (14-day pruned)
 
 [[ -f "$REPO_ROOT/.env.shared" ]] && { set -a; . "$REPO_ROOT/.env.shared"; set +a; }
 NOTIFY="$REPO_ROOT/ops/scripts/notify-slack.sh"
@@ -24,6 +35,48 @@ BOARD_LOG="$REPO_ROOT/ops/board/engineer-log.md"
 
 log() { echo "[$(date -Iseconds)] run-engineer: $*" | tee -a "$LOG"; }
 slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/null || true; }
+
+# Time-based per-site work lock (atomic mkdir). A lock older than LOCK_STALE_SECS
+# is reclaimed — the guard against a crashed work pass wedging the site forever.
+acquire_work_lock() {
+  mkdir -p "$REPO_ROOT/ops/.locks"
+  if mkdir "$WORK_LOCK_DIR" 2>/dev/null; then
+    date +%s > "$WORK_LOCK_DIR/ts"; echo "pid $$ @ $(date -Iseconds)" > "$WORK_LOCK_DIR/owner"; return 0
+  fi
+  local ts age
+  ts=$(cat "$WORK_LOCK_DIR/ts" 2>/dev/null || echo 0)
+  age=$(( $(date +%s) - ${ts:-0} ))
+  if [[ "$age" -gt "$LOCK_STALE_SECS" ]]; then
+    log "reclaiming STALE work lock (age=${age}s > ${LOCK_STALE_SECS}s) — prior pass likely crashed"
+    rm -rf "$WORK_LOCK_DIR"
+    if mkdir "$WORK_LOCK_DIR" 2>/dev/null; then
+      date +%s > "$WORK_LOCK_DIR/ts"; echo "pid $$ @ $(date -Iseconds) (reclaimed)" > "$WORK_LOCK_DIR/owner"; return 0
+    fi
+  fi
+  return 1
+}
+release_work_lock() { [[ "${HAVE_WORK_LOCK:-0}" == "1" ]] && rm -rf "$WORK_LOCK_DIR" 2>/dev/null; return 0; }
+
+heartbeat_due() {
+  local last age
+  last=$(cat "$HEARTBEAT_FILE" 2>/dev/null || echo 0)
+  age=$(( $(date +%s) - ${last:-0} ))
+  [[ "$age" -ge "$HEARTBEAT_THROTTLE_SECS" ]]
+}
+mark_heartbeat() { mkdir -p "$REPO_ROOT/ops/.locks"; date +%s > "$HEARTBEAT_FILE"; }
+# heartbeat_touch — the always-on, zero-token liveness PULSE. Called on EVERY
+# check (green, work, issue, deferred) BEFORE any branching, so external
+# monitoring can alert when a site's engineer goes silent (no fresh pulse) even
+# though it never posts to Slack. Writes one JSON line to the daily pulse log
+# plus an overwritten "latest status" file. $1=status.
+heartbeat_touch() {
+  mkdir -p "$REPO_ROOT/ops/.locks" "$REPO_ROOT/ops/logs"
+  local now rec
+  now="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  rec="{\"ts\":\"$now\",\"site\":\"rc-9\",\"status\":\"${1:-unknown}\",\"render_pass\":${RENDER_PASS:-0},\"render_fail\":${RENDER_FAIL:-0},\"git_ahead\":${GIT_AHEAD:-0},\"git_behind\":${GIT_BEHIND:-0},\"git_dirty_src\":${GIT_DIRTY_SRC:-0},\"cf_ok\":${CF_OK:-0},\"queue\":${QUEUE_COUNT:-0},\"issues\":${ISSUES_COUNT:-0}}"
+  echo "$rec" >> "$PULSE_LOG"
+  printf '%s\n' "$rec" > "$PULSE_STATUS_FILE"
+}
 
 board_block() {  # $1=status-line  $2=detail
   {
@@ -71,18 +124,42 @@ QUEUE_TAG="${QUEUE_COUNT} task(s)"; [[ "${ENGINEER_PAUSED:-0}" == "1" ]] && QUEU
 STATUS_LINE="render ${RENDER_TAG} · ${TREE_TAG} · ${SYNC_TAG} · ${CF_TAG} · ${QUEUE_TAG} · ${NOW_ET}"
 log "status=$ENGINEER_STATUS — $STATUS_LINE"
 
-# ---- 2. Healthy + empty queue → heartbeat, exit ----
+# ---- 2. Liveness pulse (ALWAYS, zero-token) — written every check for monitoring ----
+heartbeat_touch "$ENGINEER_STATUS"
+
+# ---- 2b. Healthy + empty queue → daily Slack summary at most, exit (zero Claude) ----
 if [[ "$ENGINEER_STATUS" == "green" ]]; then
-  slack "👍 *rc-9* healthy — ${STATUS_LINE}" "good"
-  board_block "👍 **Healthy** — ${STATUS_LINE}"
-  log "green — heartbeat posted, no Claude turns used"
+  if heartbeat_due; then
+    slack "👍 *rc-9* healthy (daily summary) — ${STATUS_LINE}" "good"
+    board_block "👍 **Healthy** (daily summary) — ${STATUS_LINE}"
+    mark_heartbeat
+    log "green — daily Slack summary posted, pulse logged, no Claude turns used"
+  else
+    log "green — pulse logged, Slack summary throttled (<24h since last), no Claude turns used"
+  fi
   exit 0
 fi
 
 # ---- 3. Work pass (claude-sonnet-4-6) ----
 ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
 QUEUE_LIST="${QUEUE_TASKS:-}"
-RESULT_FILE="$(mktemp)"; trap 'rm -f "$RESULT_FILE"' EXIT
+# ---- Concurrency guard — only ONE work pass per site at a time ----
+# The cheap sweep above already ran. The Claude work pass is serialized: if a
+# prior fire is still working THIS site, defer rather than run a second engineer.
+# The lock auto-reclaims after LOCK_STALE_SECS so a crashed pass cannot wedge it.
+RESULT_FILE=""
+trap 'rm -f "${RESULT_FILE:-}" 2>/dev/null; release_work_lock' EXIT
+if ! acquire_work_lock; then
+  HELD_TS=$(cat "$WORK_LOCK_DIR/ts" 2>/dev/null || date +%s)
+  HELD_AGE=$(( $(date +%s) - ${HELD_TS:-0} ))
+  log "work pass DEFERRED — a prior work pass holds the lock (age ${HELD_AGE}s)"
+  board_block "⏳ **Deferred** — work found but a prior work pass is still running (lock age ${HELD_AGE}s). ${STATUS_LINE}"
+  exit 0
+fi
+HAVE_WORK_LOCK=1
+log "acquired work lock — proceeding with work pass"
+
+RESULT_FILE="$(mktemp)"
 
 PROMPT="You are the rc-9.com autonomous Engineer. Today is ${TODAY} (${NOW_ET}).
 Working directory: ${REPO_ROOT}. You run on a 4-hour cron and were woken because the
