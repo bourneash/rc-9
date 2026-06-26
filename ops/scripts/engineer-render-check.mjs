@@ -99,23 +99,30 @@ async function runBrowser() {
     }
     const res = { page: pg.path, kind: pg.kind, ok: false, status: 0, bytes: 0, note: "" };
     const page = await ctx.newPage();
-    try {
-      const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
-      res.status = resp ? resp.status() : 0;
-      const body = await page.evaluate(() => document.documentElement.outerHTML);
-      res.bytes = body.length;
-      const httpOk = res.status >= 200 && res.status < 400;
-      const bigEnough = res.bytes >= 1500;
-      const markersOk = pg.markers.some((m) => body.includes(m));
-      const visibleLen = await page.evaluate(() => (document.body?.innerText || "").trim().length);
-      const textOk = visibleLen >= 200;
-      res.ok = httpOk && bigEnough && markersOk && textOk;
-      if (!res.ok) {
-        res.note = !httpOk ? `HTTP ${res.status}` : !bigEnough ? `tiny (${res.bytes}B)`
-          : !textOk ? `thin body text (${visibleLen} chars)` : "missing markers";
-        try { const shot = join(LOG_DIR, `engineer-render-fail-${pg.kind}.png`); await page.screenshot({ path: shot }); res.shot = shot; } catch {}
-      }
-    } catch (e) { res.note = String(e.message || e).slice(0, 120); }
+    let lastErr = null;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 3000));
+      try {
+        const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+        res.status = resp ? resp.status() : 0;
+        const body = await page.evaluate(() => document.documentElement.outerHTML);
+        res.bytes = body.length;
+        const httpOk = res.status >= 200 && res.status < 400;
+        const bigEnough = res.bytes >= 1500;
+        const markersOk = pg.markers.some((m) => body.includes(m));
+        const visibleLen = await page.evaluate(() => (document.body?.innerText || "").trim().length);
+        const textOk = visibleLen >= 200;
+        res.ok = httpOk && bigEnough && markersOk && textOk;
+        if (!res.ok) {
+          res.note = !httpOk ? `HTTP ${res.status}` : !bigEnough ? `tiny (${res.bytes}B)`
+            : !textOk ? `thin body text (${visibleLen} chars)` : "missing markers";
+          try { const shot = join(LOG_DIR, `engineer-render-fail-${pg.kind}.png`); await page.screenshot({ path: shot }); res.shot = shot; } catch {}
+        }
+        lastErr = null;
+        break;
+      } catch (e) { lastErr = e; }
+    }
+    if (lastErr) res.note = String(lastErr.message || lastErr).slice(0, 120);
     await page.close();
     results.push(res);
   }
