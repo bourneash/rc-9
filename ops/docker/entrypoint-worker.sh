@@ -40,10 +40,14 @@ if [ -d "$HOME/.ssh" ]; then
 fi
 
 # Make sure site/ deps are installed and up-to-date.
-# Always run npm ci if node_modules is missing OR if package-lock.json is newer
-# than node_modules (deps changed since last install).
+# Reinstall when node_modules is missing, the lockfile is newer (deps changed),
+# OR the install is incomplete/corrupt. A present-but-partial node_modules (e.g.
+# an interrupted install) otherwise slips past an mtime check and breaks the
+# build gate with "vite: not found". The bin sentinel catches that case.
 if [ -d /work/site ]; then
-  if [ ! -d /work/site/node_modules ] || [ /work/site/package-lock.json -nt /work/site/node_modules ]; then
+  if [ ! -d /work/site/node_modules ] \
+     || [ /work/site/package-lock.json -nt /work/site/node_modules ] \
+     || [ ! -x /work/site/node_modules/.bin/vite ]; then
     echo "[entrypoint] Installing site deps..."
     cd /work/site && npm ci --silent && cd /work
   fi
