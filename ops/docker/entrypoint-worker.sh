@@ -49,7 +49,11 @@ if [ -d /work/site ]; then
      || [ /work/site/package-lock.json -nt /work/site/node_modules ] \
      || [ ! -x /work/site/node_modules/.bin/vite ]; then
     echo "[entrypoint] Installing site deps..."
-    cd /work/site && npm ci --silent && cd /work
+    # --ignore-scripts: skip lifecycle scripts (notably sharp's source build,
+    # pulled transitively via wrangler→miniflare, which fails on musl/Alpine and
+    # aborts npm ci). The platform prebuilts vite needs (rollup/esbuild musl) are
+    # plain binary packages and still install; the SPA build never uses sharp.
+    cd /work/site && npm ci --silent --ignore-scripts && cd /work
   fi
 fi
 

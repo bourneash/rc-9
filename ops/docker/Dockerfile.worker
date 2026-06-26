@@ -74,6 +74,12 @@ RUN deluser node && delgroup node 2>/dev/null || true; \
 ENV HOME=/home/ops
 ENV TZ=America/New_York
 
+# Pre-create the site/node_modules mountpoint owned by ops. The compose worker
+# mounts a named volume here; Docker seeds a fresh volume from this directory's
+# ownership, so it MUST be ops-owned — otherwise the volume is root-owned and
+# npm ci fails with EACCES, leaving a partial install that breaks the build gate.
+RUN mkdir -p /work/site/node_modules && chown -R ops:ops /work
+
 USER ops
 WORKDIR /work
 

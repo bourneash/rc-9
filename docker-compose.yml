@@ -24,6 +24,13 @@ services:
     volumes:
       # Project code (writable — roles commit/edit here)
       - .:/work
+      # Isolate site deps in a container-managed volume so the Alpine/musl worker
+      # installs its OWN node_modules (musl-native) instead of the host's glibc
+      # tree. Sharing the host tree breaks npm ci with EACCES on root-owned
+      # leftovers (mixed host/container ownership) → partial install → the build
+      # gate fails with "vite: not found". entrypoint-worker.sh runs npm ci into
+      # this volume; the bin sentinel guarantees a populate on a fresh volume.
+      - site_node_modules:/work/site/node_modules
       # Claude Code auth — mount ONLY credentials, not the full ~/.claude.
       - ${HOME}/.claude/.credentials.json:/home/ops/.claude/.credentials.json
       - ${HOME}/.claude.json:/home/ops/.claude.json:ro
@@ -72,3 +79,8 @@ services:
 networks:
   ops:
     driver: bridge
+
+volumes:
+  # Container-managed musl-native site/node_modules for the worker (see worker
+  # volume comment). Persists across runs; entrypoint npm ci populates it once.
+  site_node_modules:
