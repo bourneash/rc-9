@@ -30,4 +30,15 @@ if ! docker image inspect rc-9-worker:latest >/dev/null 2>&1; then
   docker compose build --build-arg NODE_MAJOR="$(cat site/.nvmrc | tr -d '[:space:]')" worker
 fi
 
-exec docker compose run --rm worker "$ROLE"
+# Wall-clock guard + guaranteed container teardown. `timeout` kills the
+# `docker compose run` CLIENT, but a headless run (no TTY under supercronic) does
+# NOT propagate that to the CONTAINER — it keeps running, reparented under
+# containerd-shim, holding the bind-mounted ops/.locks/<role>.lock flock forever
+# and wedging every later run. Naming the run + force-removing it on any exit
+# (trap) guarantees the flock releases however the client dies. Portable timeout
+# flags only (cron is Alpine/BusyBox): `-k <secs> <secs>`, never GNU `--kill-after=`.
+RUN_NAME="$(basename "$SCRIPT_DIR" | tr -cd 'A-Za-z0-9._-')-${ROLE}-$$"
+cleanup_container() { docker rm -f "$RUN_NAME" >/dev/null 2>&1 || true; }
+trap cleanup_container EXIT INT TERM
+timeout -k 30 7200 docker compose run --rm --name "$RUN_NAME" worker "$ROLE"
+exit $?
