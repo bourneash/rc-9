@@ -1,0 +1,2 @@
+# Conventional /sitemap.xml -> Astro generates sitemap-index.xml, not sitemap.xml (DF-24).
+/sitemap.xml      /sitemap-index.xml  301
