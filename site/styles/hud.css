@@ -235,6 +235,27 @@
 /* ===== Mobile: hide angle slider (use angle dial instead) ===== */
 @media (max-width: 860px) {
   #bottom-controls .angle-slider-wrap { display: none; }
+
+  /* The 6-column grid reserves fixed slider tracks (min 180px each), which
+     overflow narrow viewports and push the weapon chooser + FIRE button
+     off-screen (DF-67). Reflow to a wrapping flex row so every control stays
+     reachable regardless of viewport width. */
+  #bottom-controls.controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+  }
+  #bottom-controls .power-slider-wrap {
+    flex: 1 1 160px;
+    min-width: 0;
+  }
+  #bottom-controls .stats-group,
+  #bottom-controls #drive-toggle.secondary,
+  #bottom-controls .weapon-chooser,
+  #bottom-controls #fire-button.primary {
+    flex: 0 0 auto;
+  }
 }
 
 /* ===== Edge tabs ===== */

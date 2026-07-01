@@ -938,7 +938,7 @@ export class Game {
     Overlays.setGridVisible(true);
     Overlays.updateCorners({
       sector: this.turnCount || 0,
-      round: this.turnCount || 0,
+      round: (this.turnCount || 0) + 1,
       activeCallsign: this.getCurrentTank()?.name || null,
     });
     // Autosave right after a new game is configured
@@ -5782,7 +5782,7 @@ export class Game {
     try {
       Overlays.updateCorners({
         sector: this.turnCount || 0,
-        round: this.turnCount || 0,
+        round: (this.turnCount || 0) + 1,
         activeCallsign: this.getCurrentTank()?.name || null,
       });
     } catch {}

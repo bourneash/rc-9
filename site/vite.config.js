@@ -20,11 +20,11 @@ export default defineConfig({
   define: {
     __BUILD_VERSION__: JSON.stringify(pkg.version),
     __BUILD_HASH__: JSON.stringify(gitHash),
-    __BUILD_DATE__: JSON.stringify(new Date().toISOString())
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   },
   plugins: [
     compression({ algorithm: 'gzip', ext: '.gz' }),
-    compression({ algorithm: 'brotliCompress', ext: '.br' })
+    compression({ algorithm: 'brotliCompress', ext: '.br' }),
   ],
   build: {
     outDir: 'dist',
@@ -33,7 +33,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        help: resolve(__dirname, 'help.html')
+        help: resolve(__dirname, 'help.html'),
+        privacy: resolve(__dirname, 'privacy.html'),
+        terms: resolve(__dirname, 'terms.html'),
       },
       output: {
         manualChunks(id) {
@@ -42,25 +44,25 @@ export default defineConfig({
           if (id.includes('howler')) return 'vendor-audio';
           if (id.includes('gsap')) return 'vendor-gsap';
           return 'vendor';
-        }
-      }
+        },
+      },
     },
     minify: 'terser',
     terserOptions: {
       compress: {
         drop_console: true,
-        pure_funcs: ['console.log', 'console.debug', 'console.info']
-      }
+        pure_funcs: ['console.log', 'console.debug', 'console.info'],
+      },
     },
     sourcemap: false,
   },
   server: {
     port: 5600,
     strictPort: false,
-    open: true
+    open: true,
   },
   preview: {
     port: 5601,
-    strictPort: false
-  }
+    strictPort: false,
+  },
 });

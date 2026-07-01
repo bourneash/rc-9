@@ -2,26 +2,36 @@
 // Victory detection + game-over UI.
 
 import { VictoryMessages } from './victory-messages.js';
+import * as Overlays from './canvas-overlays.js';
+
+// Neutralize the corner HUD the instant a match ends so it no longer shows the
+// stale "· AI 1 MEDIUM" active-turn label over the game-over state (DF-69).
+function clearTurnHud(game) {
+  try {
+    Overlays.updateCorners({
+      sector: game.turnCount || 0,
+      round: (game.turnCount || 0) + 1,
+      activeCallsign: null,
+    });
+  } catch {}
+}
 
 export function checkGameOver(game) {
   const aliveTanks = game.tanks.filter(t => t.health > 0);
+  if (aliveTanks.length > 1) return;
 
-  if (aliveTanks.length === 0) {
-    // All tanks dead simultaneously - draw/mutual destruction
-    game.gameOver = true;
-    const token = game.turnToken;
-    setTimeout(() => {
-      if (token !== game.turnToken) return; // Game state changed
-      game.showGameOver(null); // null = draw, no winner
-    }, 2000);
-  } else if (aliveTanks.length === 1) {
-    game.gameOver = true;
-    const token = game.turnToken;
-    setTimeout(() => {
-      if (token !== game.turnToken) return; // Game state changed
-      game.showGameOver(aliveTanks[0]);
-    }, 2000);
-  }
+  // Winner (or draw) decided. Latch game-over and clear the turn HUD immediately.
+  game.gameOver = true;
+  clearTurnHud(game);
+
+  const winner = aliveTanks.length === 1 ? aliveTanks[0] : null; // null = draw
+  // Reveal the engagement report after a short beat for the death animation.
+  // Guard on gameOver (which reset() clears) rather than turnToken so a benign
+  // turn advance in the reported napalm self-kill path can't cancel the reveal (DF-68).
+  setTimeout(() => {
+    if (!game.gameOver) return; // a new game / reset happened in the meantime
+    game.showGameOver(winner);
+  }, 2000);
 }
 
 export function showGameOver(game, winner) {
@@ -74,7 +84,7 @@ export function showGameOver(game, winner) {
     durationStr: null,
     hits: winner ? (winner.shotsHit ?? null) : null,
     shots: winner ? (winner.shotsFired ?? null) : null,
-    damage: winner ? (winner.damageDealt || 0) : null,
+    damage: winner ? winner.damageDealt || 0 : null,
   };
 
   fillEngagementReport(state);
@@ -91,9 +101,12 @@ function fillEngagementReport(state) {
 
   const banner = document.getElementById('er-banner');
   if (banner) {
-    banner.textContent = state.outcome === 'victory' ? 'VICTORY · OPERATOR'
-                       : state.outcome === 'tie'     ? 'STALEMATE'
-                       :                               'DEFEAT · ENEMY';
+    banner.textContent =
+      state.outcome === 'victory'
+        ? 'VICTORY · OPERATOR'
+        : state.outcome === 'tie'
+          ? 'STALEMATE'
+          : 'DEFEAT · ENEMY';
     banner.className = 'er-banner ' + (state.outcome === 'victory' ? '' : state.outcome);
   }
 
@@ -105,10 +118,11 @@ function fillEngagementReport(state) {
   setText('er-standing', state.outcome === 'victory' ? ' STANDING' : '');
   setText('er-tag', (state.contextualMessage || '').toUpperCase());
   setText('er-rounds', state.turns ?? '—');
-  setText('er-hits',   state.hits  != null ? state.hits  : '—');
-  setText('er-shots',  state.shots != null ? state.shots : '—');
+  setText('er-hits', state.hits != null ? state.hits : '—');
+  setText('er-shots', state.shots != null ? state.shots : '—');
   setText('er-damage', state.damage != null ? state.damage : '—');
-  setText('er-accuracy',
+  setText(
+    'er-accuracy',
     state.shots != null && state.hits != null
       ? Math.round((state.hits / Math.max(1, state.shots)) * 100)
       : '—'
@@ -127,7 +141,7 @@ export function showVictoryToast(game, winnerName, victoryMessage, winner) {
     durationStr: null,
     hits: winner ? (winner.shotsHit ?? null) : null,
     shots: winner ? (winner.shotsFired ?? null) : null,
-    damage: winner ? (winner.damageDealt || 0) : null,
+    damage: winner ? winner.damageDealt || 0 : null,
   };
   fillEngagementReport(state);
   if (typeof globalThis.openGameOverModal === 'function') {
