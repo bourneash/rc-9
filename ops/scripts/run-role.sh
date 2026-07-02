@@ -222,7 +222,7 @@ if [[ "$ROLE" == "update" || "$ROLE" == "deployer" ]]; then
   if [[ -x "$NOTIFY" ]]; then
     if [[ "$STATUS" -eq 0 ]]; then
       # Extract the **bold summary line** the role emits at the end of its run
-      SUMMARY=$(grep -E '^\*\*' "$LOG" | tail -1 || true)
+      SUMMARY=$(sed -n '/^\*\*/,$p' "$LOG" | grep -v '^---$' | grep -v '^=== role=' || true)
       if [[ -n "$SUMMARY" ]]; then
         MSG="*rc-9.com* \`${ROLE}\` — ${SUMMARY}"
       else
