@@ -12,3 +12,11 @@
 # Deployer — every 15 min if .deploy-needed flag exists.
 # NOTE: rc-9 deploys via `npx wrangler deploy` (Vite SPA), not git push.
 */15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer
+
+# Reaper — every 15 min. Pure shell, no Claude invocation. Force-kills any
+# stray one-shot worker container (cron-spawned hang or a manual debug run
+# someone forgot to close) still running past 1h — nothing legitimate here
+# takes that long. Posts a Slack warning when it kills something so the
+# threshold can be tuned if a real run ever needs longer.
+# Kill switch: touch ops/.reaper-disabled.
+7,22,37,52 * * * *   [ -f ops/.reaper-disabled ] || bash ops/scripts/reap-stuck-workers.sh
