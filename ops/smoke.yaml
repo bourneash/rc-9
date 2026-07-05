@@ -1,1 +1,10 @@
-
+apex: rc-9.com
+enabled: true
+slack:
+  enabled: true
+  channel_env: SLACK_CHANNEL_RC9
+  channel: domain-rc-9-com
+checks:
+  - path: /
+    expect: 200
+    label: Homepage
