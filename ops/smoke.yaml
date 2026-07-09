@@ -1,3 +1,7 @@
+# sites/rc-9.com/ops/smoke.yaml
+# Consumed by tools/fleet-smoke/run_fleet_smoke.py — see
+# tools/fleet-smoke/README.md for the schema. Editing this file takes effect
+# on the fleet cron's next tick; no rebuild needed.
 apex: rc-9.com
 enabled: true
 slack:
@@ -8,3 +12,18 @@ checks:
   - path: /
     expect: 200
     label: Homepage
+  - path: /terms
+    expect: 200
+    label: Terms page
+  - path: /privacy
+    expect: 200
+    label: Privacy policy
+  - path: /help
+    expect: 200
+    label: Help page
+  - path: /config.json
+    expect: 200
+    label: Game config
+  - path: /sitemap-index.xml
+    expect: 200
+    label: Sitemap
