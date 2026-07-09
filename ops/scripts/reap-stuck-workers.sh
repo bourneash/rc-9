@@ -15,6 +15,19 @@
 # Default 3600s leaves generous headroom; override with REAPER_MAX_AGE_SEC.
 set -uo pipefail
 
+# Renders a duration in seconds as e.g. "45s" or "12m" -- test runs (a low
+# REAPER_MAX_AGE_SEC used to validate the reaper) finish in seconds, and
+# truncating those to whole minutes made every test alert read as a
+# confusing "running 0m (threshold 0m)".
+fmt_dur() {
+  local s=$1
+  if (( s < 60 )); then
+    echo "${s}s"
+  else
+    echo "$(( s / 60 ))m"
+  fi
+}
+
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
@@ -51,15 +64,16 @@ for id in "${IDS[@]}"; do
 
   if (( age_sec > MAX_AGE_SEC )); then
     name="$(docker inspect -f '{{.Name}}' "$id" 2>/dev/null | sed 's#^/##')"
-    age_human="$(( age_sec / 60 ))m"
-    echo "[$(date -Iseconds)] reap-stuck-workers: killing $name (id=$id, age=${age_human}, threshold=$((MAX_AGE_SEC / 60))m)"
+    age_human="$(fmt_dur "$age_sec")"
+    threshold_human="$(fmt_dur "$MAX_AGE_SEC")"
+    echo "[$(date -Iseconds)] reap-stuck-workers: killing $name (id=$id, age=${age_human}, threshold=${threshold_human})"
 
     docker kill "$id" >/dev/null 2>&1 || true
     docker rm -f "$id" >/dev/null 2>&1 || true
 
     if [[ -x "$NOTIFY" ]]; then
       "$NOTIFY" "$CHANNEL" \
-        ":wastebasket: Reaper killed stuck worker container \`$name\` — running ${age_human} (threshold $((MAX_AGE_SEC / 60))m). If this was legitimate work, bump REAPER_MAX_AGE_SEC in crontab.docker." \
+        ":wastebasket: Reaper killed stuck worker container \`$name\` — running ${age_human} (threshold ${threshold_human}). If this threshold looks unusually low, it was likely a deliberate reaper test (e.g. a REAPER_MAX_AGE_SEC override) -- no action needed. Otherwise, if this was legitimate work, bump REAPER_MAX_AGE_SEC in crontab.docker." \
         "warning" 2>/dev/null || true
     fi
   fi
