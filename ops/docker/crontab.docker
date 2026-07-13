@@ -13,10 +13,7 @@
 # NOTE: rc-9 deploys via `npx wrangler deploy` (Vite SPA), not git push.
 */15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer
 
-# Reaper — every 15 min. Pure shell, no Claude invocation. Force-kills any
-# stray one-shot worker container (cron-spawned hang or a manual debug run
-# someone forgot to close) still running past 1h — nothing legitimate here
-# takes that long. Posts a Slack warning when it kills something so the
-# threshold can be tuned if a real run ever needs longer.
-# Kill switch: touch ops/.reaper-disabled.
-7,22,37,52 * * * *   [ -f ops/.reaper-disabled ] || bash ops/scripts/reap-stuck-workers.sh
+# Reaper — moved fleet-wide (tools/scripts/reap-stuck-workers-fleet.sh, host
+# crontab, same 7,22,37,52 cadence). See that script's header for why: 16
+# identical per-site copies collapsed into one host-level pass since
+# docker.sock is the same shared daemon for every site anyway.
