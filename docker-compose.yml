@@ -40,6 +40,10 @@ services:
       - ${HOME}/.ssh:/home/ops/.ssh:ro
       # Shared CF / affiliate / Slack creds across domain projects
       - ${HOME}/projects/domains/.env:/work/.env.shared:ro
+      # Shared monorepo tooling (claude-tracked.sh token-usage wrapper, etc.) —
+      # without this, $REPO_ROOT/.monorepo-tools is empty and the fallback
+      # ../../tools path doesn't exist inside the container either.
+      - ${HOME}/projects/domains/tools:/work/.monorepo-tools:ro
     environment:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}

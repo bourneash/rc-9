@@ -9,6 +9,14 @@ dist/
 .superpowers/
 test-results/
 .env.shared
+
+# Shared monorepo tooling — read-only bind mount into the worker/cron
+# container ($HOME/projects/domains/tools -> .monorepo-tools), NOT part of
+# this repo. Without this line, a container-side git operation can
+# accidentally sweep the entire shared tools/ tree into this repo (hit
+# 0daynews.com 2026-07-13, 472 files). Never remove this line.
+.monorepo-tools/
+
 ops/logs/*.log
 ops/.locks/
 ops/logs/engineer-issues-*.txt
