@@ -38,6 +38,11 @@ if [[ -z "$ROLE" ]]; then
   exit 2
 fi
 
+# AI token-usage tracking (Fleet Dashboard AI Usage tab) — see tools/scripts/claude-tracked.sh
+export CRON_SITE="rc-9.com"
+CLAUDE_TRACKED="$REPO_ROOT/.monorepo-tools/scripts/claude-tracked.sh"
+[[ -x "$CLAUDE_TRACKED" ]] || CLAUDE_TRACKED="$REPO_ROOT/../../tools/scripts/claude-tracked.sh"
+
 # Kill-switch (defense-in-depth): honor ops/.<role>-disabled even if run-role.sh
 # is reached by a path that bypasses run-worker.sh (e.g. a direct
 # `docker compose run --rm worker <role>`). Mirrors run-worker.sh's check.
@@ -160,7 +165,7 @@ else
 
   _run_claude() {
     # shellcheck disable=SC2086
-    timeout "$TIMEOUT" claude -p "$(cat "$ROLE_FILE")
+    CRON_ROLE="$ROLE" timeout "$TIMEOUT" "$CLAUDE_TRACKED" "$(cat "$ROLE_FILE")
 
 Today is $(date -Iseconds). The current working directory is $(pwd). Begin." \
       --max-turns "$MAX_TURNS" \
