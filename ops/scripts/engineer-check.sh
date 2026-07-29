@@ -26,7 +26,7 @@ rlog "=== engineer check sweep ($BASE_URL) ==="
 # ---- 1. Render check (Playwright true-render, degrades to curl) ----
 RENDER_PASS=0; RENDER_FAIL=0; RENDER_MODE=error
 if command -v node >/dev/null 2>&1; then
-  RENDER_OUT=$(node "$REPO_ROOT/ops/scripts/engineer-render-check.mjs" "$BASE_URL" 2>>"$LOG")
+  RENDER_OUT=$(timeout 90 node "$REPO_ROOT/ops/scripts/engineer-render-check.mjs" "$BASE_URL" 2>>"$LOG")
   echo "$RENDER_OUT" >> "$LOG"
   # Parse with sed — the worker is Alpine (busybox grep has no -P/-oP).
   SUMMARY=$(echo "$RENDER_OUT" | grep '^RENDER_RESULT' | tail -1)
