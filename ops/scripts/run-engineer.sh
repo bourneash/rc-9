@@ -8,6 +8,7 @@ set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
+source "$REPO_ROOT/.monorepo-tools/scripts/ai-usage-bootstrap.sh" 2>/dev/null || source "$REPO_ROOT/../../tools/scripts/ai-usage-bootstrap.sh"
 
 LOG="${1:-/dev/stderr}"
 BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
@@ -185,7 +186,7 @@ log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # despite --dangerously-skip-permissions + mounted SSH keys.
 set +e
 GIT_SSH_COMMAND='/bin/false' GIT_TERMINAL_PROMPT=0 \
-timeout "$WORK_TIMEOUT" claude -p "$PROMPT" --output-format text --model "$MODEL" \
+timeout "$WORK_TIMEOUT" "$CLAUDE_TRACKED" "$PROMPT" --output-format text --model "$MODEL" \
   --max-turns "$MAX_TURNS" --dangerously-skip-permissions > "$RESULT_FILE" 2>>"$LOG"
 CLAUDE_EXIT=$?
 set -e
