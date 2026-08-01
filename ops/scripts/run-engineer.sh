@@ -192,9 +192,9 @@ CLAUDE_EXIT=$?
 set -e
 tee -a "$LOG" < "$RESULT_FILE" > /dev/null
 
-CHANGED=$(grep '^ENGINEER_CHANGED=' "$RESULT_FILE" | tail -1 | cut -d= -f2 | tr -d ' \r\n'); CHANGED="${CHANGED:-0}"
-SUMMARY=$(grep '^ENGINEER_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2-); SUMMARY="${SUMMARY:-engineer run complete}"
-ESCALATE=$(grep '^ENGINEER_ESCALATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2-); ESCALATE="${ESCALATE:-none}"
+CHANGED=$(grep '^ENGINEER_CHANGED=' "$RESULT_FILE" | tail -1 | cut -d= -f2 | tr -d ' \r\n' || true); CHANGED="${CHANGED:-0}"
+SUMMARY=$(grep '^ENGINEER_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); SUMMARY="${SUMMARY:-engineer run complete}"
+ESCALATE=$(grep '^ENGINEER_ESCALATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); ESCALATE="${ESCALATE:-none}"
 
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
   log "engineer pass TIMED OUT after ${WORK_TIMEOUT}s"

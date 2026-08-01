@@ -329,9 +329,9 @@ CLAUDE_EXIT=$?
 set -e
 tee -a "$LOG" < "$RESULT_FILE" > /dev/null
 
-FIXED=$(grep '^WATCHDOG_FIXED='   "$RESULT_FILE" | tail -1 | cut -d= -f2  | tr -d ' \r\n'); FIXED="${FIXED:-0}"
-RSUMMARY=$(grep '^WATCHDOG_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2-); RSUMMARY="${RSUMMARY:-watchdog repair}"
-RDETAIL=$(grep '^WATCHDOG_DETAIL='  "$RESULT_FILE" | tail -1 | cut -d= -f2-); RDETAIL="${RDETAIL:-}"
+FIXED=$(grep '^WATCHDOG_FIXED='   "$RESULT_FILE" | tail -1 | cut -d= -f2  | tr -d ' \r\n' || true); FIXED="${FIXED:-0}"
+RSUMMARY=$(grep '^WATCHDOG_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); RSUMMARY="${RSUMMARY:-watchdog repair}"
+RDETAIL=$(grep '^WATCHDOG_DETAIL='  "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); RDETAIL="${RDETAIL:-}"
 
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
   log "repair pass TIMED OUT"
