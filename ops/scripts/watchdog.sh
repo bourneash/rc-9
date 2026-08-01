@@ -26,7 +26,7 @@ set -uo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$REPO_ROOT"
 
-CRON_SITE="$(basename "$REPO_ROOT")"
+export CRON_SITE="rc-9.com" CRON_ROLE="watchdog"
 CLAUDE_TRACKED="$REPO_ROOT/.monorepo-tools/scripts/claude-tracked.sh"
 [[ -x "$CLAUDE_TRACKED" ]] || CLAUDE_TRACKED="$REPO_ROOT/../../tools/scripts/claude-tracked.sh"
 
