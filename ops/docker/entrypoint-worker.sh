@@ -3,6 +3,15 @@
 # Inside the container, $ROLE drives which role's prompt is loaded.
 set -euo pipefail
 
+# Mutable Claude CLI state is worker-local; auth credentials are mounted
+# separately and remain persistent.
+if [[ -f "$HOME/.claude-host.json" ]]; then
+  cp "$HOME/.claude-host.json" "$HOME/.claude.json"
+else
+  printf '{}\n' > "$HOME/.claude.json"
+fi
+chmod 600 "$HOME/.claude.json"
+
 ROLE="${1:-}"
 if [[ -z "$ROLE" ]]; then
   echo "usage: docker compose run --rm worker <role-name>"

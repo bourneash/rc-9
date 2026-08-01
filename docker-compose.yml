@@ -33,7 +33,7 @@ services:
       - site_node_modules:/work/site/node_modules
       # Claude Code auth — mount ONLY credentials, not the full ~/.claude.
       - ${HOME}/.claude/.credentials.json:/home/ops/.claude/.credentials.json
-      - ${HOME}/.claude.json:/home/ops/.claude.json:ro
+      - ${HOME}/.claude.json:/home/ops/.claude-host.json:ro
       # Minimal settings: no plugins, no hooks, no status line.
       - ./ops/docker/worker-claude-settings.json:/home/ops/.claude/settings.json:ro
       # Git push via host SSH key (the github-bourneash alias)
