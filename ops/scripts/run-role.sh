@@ -87,6 +87,13 @@ fi
 
 cd "$REPO_ROOT"
 
+# Clear any stale ops/.deploy-failed BEFORE the deployer runs. Otherwise we'd
+# detect the prior run's failure marker and re-alert. The deployer is the only
+# role that writes this file (per ops/roles/deployer.md).
+if [[ "$ROLE" == "deployer" ]] && [[ -f "$REPO_ROOT/ops/.deploy-failed" ]]; then
+  rm -f "$REPO_ROOT/ops/.deploy-failed"
+fi
+
 # Clear stale git index.lock ONLY if no live git process holds it.
 # Uses a cross-role git mutex (flock fd 8) so concurrent roles don't
 # race on the same index.lock.
@@ -199,6 +206,22 @@ if [[ "$STATUS" -eq 124 ]]; then
 fi
 echo "---" >> "$LOG"
 echo "=== role=$ROLE finished at $(date -Iseconds) (exit=$STATUS) ===" >> "$LOG"
+
+# --- Deployer failure detection ---
+# `claude -p` exits 0 even when the role narrates "exit 1" — so we can't rely
+# on $STATUS alone to detect deploy gate failures (build/deploy/smoke). Instead
+# the deployer role writes ops/.deploy-failed with the reason on failure.
+if [[ "$ROLE" == "deployer" ]] && [[ -f "$REPO_ROOT/ops/.deploy-failed" ]]; then
+  DEPLOY_REASON=$(head -1 "$REPO_ROOT/ops/.deploy-failed" 2>/dev/null || echo "unknown")
+  echo "[run-role] deploy failure detected: $DEPLOY_REASON" >> "$LOG"
+  if [[ -x "$REPO_ROOT/ops/scripts/emit-incident.sh" ]]; then
+    bash "$REPO_ROOT/ops/scripts/emit-incident.sh" --role deployer --class deploy-fail --severity high \
+      --summary "deploy blocked — $DEPLOY_REASON" --log "$LOG" 2>/dev/null || true
+  fi
+  rm -f "$REPO_ROOT/.deploy-needed"
+  rm -f "$REPO_ROOT/ops/.deploy-failed"
+  STATUS=1
+fi
 
 # Update last-run.json for health-check
 STATUS_FILE="$REPO_ROOT/ops/board/last-run.json"

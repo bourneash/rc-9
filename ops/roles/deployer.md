@@ -29,13 +29,22 @@ repo root, or when explicitly invoked. 15-minute wall-clock budget per run.
 ## Workflow
 
 1. `git status` — confirm there's something to ship. If clean and `.deploy-needed` exists, remove the sentinel and exit (false alarm).
-2. `cd site && npm run build` — must succeed (Vite build). If it fails, append failure to BOARD_REPORT tagging `engineer.md` and exit. Do NOT deploy a broken build.
+2. `cd site && npm run build` — must succeed (Vite build). If it fails, write
+   `ops/.deploy-failed` at repo root with a one-line reason (e.g.
+   `build: vite build failed — see ops/logs/deployer-<ts>.log`), append failure to
+   BOARD_REPORT tagging `engineer.md`, and exit. Do NOT deploy a broken build.
 3. Stage + commit changes deliberately — `git add site/` plus any specific files you changed. **Never `git add -A` or `git add .`**. Then `git commit -m "deploy: <brief description>"`.
 4. `git push origin main` — keeps git history in sync.
-5. `cd site && npx wrangler deploy` — deploys the built `dist/` directly to the `rc-9` Worker. This is the live deploy step.
+5. `cd site && npx wrangler deploy` — deploys the built `dist/` directly to the `rc-9` Worker. This is the live deploy step. If `wrangler deploy` fails, write `ops/.deploy-failed` with a one-line reason (e.g. `deploy: wrangler deploy failed — <error>`), append failure to BOARD_REPORT, and exit.
 6. Wait ~30 seconds. Then curl `https://rc-9.com/` to confirm HTTP 200 + `cf-ray` header present.
 7. On green smoke: remove `.deploy-needed`, append a one-line BOARD_REPORT note.
-8. On red smoke: append a failure entry with route + expected vs actual + hypothesis. Tag `engineer.md`. Do NOT push a fix in this role.
+8. On red smoke: write `ops/.deploy-failed` with a one-line reason (e.g. `smoke: / returned 500` or `smoke: cf-ray header missing`), append a failure entry with route + expected vs actual + hypothesis. Tag `engineer.md`. Do NOT push a fix in this role.
+
+`ops/.deploy-failed` is the machine-readable signal the harness (`run-role.sh`)
+uses to alert Slack once and feed the watchdog's incident ledger for possible
+auto-repair. Write it exactly once per run — don't append on retries. `run-role.sh`
+clears any stale copy before each deployer invocation, so a leftover file always
+reflects THIS run's outcome.
 
 ## Success metrics
 

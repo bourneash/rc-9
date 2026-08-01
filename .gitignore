@@ -27,3 +27,7 @@ ops/board/last-run.json
 
 # Engineer liveness pulse log (machine-readable, monitoring)
 ops/logs/engineer-heartbeat-*.jsonl
+
+# Watchdog incident ledger + kill switch (machine state, not source)
+ops/health/
+ops/.watchdog-disabled

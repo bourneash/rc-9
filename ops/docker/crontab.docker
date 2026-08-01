@@ -13,6 +13,9 @@
 # NOTE: rc-9 deploys via `npx wrangler deploy` (Vite SPA), not git push.
 */15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer
 
+# Watchdog — self-healing incident loop every 15 min (offset off scraper/deployer).
+2,17,32,47 * * * *   bash ops/scripts/run-watchdog.sh
+
 # Reaper — moved fleet-wide (tools/scripts/reap-stuck-workers-fleet.sh, host
 # crontab, same 7,22,37,52 cadence). See that script's header for why: 16
 # identical per-site copies collapsed into one host-level pass since
