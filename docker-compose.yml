@@ -45,7 +45,6 @@ services:
       # ../../tools path doesn't exist inside the container either.
       - ${HOME}/projects/domains/tools:/work/.monorepo-tools:ro
     environment:
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       GIT_USER_NAME: "Remote Command Bot"
