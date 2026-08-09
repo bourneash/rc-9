@@ -265,7 +265,7 @@ if [[ "$ROLE" == "update" || "$ROLE" == "deployer" ]]; then
     else
       TAIL=$(tail -5 "$LOG" 2>/dev/null || true)
       if grep -qE "401|Invalid authentication credentials" "$LOG" 2>/dev/null; then
-        MSG=$(printf ':key: *rc-9.com* `%s` failed (exit=%d) — OAuth token expired\nFix: open an interactive claude session to refresh, or set ANTHROPIC_API_KEY in .env.shared' "$ROLE" "$STATUS")
+        MSG=$(printf ':key: *rc-9.com* `%s` failed (exit=%d) — OAuth token expired\nFix: open an interactive claude session to refresh (see tools/scripts/check-claude-auth.sh)' "$ROLE" "$STATUS")
       else
         MSG=$(printf ':x: *rc-9.com* `%s` failed (exit=%d)\n```%s```' "$ROLE" "$STATUS" "$TAIL")
       fi
