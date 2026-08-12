@@ -18,6 +18,7 @@ test-results/
 .monorepo-tools/
 
 ops/logs/*.log
+ops/logs/token-usage-*.jsonl
 ops/.locks/
 ops/logs/engineer-issues-*.txt
 ops/logs/engineer-render-fail-*.png
