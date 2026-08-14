@@ -21,6 +21,8 @@ services:
     image: rc-9-worker:latest
     # One-shot — only invoked via `docker compose run --rm worker <role>`.
     profiles: ["manual"]
+    security_opt:
+      - no-new-privileges:true
     volumes:
       # Project code (writable — roles commit/edit here)
       - .:/work
@@ -61,6 +63,8 @@ services:
     image: rc-9-cron:latest
     container_name: rc-9-cron
     restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     volumes:
       # Docker socket so this container can invoke `docker compose run`.
       - /var/run/docker.sock:/var/run/docker.sock
