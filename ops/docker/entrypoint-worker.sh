@@ -27,6 +27,7 @@ mkdir -p "$HOME/.claude/projects" 2>/dev/null || true
 git config --global user.name  "${GIT_USER_NAME:-Remote Command Bot}"
 git config --global user.email "${GIT_USER_EMAIL:-bot@rc-9.com}"
 git config --global --add safe.directory /work
+git config --global core.hooksPath /work/.monorepo-tools/git-hooks  # content-guardrails (installed by install-guardrail-container-hooks.sh)
 
 # SSH refuses to use config / key files with group/other read perms (>600).
 # The host's ~/.ssh/ is bind-mounted read-only with whatever perms the host
