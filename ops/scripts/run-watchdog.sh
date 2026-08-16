@@ -19,6 +19,13 @@ cd "$REPO_ROOT"
 LOG="ops/logs/watchdog-$(date -u +%Y%m%d).log"
 mkdir -p ops/logs
 
+# Fleet-wide stagger: with all sites on the same :02/:17/:32/:47 crontab
+# minute, 19+ cron containers fired their probe curl in the same second —
+# periodic host-level network contention that could stretch a curl past the
+# 15s timeout, tripping even the 2-consecutive-failure check (2026-08-15).
+# Deterministic per-site sleep spreads the fleet across the 15-min window.
+sleep 370
+
 # Cheap detection in the cron container.
 WATCHDOG_DETECT_ONLY=1 bash ops/scripts/watchdog.sh
 rc=$?
