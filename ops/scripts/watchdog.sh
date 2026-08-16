@@ -75,7 +75,7 @@ recovered_for() {
   case "$1" in
     site-down)
       [[ "${WATCHDOG_FAKE_PROBE_DOWN:-0}" == "1" ]] && return 1
-      local code; code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null || echo 000)"
+      local code; code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null)"
       [[ "$code" =~ ^2|^3 ]] ;;
     deploy-stuck)
       [[ ! -f .deploy-needed && ! -f .deploy-needed.failed ]] && return 0
@@ -92,19 +92,22 @@ recovered_for() {
 
 # ================= 1. Cheap active probes (each trips → breadcrumb) =================
 probe() {
-  # site-down: two consecutive curls (10s apart) on the homepage. A single
+  # site-down: two consecutive curls (30s apart) on the homepage. A single
   # curl failure is usually a transient DNS/network blip in this container,
   # not a real outage — only raise an incident if the homepage is STILL down
   # on the retry (chronic self-clearing false positives across the fleet,
   # 2026-08-15 — single-shot probing was too trigger-happy).
+  # Note: curl always writes %{http_code} (e.g. "000") even on connection
+  # failure; the `|| echo 000` fallback is omitted to avoid doubling it to
+  # "000000" when curl exits non-zero on a DNS/network error.
   local code
   if [[ "${WATCHDOG_FAKE_PROBE_DOWN:-0}" == "1" ]]; then code="503"; else
-    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null || echo 000)"
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null)"
   fi
   if [[ ! "$code" =~ ^2|^3 ]]; then
-    sleep 10
+    sleep 30
     if [[ "${WATCHDOG_FAKE_PROBE_DOWN:-0}" == "1" ]]; then code="503"; else
-      code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null || echo 000)"
+      code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 "$BASE_URL/" 2>/dev/null)"
     fi
   fi
   if [[ ! "$code" =~ ^2|^3 ]]; then
