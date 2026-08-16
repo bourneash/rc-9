@@ -24,6 +24,7 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+source "$REPO_ROOT/ops/scripts/git-push-retry.sh"
 cd "$REPO_ROOT"
 
 export CRON_SITE="rc-9.com" CRON_ROLE="watchdog"
@@ -387,7 +388,7 @@ if git diff --cached --quiet; then
   log "fix needed no shippable file change (e.g. lockfile-only already applied) — treating as recovered"
 else
   git -c commit.gpgsign=false commit -m "watchdog: ${RSUMMARY} — ${TODAY} ${NOW_ET}" >>"$LOG" 2>&1 || true
-  if timeout 120 git push origin main >>"$LOG" 2>&1; then
+  if git_push_retry >>"$LOG" 2>&1; then
     touch .deploy-needed; PUSHED=1
     log "pushed fix to main — CF Workers Builds will deploy"
   else
