@@ -150,6 +150,17 @@ fi
 HAVE_WORK_LOCK=1
 log "acquired work lock — proceeding with work pass"
 
+# ---- Network preflight (2026-08-19 DNS-outage hardening) ----
+# Host reboot broke container DNS; every engineer/watchdog cron tick still
+# burned a full claude -p call hanging ~200s on dead DNS before failing —
+# 120+ wasted calls fleet-wide in one day, zero work done. Skip the work
+# pass (no Claude call, no cost) if basic connectivity is down; the next
+# tick's cheap check sweep retries for free.
+if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthropic.com/" 2>/dev/null; then
+  log "network preflight FAILED — skipping work pass this tick (no Claude call made)"
+  exit 0
+fi
+
 RESULT_FILE="$(mktemp)"
 
 PROMPT="You are the rc-9.com autonomous Engineer. Today is ${TODAY} (${NOW_ET}).

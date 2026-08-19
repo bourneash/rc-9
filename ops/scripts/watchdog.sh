@@ -281,6 +281,17 @@ if [[ "$ATTEMPTS" -ge "$MAX_ATTEMPTS" ]]; then
   exit 0
 fi
 
+# ================= 4b. Network preflight (2026-08-19 DNS-outage hardening) =================
+# Host reboot broke container DNS; every engineer/watchdog cron tick still
+# burned a full claude -p call hanging ~200s on dead DNS before failing —
+# 120+ wasted calls fleet-wide in one day, zero repairs made. Skip the repair
+# pass (no attempt spent, no Claude call) if the network itself is down; the
+# incident stays OPEN and is retried next eligible tick.
+if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthropic.com/" 2>/dev/null; then
+  log "network preflight FAILED — skipping repair pass this tick (no attempt spent, no Claude call made)"
+  exit 0
+fi
+
 # ================= 5. Repair pass =================
 NEW_ATTEMPTS=$(( ATTEMPTS + 1 ))
 set_field attempts "$NEW_ATTEMPTS"
