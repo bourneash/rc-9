@@ -1,7 +1,8 @@
 # sites/rc-9.com/ops/smoke.yaml
-# Consumed by tools/fleet-smoke/run_fleet_smoke.py — see
-# tools/fleet-smoke/README.md for the schema. Editing this file takes effect
-# on the fleet cron's next tick; no rebuild needed.
+# Consumed by tools/fleet-gatus/scripts/generate_config.py — see
+# tools/fleet-gatus/README.md for the schema. Editing this file takes effect
+# on the next `generate_config.py && docker compose restart` in
+# tools/fleet-gatus (no rebuild needed).
 apex: rc-9.com
 enabled: true
 slack:
