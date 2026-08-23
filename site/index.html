@@ -11,6 +11,10 @@
     <!-- Consent-gated analytics + cookie banner. Externalized to /consent.js so the
          strict CSP (no 'unsafe-inline' for scripts) doesn't block it. -->
     <script src="/consent.js" defer></script>
+    <!-- Google AdSense. Manual units only, rendered into [data-rc9-ad] containers
+         on the title screen / end-of-round report. Anchor + vignette auto-formats
+         are suppressed in /adsense.js so nothing ever covers the play surface. -->
+    <script src="/adsense.js" defer></script>
     <style>
       .rc9-footer-link { transition: opacity 0.2s; }
       .rc9-footer-link:hover { opacity: 0.7 !important; }
@@ -125,6 +129,8 @@
       <span class="ts-item-meta">SOON</span>
     </button>
   </nav>
+
+  <div class="ts-ad" data-rc9-ad="title-screen" data-rc9-ad-format="horizontal" hidden></div>
 
   <div class="ts-foot">
     <div class="group"><span class="key">↑↓</span> NAVIGATE</div>
@@ -292,6 +298,7 @@
             </div>
           </div>
         </div>
+        <div class="er-ad" data-rc9-ad="engagement-report" data-rc9-ad-format="horizontal" hidden></div>
         <div class="modal-actions">
           <button id="er-return" class="btn-ghost">RETURN TO COMMAND</button>
           <button id="new-game-button" class="btn-primary" style="margin-left:auto">&#9654; NEW ENGAGEMENT</button>

@@ -2,7 +2,9 @@
 
 const TITLE_EL_ID = 'title-screen';
 
-function $(id) { return document.getElementById(id); }
+function $(id) {
+  return document.getElementById(id);
+}
 
 export function show() {
   const el = $(TITLE_EL_ID);
@@ -13,6 +15,9 @@ export function show() {
   startUtcTick();
   focusMenu();
   globalThis.refreshEmptyStateCTA?.();
+  // The title-screen ad container is only laid out once the screen is visible;
+  // AdSense measures 0 width inside a [hidden] ancestor and gives up.
+  globalThis.__RC9_ADSENSE__?.refresh();
 }
 
 export function hide() {
@@ -28,7 +33,8 @@ function refreshOperator() {
   if (!opEl) return;
   let name = 'OPERATOR';
   try {
-    const stored = localStorage.getItem('rc9.callsign.slot.0') || localStorage.getItem('rc9.player.name.0');
+    const stored =
+      localStorage.getItem('rc9.callsign.slot.0') || localStorage.getItem('rc9.player.name.0');
     if (stored && stored.trim()) name = stored.trim().toUpperCase();
   } catch {}
   opEl.textContent = `OP // ${name}`;
@@ -38,9 +44,9 @@ function refreshBuild() {
   const el = $('ts-build');
   if (!el) return;
   // Vite injects these at build time via define{} in vite.config.js
-  const v = (typeof __BUILD_VERSION__ !== 'undefined') ? __BUILD_VERSION__ : '0.0.0';
-  const h = (typeof __BUILD_HASH__ !== 'undefined') ? __BUILD_HASH__ : 'dev';
-  const d = (typeof __BUILD_DATE__ !== 'undefined') ? __BUILD_DATE__.slice(0, 10) : '';
+  const v = typeof __BUILD_VERSION__ !== 'undefined' ? __BUILD_VERSION__ : '0.0.0';
+  const h = typeof __BUILD_HASH__ !== 'undefined' ? __BUILD_HASH__ : 'dev';
+  const d = typeof __BUILD_DATE__ !== 'undefined' ? __BUILD_DATE__.slice(0, 10) : '';
   el.textContent = `RC-9 v${v} · build ${h}${d ? ' · ' + d : ''}`;
 }
 
@@ -58,7 +64,12 @@ function startUtcTick() {
   tick();
   utcTimer = setInterval(tick, 1000);
 }
-function stopUtcTick() { if (utcTimer) { clearInterval(utcTimer); utcTimer = null; } }
+function stopUtcTick() {
+  if (utcTimer) {
+    clearInterval(utcTimer);
+    utcTimer = null;
+  }
+}
 
 function focusMenu() {
   const first = document.querySelector('#title-screen .ts-item:not([hidden]):not(:disabled)');
@@ -103,10 +114,12 @@ function bindMenu() {
       handleAction(actionFor(btn));
     });
   });
-  document.addEventListener('keydown', (e) => {
+  document.addEventListener('keydown', e => {
     const el = $(TITLE_EL_ID);
     if (!el || el.hasAttribute('hidden')) return;
-    const items = Array.from(document.querySelectorAll('#title-screen .ts-item:not([hidden]):not(:disabled)'));
+    const items = Array.from(
+      document.querySelectorAll('#title-screen .ts-item:not([hidden]):not(:disabled)')
+    );
     if (!items.length) return;
     const idx = items.findIndex(i => i === document.activeElement);
     if (e.key === 'ArrowDown') {

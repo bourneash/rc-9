@@ -775,6 +775,9 @@ function openGameOverModal() {
   modal.classList.remove('hidden');
   activateModalA11y(modal, '#new-game-button');
   ensureGameOverModalHandlers();
+  // Same as the title screen: fill the report's ad slot only now that the
+  // dialog is open and the container has a real width.
+  globalThis.__RC9_ADSENSE__?.refresh();
   try {
     saveLastUIState('options');
   } catch {}
@@ -983,45 +986,84 @@ function wirePillGroup(group, getCurrent, setCurrent) {
     const cur = String(getCurrent() ?? '');
     pills.forEach(p => p.classList.toggle('selected', p.dataset.pill === cur));
   }
-  pills.forEach(p => p.addEventListener('click', () => {
-    setCurrent(p.dataset.pill);
-    reflect();
-  }));
+  pills.forEach(p =>
+    p.addEventListener('click', () => {
+      setCurrent(p.dataset.pill);
+      reflect();
+    })
+  );
   return reflect;
 }
 
-const syncWindPills = wirePillGroup('wind',
+const syncWindPills = wirePillGroup(
+  'wind',
   () => document.querySelector('#new-game-modal input[name="wind"]:checked')?.value,
   v => {
     const r = document.querySelector(`#new-game-modal input[name="wind"][value="${v}"]`);
-    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+    if (r) {
+      r.checked = true;
+      r.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 );
-const syncHealthPills = wirePillGroup('health',
+const syncHealthPills = wirePillGroup(
+  'health',
   () => document.querySelector('#new-game-modal input[name="health"]:checked')?.value,
   v => {
     const r = document.querySelector(`#new-game-modal input[name="health"][value="${v}"]`);
-    if (r) { r.checked = true; r.dispatchEvent(new Event('change', { bubbles: true })); }
+    if (r) {
+      r.checked = true;
+      r.dispatchEvent(new Event('change', { bubbles: true }));
+    }
   }
 );
 const ammoSelect = document.getElementById('setup-ammo-mode');
-const syncAmmoModePills = wirePillGroup('ammo-mode',
+const syncAmmoModePills = wirePillGroup(
+  'ammo-mode',
   () => ammoSelect?.value,
-  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+  v => {
+    if (ammoSelect) {
+      ammoSelect.value = v;
+      ammoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 );
-const syncAmmoPresetPills = wirePillGroup('ammo-preset',
+const syncAmmoPresetPills = wirePillGroup(
+  'ammo-preset',
   () => ammoSelect?.value,
-  v => { if (ammoSelect) { ammoSelect.value = v; ammoSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+  v => {
+    if (ammoSelect) {
+      ammoSelect.value = v;
+      ammoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 );
 
 const timeSelect = document.getElementById('setup-time');
-const syncTimePills = wirePillGroup('time',
+const syncTimePills = wirePillGroup(
+  'time',
   () => timeSelect?.value,
-  v => { if (timeSelect) { timeSelect.value = v; timeSelect.dispatchEvent(new Event('change', { bubbles: true })); } }
+  v => {
+    if (timeSelect) {
+      timeSelect.value = v;
+      timeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
 );
 
 // ===== Tank callsign helpers =====
-const CALLSIGNS = ['JAGUAR', 'VIPER', 'RAVEN', 'HAWK', 'COBRA', 'FALCON', 'GHOST', 'WOLF', 'OWL', 'BEAR'];
+const CALLSIGNS = [
+  'JAGUAR',
+  'VIPER',
+  'RAVEN',
+  'HAWK',
+  'COBRA',
+  'FALCON',
+  'GHOST',
+  'WOLF',
+  'OWL',
+  'BEAR',
+];
 
 function defaultCallsign(slotIdx) {
   try {
@@ -1036,7 +1078,9 @@ function defaultCallsign(slotIdx) {
 }
 
 function saveCallsign(slotIdx, name) {
-  try { localStorage.setItem(`rc9.callsign.slot.${slotIdx}`, name); } catch {}
+  try {
+    localStorage.setItem(`rc9.callsign.slot.${slotIdx}`, name);
+  } catch {}
 }
 
 // ===== Briefing stepper (slot count) =====
@@ -1051,8 +1095,12 @@ function saveCallsign(slotIdx, name) {
     }
     if (stepperVal) stepperVal.textContent = String(n).padStart(2, '0');
   }
-  document.getElementById('setup-slots-minus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) - 1));
-  document.getElementById('setup-slots-plus')?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) + 1));
+  document
+    .getElementById('setup-slots-minus')
+    ?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) - 1));
+  document
+    .getElementById('setup-slots-plus')
+    ?.addEventListener('click', () => setSlotCount(parseInt(totalInput?.value || '4', 10) + 1));
   // Initial reflect on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', () => {
     if (totalInput) setSlotCount(parseInt(totalInput.value || '4', 10));
@@ -1069,7 +1117,8 @@ function saveCallsign(slotIdx, name) {
     const t = e.target;
     if (t && t.tagName === 'SELECT') return;
     // Skip if focus is on the Reset/Cancel buttons — Enter on them should activate them, not Start.
-    if (t && (t.id === 'setup-reset' || t.id === 'setup-cancel' || t.id === 'briefing-close')) return;
+    if (t && (t.id === 'setup-reset' || t.id === 'setup-cancel' || t.id === 'briefing-close'))
+      return;
     e.preventDefault();
     document.getElementById('setup-start')?.click();
   });

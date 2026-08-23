@@ -206,3 +206,25 @@
   .ts-menu { left: 24px; right: 24px; top: auto; bottom: 80px; transform: none; min-width: 0; }
   .ts-uplink { font-size: 9px; }
 }
+
+/* --- Ad band ---------------------------------------------------------------
+   Sits bottom-left of the title screen, clear of the right-hand menu column and
+   above the 36px .ts-foot strip. Only ever visible on the main menu — never
+   during a match. Hidden below 760px, where .ts-menu relocates to the bottom of
+   the viewport and would collide with it. */
+.ts-ad {
+  position: absolute;
+  left: clamp(24px, 6vw, 80px);
+  bottom: 52px;
+  z-index: 1;
+  width: min(728px, 42vw);
+  max-height: 90px;
+  overflow: hidden;
+  border: var(--border-line);
+  background: rgba(0, 0, 0, 0.35);
+}
+.ts-ad[hidden] { display: none; }
+
+@media (max-width: 760px), (max-height: 620px) {
+  .ts-ad { display: none; }
+}

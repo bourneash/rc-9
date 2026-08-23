@@ -686,3 +686,14 @@
 
 /* Spacing fix for the roster panel — give it room */
 .briefing-panel[data-panel="roster"] #setup-slots { margin-top: 4px; }
+
+/* --- End-of-round ad slot ---------------------------------------------------
+   Rendered inside the Engagement Report between the stats block and the action
+   buttons. This modal only opens once a match is over, so the unit can never
+   sit over live gameplay. Collapses when unfilled (see /adsense.js). */
+.er-ad {
+  margin: 12px 18px 0;
+  max-height: 90px;
+  overflow: hidden;
+}
+.er-ad[hidden] { display: none; }
