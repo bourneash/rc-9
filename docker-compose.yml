@@ -15,6 +15,10 @@ name: rc-9-ops
 
 services:
   worker:
+    mem_limit: 8g
+    pids_limit: 2048
+    cap_drop:
+      - ALL
     image: fleet-site-worker:latest
     # One-shot — only invoked via `docker compose run --rm worker <role>`.
     profiles: ["manual"]
@@ -54,6 +58,10 @@ services:
     networks: [ops]
 
   cron:
+    mem_limit: 1g
+    pids_limit: 512
+    cap_drop:
+      - ALL
     image: fleet-site-cron:latest
     container_name: rc-9-cron
     restart: unless-stopped
