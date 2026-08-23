@@ -15,10 +15,7 @@ name: rc-9-ops
 
 services:
   worker:
-    build:
-      context: ./ops/docker
-      dockerfile: Dockerfile.worker
-    image: rc-9-worker:latest
+    image: fleet-site-worker:latest
     # One-shot — only invoked via `docker compose run --rm worker <role>`.
     profiles: ["manual"]
     security_opt:
@@ -57,15 +54,17 @@ services:
     networks: [ops]
 
   cron:
-    build:
-      context: ./ops/docker
-      dockerfile: Dockerfile.cron
-    image: rc-9-cron:latest
+    image: fleet-site-cron:latest
     container_name: rc-9-cron
     restart: unless-stopped
     security_opt:
       - no-new-privileges:true
     volumes:
+      # Crontab is BIND-MOUNTED, never baked into the image: editing
+      # ops/docker/crontab.docker and restarting this container is the whole
+      # reschedule procedure. Baking it is what let schedules silently
+      # diverge from the repo for days at a time.
+      - ./ops/docker/crontab.docker:/etc/crontab.docker:ro
       # Docker socket so this container can invoke `docker compose run`.
       - /var/run/docker.sock:/var/run/docker.sock
       # CRITICAL: bind the host project at the SAME absolute path inside cron so
@@ -77,6 +76,8 @@ services:
       - ${HOME:-/home/jesse}/projects/domains/.env:${PWD:-/home/jesse/projects/domains/sites/rc-9.com}/.env.shared:ro
     working_dir: ${PWD:-/home/jesse/projects/domains/sites/rc-9.com}
     environment:
+      SITE_NAME: rc-9.com
+      FLEET_WORKER_IMAGE: fleet-site-worker:latest
       TZ: America/New_York
       COMPOSE_PROJECT_NAME: rc-9-ops
       HOME: ${HOME:-/home/jesse}
