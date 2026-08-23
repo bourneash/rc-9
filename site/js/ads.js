@@ -12,13 +12,18 @@ const AdAPI = {
   _prerollShown: false,
 
   // Detect whether we should load ads at all.
-  // Rules: enable if embedded in iframe (portal), OR explicitly opted in via URL param, OR in production on rc-9.com.
+  // Rules: enable only when embedded in a portal iframe, or explicitly opted in
+  // via ?ads=1 for testing.
+  //
+  // Deliberately NOT enabled on rc-9.com itself: our own domain monetises via
+  // Google AdSense (/adsense.js), and a GameDistribution preroll there would
+  // gate the first match behind a video ad. The GD SDK is also not in the site
+  // CSP, so on rc-9.com it only ever produced a blocked-script console error.
   shouldEnable() {
     try {
       const inIframe = window.self !== window.top;
       const urlOptIn = new URLSearchParams(location.search).has('ads');
-      const onProd = /rc-9\.com$/.test(location.hostname);
-      return inIframe || urlOptIn || onProd;
+      return inIframe || urlOptIn;
     } catch {
       return true; // if cross-origin throws, we're in iframe → portal
     }

@@ -4,9 +4,10 @@
 //   1. NEVER cover the play surface. Units only render into explicit
 //      [data-rc9-ad] containers that live on the title screen, inside the
 //      end-of-round Engagement Report, or on the static content pages.
-//   2. Anchor / vignette / interstitial auto-formats are suppressed. A
-//      full-viewport canvas game with a bottom HUD cannot tolerate an anchor
-//      ad — it sits directly over the controls bar.
+//   2. Anchor / vignette / interstitial auto-formats must stay OFF for this
+//      site in the AdSense console. A full-viewport canvas game with a bottom
+//      HUD cannot tolerate an anchor ad — it sits directly over the controls
+//      bar — and a vignette fires between screens, i.e. mid-session.
 //   3. Unfilled units collapse to zero height so the layout never shows a
 //      dead grey rectangle.
 //   4. Served from an external file because the site CSP has no
@@ -45,13 +46,13 @@
     };
     document.head.appendChild(s);
 
-    // Suppress auto-placed overlay formats. Manual units only.
+    // NOTE: do not push an `enable_page_level_ads` config here. The loader
+    // script already pushes one when Auto ads is on for the account, and a
+    // second push throws "Only one 'enable_page_level_ads' allowed per page",
+    // which aborts the whole queue. Anchor and vignette formats are turned off
+    // per-site in the AdSense console (Ads → By site → rc-9.com → Auto ads),
+    // not from here.
     window.adsbygoogle = window.adsbygoogle || [];
-    window.adsbygoogle.push({
-      google_ad_client: CLIENT,
-      enable_page_level_ads: false,
-      overlays: { bottom: false },
-    });
 
     renderAll();
   }
