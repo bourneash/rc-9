@@ -76,13 +76,18 @@
 
   // Footer "Cookie prefs" link: clear the stored choice and re-prompt.
   function wirePrefsLink() {
-    var prefs = document.getElementById('rc9-cookie-prefs');
-    if (!prefs) return;
-    prefs.addEventListener('click', function (e) {
-      e.preventDefault();
-      localStorage.removeItem(STORAGE_KEY);
-      location.reload();
-    });
+    // Footer control plus any in-copy "Cookie prefs" link (privacy.html has one).
+    var links = document.querySelectorAll('#rc9-cookie-prefs, #rc9-cookie-prefs-inline');
+    for (var i = 0; i < links.length; i++) {
+      links[i].addEventListener('click', function (e) {
+        e.preventDefault();
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {}
+        updateConsent('denied');
+        location.reload();
+      });
+    }
   }
 
   // Build the banner for pages that don't ship the markup inline.
