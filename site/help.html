@@ -84,6 +84,7 @@
     .page-ad { margin: 32px 0 0; min-height: 0; }
     .page-ad[hidden] { display: none; }
   </style>
+  <script src="/consent.js" defer></script>
   <script src="/adsense.js" defer></script>
 </head>
 <body>
@@ -146,5 +147,11 @@
   </div>
 
   <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
+  <div style="position:fixed;bottom:4px;left:8px;z-index:999;display:flex;gap:10px;">
+    <a href="/" style="font-size:10px;opacity:0.35;color:#888;font-family:monospace;text-decoration:none;">Game</a>
+    <a href="/privacy" style="font-size:10px;opacity:0.35;color:#888;font-family:monospace;text-decoration:none;">Privacy</a>
+    <a href="/terms" style="font-size:10px;opacity:0.35;color:#888;font-family:monospace;text-decoration:none;">Terms</a>
+    <a href="#" id="rc9-cookie-prefs" style="font-size:10px;opacity:0.35;color:#888;font-family:monospace;text-decoration:none;">Cookie prefs</a>
+  </div>
 </body>
 </html>
