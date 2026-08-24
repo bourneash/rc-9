@@ -64,3 +64,25 @@
 🔧 **Work done** — engineer run complete
 
 render 1/2 pages · tree clean · main synced · CF live · 0 task(s) · 02:48 ET
+
+## Run — 2026-08-19 14:23 UTC
+
+🔧 **Work done** — engineer run complete
+
+render 0/2 pages · tree clean · main synced · CF DOWN · 0 task(s) · 10:18 ET
+
+## Run — 2026-08-19 15:50 UTC
+
+🔧 **Incident resolved** — watchdog task 958faf2f7df1 closed · render 2/2 ok · CF ok · 11:48 ET
+
+- Site-down incident `958faf2f7df1` was stuck in `escalated` status blocking watchdog re-arm
+- HTTP 000 events were transient (self-cleared); watchdog repair attempts failed due to API `ConnectionRefused` (infra, not site code)
+- Marked incident `resolved` — watchdog re-armed for future incidents
+- Task moved `backlog/ → done/`
+- No site code changes; build not required
+
+## Run — 2026-08-19 15:49 UTC
+
+🔧 **Work done** — Resolved stale site-down incident 958faf2f7df1 (transient HTTP 000, self-cleared); watchdog re-armed; no site code changes
+
+render 2/2 pages · ⚠ 1 uncommitted src · main synced · CF live · 1 task(s) · 11:48 ET
