@@ -20,12 +20,13 @@
   var CLIENT = 'ca-pub-9826966557108061';
 
   // Ad unit slot IDs, keyed by the data-rc9-ad value on the container.
-  // Empty string = unit not created in the AdSense console yet; the container
-  // stays hidden rather than rendering a broken <ins>.
+  // Created 2026-08-23 under pub-9826966557108061. Empty string = unit not yet
+  // created in the AdSense console; that container stays hidden rather than
+  // rendering a broken <ins>.
   var SLOTS = {
-    'title-screen': '',
-    'engagement-report': '',
-    content: '',
+    'title-screen': '7039650630', // rc9-title-screen (display, horizontal, responsive)
+    'engagement-report': '1643904052', // rc9-engagement-report
+    content: '7167693478', // rc9-content — help / privacy / terms
   };
 
   var loaded = false;
