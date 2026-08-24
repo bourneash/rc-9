@@ -44,19 +44,47 @@ export class AV {
     this._setupFlashEl();
   }
 
+  // One representative file from the sample bank. If this 404s, the bank isn't
+  // deployed and there is no point constructing ~20 Howls that will all fail.
+  static SAMPLE_BANK_SENTINEL = '/assets/audio/cannon1.mp3';
+
   _setupAudioBank() {
-    // Decide whether to use remote audio (CDN) or local synthesized audio only
-    const USE_CDN_AUDIO = true; // default to full SFX via CDN when available
-    if (USE_CDN_AUDIO && globalThis.Howl && globalThis.Howler) {
-      this._setupCdnAudio();
-    } else {
-      this._ensureContext();
-      this._initSynthAudio();
-    }
+    // Always bring up the synthesized layer first. It needs no assets, so audio
+    // works from frame one — and it owns the wind/engine loops, which the
+    // sample bank never provided a substitute for.
+    //
+    // Previously this branch was `const USE_CDN_AUDIO = true`, which meant the
+    // synth layer only ran when Howler was *missing*. In production Howler is
+    // always present, so _initSynthAudio() never ran: wind and engine loops were
+    // permanently dead, and ~20 sample requests 404'd on every single page load
+    // (assets/audio/ has never contained files, and the hardcoded
+    // cdn.jsdelivr.net/gh/AI-UX/sfx fallback repo does not exist either).
+    this._loadPersistedAudioState();
+    this._ensureContext();
+    this._initSynthAudio();
+
+    if (!(globalThis.Howl && globalThis.Howler)) return;
+
+    // Upgrade to the sample bank only if it's actually deployed. Drop real mp3s
+    // into site/assets/audio/ and this lights up on the next load with no code
+    // change.
+    this._probeSampleBank()
+      .then(available => {
+        if (available) this._setupCdnAudio();
+      })
+      .catch(() => {});
   }
 
-  _setupCdnAudio() {
-    // Apply persisted audio state
+  _probeSampleBank() {
+    return fetch(AV.SAMPLE_BANK_SENTINEL, { method: 'HEAD', cache: 'no-store' })
+      .then(r => r.ok)
+      .catch(() => false);
+  }
+
+  // Persisted volume / mute / music-on. This used to live inside
+  // _setupCdnAudio(), which meant the synth-only path silently ignored the
+  // user's saved settings.
+  _loadPersistedAudioState() {
     try {
       const savedVol = Number.parseFloat(localStorage.getItem('se.volume') || '0.7');
       if (Number.isFinite(savedVol)) this.masterVolume = Math.max(0, Math.min(1, savedVol));
@@ -65,6 +93,14 @@ export class AV {
       const savedMusic = localStorage.getItem('se.musicOn');
       this.musicOn = savedMusic !== '0';
     } catch {}
+  }
+
+  _setupCdnAudio() {
+    this._loadPersistedAudioState();
+    // The synth layer is already running by the time we get here (see
+    // _setupAudioBank). Silence its continuous sources so the Howl wind/engine
+    // loops and music don't play on top of them.
+    this._silenceSynthLoops();
 
     // Global volume/mute
     try {
@@ -99,103 +135,79 @@ export class AV {
     this._sfxVolume = 0.7; // default SFX mix (0..1)
     this._musicVolume = 0.5; // default music mix (0..1)
 
-    // Audio helper: try local first, fallback to CDN
-    const audio = (local, cdn) => [local, cdn];
+    // Audio helper. This used to return [local, cdn], but the cdn argument
+    // pointed at cdn.jsdelivr.net/gh/AI-UX/sfx — a repo that does not exist and
+    // 404s for every file — so it only ever doubled the failed requests. Local
+    // path only; the bank is gated behind _probeSampleBank() now anyway.
+    const audio = local => [local];
 
     this.sounds.fire_generic = new Howl({
-      src: audio('/assets/audio/laser1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/laser1.mp3'),
+      src: audio('/assets/audio/laser1.mp3'),
       volume: this._sfxDefaults.fire_generic * this._sfxVolume,
     });
     this.sounds.fire_laser = new Howl({
-      src: audio('/assets/audio/pew1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/pew1.mp3'),
+      src: audio('/assets/audio/pew1.mp3'),
       volume: this._sfxDefaults.fire_laser * this._sfxVolume,
     });
     this.sounds.fire_heavy = new Howl({
-      src: audio('/assets/audio/cannon1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/cannon1.mp3'),
+      src: audio('/assets/audio/cannon1.mp3'),
       volume: this._sfxDefaults.fire_heavy * this._sfxVolume,
     });
     this.sounds.fire_nuke = new Howl({
-      src: audio(
-        '/assets/audio/powerup1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/powerup1.mp3'
-      ),
+      src: audio('/assets/audio/powerup1.mp3'),
       volume: this._sfxDefaults.fire_nuke * this._sfxVolume,
     });
     this.sounds.fire_cluster = new Howl({
-      src: audio(
-        '/assets/audio/shot_alt1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/shot_alt1.mp3'
-      ),
+      src: audio('/assets/audio/shot_alt1.mp3'),
       volume: this._sfxDefaults.fire_cluster * this._sfxVolume,
     });
     this.sounds.fire_homing = new Howl({
-      src: audio('/assets/audio/rocket1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/rocket1.mp3'),
+      src: audio('/assets/audio/rocket1.mp3'),
       volume: this._sfxDefaults.fire_homing * this._sfxVolume,
     });
 
     this.sounds.explosion_small = new Howl({
-      src: audio(
-        '/assets/audio/explosion1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/explosion1.mp3'
-      ),
+      src: audio('/assets/audio/explosion1.mp3'),
       volume: this._sfxDefaults.explosion_small * this._sfxVolume,
     });
     this.sounds.explosion_heavy = new Howl({
-      src: audio(
-        '/assets/audio/explosion_heavy1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/explosion_heavy1.mp3'
-      ),
+      src: audio('/assets/audio/explosion_heavy1.mp3'),
       volume: this._sfxDefaults.explosion_heavy * this._sfxVolume,
     });
     this.sounds.explosion_nuke = new Howl({
-      src: audio(
-        '/assets/audio/explosion_long.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/explosion_long.mp3'
-      ),
+      src: audio('/assets/audio/explosion_long.mp3'),
       volume: this._sfxDefaults.explosion_nuke * this._sfxVolume,
     });
     this.sounds.nukeCharge = this.sounds.fire_nuke;
     this.sounds.nukeBlast = this.sounds.explosion_nuke;
 
     this.sounds.ufo_whoosh = new Howl({
-      src: audio('/assets/audio/ufo1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/ufo1.mp3'),
+      src: audio('/assets/audio/ufo1.mp3'),
       volume: this._sfxDefaults.ufo_whoosh * this._sfxVolume,
     });
     this.sounds.plane_flyby = new Howl({
-      src: audio('/assets/audio/plane1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/plane1.mp3'),
+      src: audio('/assets/audio/plane1.mp3'),
       volume: this._sfxDefaults.plane_flyby * this._sfxVolume,
     });
     this.sounds.paratrooper_drop = new Howl({
-      src: audio(
-        '/assets/audio/parachute1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/parachute1.mp3'
-      ),
+      src: audio('/assets/audio/parachute1.mp3'),
       volume: this._sfxDefaults.paratrooper_drop * this._sfxVolume,
     });
     this.sounds.parachute_deploy = new Howl({
-      src: audio(
-        '/assets/audio/cloth_pop1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/cloth_pop1.mp3'
-      ),
+      src: audio('/assets/audio/cloth_pop1.mp3'),
       volume: this._sfxDefaults.parachute_deploy * this._sfxVolume,
     });
     this.sounds.crate_inbound = new Howl({
-      src: audio(
-        '/assets/audio/radio_ping1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/radio_ping1.mp3'
-      ),
+      src: audio('/assets/audio/radio_ping1.mp3'),
       volume: this._sfxDefaults.crate_inbound * this._sfxVolume,
     });
     this.sounds.crate_pickup = new Howl({
-      src: audio('/assets/audio/pickup1.mp3', 'https://cdn.jsdelivr.net/gh/AI-UX/sfx/pickup1.mp3'),
+      src: audio('/assets/audio/pickup1.mp3'),
       volume: this._sfxDefaults.crate_pickup * this._sfxVolume,
     });
 
     this.windLoop = new Howl({
-      src: audio(
-        '/assets/audio/wind_loop.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/wind_loop.mp3'
-      ),
+      src: audio('/assets/audio/wind_loop.mp3'),
       loop: true,
       volume: 0,
     });
@@ -205,28 +217,16 @@ export class AV {
       console.warn('[AV] Failed to play wind loop:', e.message);
     }
     this.engineLoop = new Howl({
-      src: audio(
-        '/assets/audio/engine_loop1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/engine_loop1.mp3'
-      ),
+      src: audio('/assets/audio/engine_loop1.mp3'),
       loop: true,
       volume: 0,
     });
 
     // Background music (simple playlist) - local first, CDN fallback
     const tracks = [
-      audio(
-        '/assets/audio/music/chip1.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/music/chip1.mp3'
-      ),
-      audio(
-        '/assets/audio/music/chip2.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/music/chip2.mp3'
-      ),
-      audio(
-        '/assets/audio/music/chip3.mp3',
-        'https://cdn.jsdelivr.net/gh/AI-UX/sfx/music/chip3.mp3'
-      ),
+      audio('/assets/audio/music/chip1.mp3'),
+      audio('/assets/audio/music/chip2.mp3'),
+      audio('/assets/audio/music/chip3.mp3'),
     ];
     this._musicBaseVolume = 0.25;
     this.music = new Howl({
@@ -673,6 +673,19 @@ export class AV {
       this._musicTimer = setInterval(tick, 250);
     } catch {}
   }
+  // Zero the synth layer's continuous sources when the sample bank takes over.
+  // One-shot fallbacks (_beep/_noiseBurst) stay available — playFire/
+  // playExplosion still fall back to them when an individual Howl isn't loaded.
+  _silenceSynthLoops() {
+    this._stopMusicSynth();
+    try {
+      this._windGain && (this._windGain.gain.value = 0);
+    } catch {}
+    try {
+      this._engineGain && (this._engineGain.gain.value = 0);
+    } catch {}
+  }
+
   _stopMusicSynth() {
     try {
       clearInterval(this._musicTimer);
