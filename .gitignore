@@ -47,8 +47,8 @@ dist/
 .astro/
 site/.astro/
 ops/logs/*
-ops/health/*
-ops/.locks/*
+ops/health/
+ops/.locks/
 ops/board/last-run.json
 ops/facts.yaml
 __pycache__/
@@ -61,6 +61,5 @@ __pycache__/
 **/.claude/settings.local.json
 test-results/
 playwright-report/
-!**/token-usage-*.jsonl
 !**/.gitkeep
 # <<< fleet-git managed block <<<
