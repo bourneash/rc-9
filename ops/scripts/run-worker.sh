@@ -18,8 +18,17 @@ if [[ -f "$SCRIPT_DIR/ops/.${ROLE}-disabled" ]]; then
   exit 0
 fi
 
-if ! docker image inspect rc-9-worker:latest >/dev/null 2>&1; then
-  echo "[$(date -Iseconds)] worker image missing — rebuilding before running $ROLE"
+# The worker runs the SHARED fleet image (tools/fleet-images, consolidated
+# 2026-08-23). The old per-site tag (rc-9-worker:latest) no longer exists, so this
+# check missed on EVERY role invocation and fired the rebuild branch below —
+# a silent no-op today, since the service is image-only with no build: stanza,
+# but it is the same latent trap that made broadwayshowgirls fail hard.
+# Derive the tag from compose so it can never drift again.
+IMG="$(docker compose config --images worker 2>/dev/null | head -1)"
+IMG="${IMG:-fleet-site-worker:latest}"
+
+if ! docker image inspect "$IMG" >/dev/null 2>&1; then
+  echo "[$(date -Iseconds)] worker image ($IMG) missing — rebuilding before running $ROLE"
   # Inside the cron container HOME points to the host home but ~/.docker isn't
   # bind-mounted, so docker compose build fails with "mkdir ~/.docker: permission denied".
   # Fall back to a writable temp dir so the build succeeds from any context.
