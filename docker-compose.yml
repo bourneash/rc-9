@@ -42,7 +42,7 @@ services:
       # Git push via host SSH key (the github-bourneash alias)
       - ${HOME}/.ssh:/home/ops/.ssh:ro
       # Shared CF / affiliate / Slack creds across domain projects
-      - ${HOME}/projects/domains/.env:/work/.env.shared:ro
+      - ${HOME}/projects/domains/tools/env-broker/rendered/rc-9.com.env:/work/.env.shared:ro
       # Shared monorepo tooling (claude-tracked.sh token-usage wrapper, etc.) —
       # without this, $REPO_ROOT/.monorepo-tools is empty and the fallback
       # ../../tools path doesn't exist inside the container either.
@@ -108,7 +108,7 @@ services:
       # Docker config dir — needed when run-worker.sh rebuilds the worker image.
       - ${HOME:-/home/jesse}/.docker:${HOME:-/home/jesse}/.docker
       # Shared credentials (Slack token, CF vars) — sourced at startup by entrypoint-cron.sh.
-      - ${HOME:-/home/jesse}/projects/domains/.env:${PWD:-/home/jesse/projects/domains/sites/rc-9.com}/.env.shared:ro
+      - ${HOME:-/home/jesse}/projects/domains/tools/env-broker/rendered/rc-9.com.env:${PWD:-/home/jesse/projects/domains/sites/rc-9.com}/.env.shared:ro
     working_dir: ${PWD:-/home/jesse/projects/domains/sites/rc-9.com}
     environment:
       SITE_NAME: rc-9.com
