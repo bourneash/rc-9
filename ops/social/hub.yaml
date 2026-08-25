@@ -1,0 +1,44 @@
+# social-hub configuration — rc-9.com
+#
+# A tool, not a content site — it has no article stream to ingest. The channel
+# is managed here so releases and milestones can be posted by hand:
+# `social-hub compose rc-9.com bluesky --body "…"`.
+
+enabled: true
+platforms: [bluesky, console]
+
+approval: manual
+variants_per_source: 2
+max_source_age_hours: 720
+
+cadence:
+  per_platform_per_day: 1
+  min_gap_minutes: 1440
+  quiet_hours: [4, 11]
+  slots: ["20:25"]
+
+reply:
+  enabled: true
+  approval: manual
+  max_per_day: 6
+
+ai:
+  model: claude-sonnet-4-6
+  guardrails: >-
+    Never invent gameplay features, release dates or player numbers. Nothing
+    that reads as a real military or emergency communication.
+
+voice: >-
+    A remote-command game — terse, in-world, operator-to-operator. Reads like
+    a dispatch, not a marketing post.
+
+hashtags: []
+link_style: append
+
+platform_overrides:
+  console:
+    approval: auto
+    copy_from: bluesky
+    cadence:
+      per_platform_per_day: 6
+      min_gap_minutes: 30
