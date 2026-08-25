@@ -65,6 +65,33 @@ services:
     image: fleet-site-cron:latest
     container_name: rc-9-cron
     restart: unless-stopped
+    # Tier-1 liveness. supercronic is PID 1 (entrypoint-cron.sh exec's it), so
+    # reading /proc/1/comm is exact, spawns no process, and — unlike the
+    # `pgrep -f supercronic` this replaces — CANNOT match the probe itself.
+    # That old probe was unfailable: the healthcheck's own shell carried the
+    # string "supercronic" in its cmdline, so `pgrep -f` always exited 0 and
+    # the container reported healthy even with a dead scheduler.
+    #
+    # 120s, not 60s: measured cost is ~40ms wall / ~8ms CPU per probe, and the
+    # fleet-wide budget rule is no interval below 60s and NO network/docker-CLI
+    # inside a container healthcheck. See tools/fleet-images/README.md —
+    # autoheal's baked-in 5s probe firing a runc exec every 5s is the incident
+    # that rule exists to prevent.
+    #
+    # This only catches a DEAD supercronic. A WEDGED one still answers here;
+    # that is tier 2's job (tools/scripts/cron-freshness-cron.sh), one host-side
+    # sweep for the whole fleet rather than 26 more per-container probes.
+    healthcheck:
+      test: ["CMD", "grep", "-qx", "supercronic", "/proc/1/comm"]
+      interval: 120s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    labels:
+      # Docker never restarts a container just for going unhealthy. Without
+      # this label the healthcheck above is decoration — vpn-autoheal
+      # (tools/vpn-proxy) is what turns unhealthy into a restart.
+      autoheal: "true"
     security_opt:
       - no-new-privileges:true
     volumes:
