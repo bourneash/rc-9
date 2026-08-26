@@ -20,3 +20,8 @@
 # crontab, same 7,22,37,52 cadence). See that script's header for why: 16
 # identical per-site copies collapsed into one host-level pass since
 # docker.sock is the same shared daemon for every site anyway.
+
+# Promoter — Tue/Fri 8am. Writes evergreen spotlight items about the site
+# itself into ops/social/spotlight/*.md for tools/social-hub to draft from.
+# No deploy, no site/ writes.
+0 8 * * 2,5  bash ops/scripts/run-worker.sh promoter

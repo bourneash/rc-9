@@ -7,6 +7,12 @@
 enabled: true
 platforms: [bluesky, console]
 
+sources:
+  collections:
+    - name: spotlight
+      glob: "ops/social/spotlight/*.md"
+      url_template: "{url}"
+
 approval: manual
 variants_per_source: 2
 max_source_age_hours: 720

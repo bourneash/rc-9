@@ -3,7 +3,7 @@
 # Runs one autonomous role via `claude -p` headless.
 # Cron-safe: explicit PATH, lockfile, timestamped logs, no inherited env assumptions.
 #
-# Roles: planner | news-writer | social-media | newsletter-editor | seo-analyst | engineer | deployer
+# Roles: planner | news-writer | social-media | newsletter-editor | seo-analyst | engineer | deployer | promoter
 
 set -euo pipefail
 
@@ -164,6 +164,7 @@ else
     planner)            MAX_TURNS=30;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
     seo-analyst)        MAX_TURNS=30;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
     deployer)           MAX_TURNS=35;  TIMEOUT=1800;  MODEL="claude-haiku-4-5-20251001" ;;  # 30m
+    promoter)           MAX_TURNS=20;  TIMEOUT=1800;  MODEL="claude-sonnet-4-6"          ;;  # 30m, Tue/Fri
     *)                  MAX_TURNS=40;  TIMEOUT=7200;  MODEL=""                          ;;  # 2h
   esac
 
@@ -241,9 +242,10 @@ os.makedirs(os.path.dirname(path), exist_ok=True)
 json.dump(data, open(path, "w"), indent=2, sort_keys=True)
 PY
 
-# Slack notifications for update and deployer roles only (high-signal).
-# Other roles (planner, seo-analyst, etc.) are low-frequency and post to ops/board/.
-if [[ "$ROLE" == "update" || "$ROLE" == "deployer" ]]; then
+# Slack notifications for update, deployer, and promoter (high-signal / low
+# frequency enough to be worth a heartbeat). Other roles (planner, seo-analyst,
+# etc.) are low-frequency and post to ops/board/ only.
+if [[ "$ROLE" == "update" || "$ROLE" == "deployer" || "$ROLE" == "promoter" ]]; then
   NOTIFY="$REPO_ROOT/ops/scripts/notify-slack.sh"
   CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
 
