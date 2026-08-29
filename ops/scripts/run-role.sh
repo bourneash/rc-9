@@ -158,14 +158,14 @@ elif [[ "$ROLE" == "breaking-news" ]]; then
 else
   # --- Per-role turn budgets, wall-clock timeouts, and model selection ---
   case "$ROLE" in
-    news-writer)        MAX_TURNS=30;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
-    engineer)           MAX_TURNS=50;  TIMEOUT=9000;  MODEL=""                          ;;  # 2.5h
-    newsletter-editor)  MAX_TURNS=35;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
-    planner)            MAX_TURNS=30;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
-    seo-analyst)        MAX_TURNS=30;  TIMEOUT=5400;  MODEL=""                          ;;  # 90m
+    news-writer)        MAX_TURNS=30;  TIMEOUT=5400;  MODEL="claude-sonnet-4-6"          ;;  # 90m
+    engineer)           MAX_TURNS=50;  TIMEOUT=9000;  MODEL="claude-sonnet-4-6"          ;;  # 2.5h
+    newsletter-editor)  MAX_TURNS=35;  TIMEOUT=5400;  MODEL="claude-sonnet-4-6"          ;;  # 90m
+    planner)            MAX_TURNS=30;  TIMEOUT=5400;  MODEL="claude-sonnet-4-6"          ;;  # 90m
+    seo-analyst)        MAX_TURNS=30;  TIMEOUT=5400;  MODEL="claude-sonnet-4-6"          ;;  # 90m
     deployer)           MAX_TURNS=35;  TIMEOUT=1800;  MODEL="claude-haiku-4-5-20251001" ;;  # 30m
     promoter)           MAX_TURNS=20;  TIMEOUT=1800;  MODEL="claude-sonnet-4-6"          ;;  # 30m, Tue/Fri
-    *)                  MAX_TURNS=40;  TIMEOUT=7200;  MODEL=""                          ;;  # 2h
+    *)                  MAX_TURNS=40;  TIMEOUT=7200;  MODEL="claude-sonnet-4-6"          ;;  # 2h
   esac
 
   MODEL_FLAG=""
