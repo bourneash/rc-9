@@ -53,13 +53,29 @@ function buildPageList() {
 
 const PAGES = buildPageList();
 
-function fetchRaw(url) {
+const CURL_TRANSIENT_RE = /Could not resolve host|Couldn't resolve host|Connection reset|Connection refused|Operation timed out|Failed to connect/i;
+
+function fetchRawOnce(url) {
   const out = execFileSync("curl", ["-sS", "-L", "--max-time", "20", "-w", "\\n__HTTP__%{http_code}", url],
     { encoding: "utf8", maxBuffer: 12 * 1024 * 1024 });
   const idx = out.lastIndexOf("\n__HTTP__");
   const body = idx >= 0 ? out.slice(0, idx) : out;
   const status = idx >= 0 ? parseInt(out.slice(idx + 9), 10) : 0;
   return { body, status };
+}
+
+// Retry once on a transient curl error (e.g. DNS blip during a VPN-proxy
+// rotation window — vpn-proxy rotates its tunnel every 15min and the container
+// can briefly lose resolution). A single-shot failure here used to escalate to
+// Slack as "DNS not resolving" even though the domain was fine seconds later.
+function fetchRaw(url) {
+  try {
+    return fetchRawOnce(url);
+  } catch (e) {
+    const msg = String(e.message || e);
+    if (!CURL_TRANSIENT_RE.test(msg)) throw e;
+    return fetchRawOnce(url);
+  }
 }
 
 function evalRaw(pg, body, status) {
