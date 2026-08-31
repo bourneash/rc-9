@@ -3,6 +3,16 @@
 # Rebuilds from Dockerfile.worker if the image is absent (e.g. after docker system prune).
 set -euo pipefail
 
+# --- fleet-worker-ensure: self-heal the shared worker image (2026-08-30) ---
+# fleet-site-worker:latest is TAGGED but cattle (docker compose run --rm, no
+# long-lived container), so nothing protects it from a raw `docker ... prune
+# -a` run outside the sanctioned tools/scripts/gc-docker.sh. Re-check + rebuild
+# centrally on every invocation instead of failing per-job until a human
+# notices the Slack alert storm and runs fleet-image-build by hand.
+_fwe_root="$(git -C "$(dirname "${BASH_SOURCE[0]}")" rev-parse --show-superproject-working-tree 2>/dev/null || true)"
+[[ -n "$_fwe_root" ]] && "$_fwe_root/tools/fleet-images/bin/fleet-worker-ensure"
+# --- end fleet-worker-ensure ---
+
 ROLE="${1:-}"
 if [[ -z "$ROLE" ]]; then
   echo "usage: $0 <role>" >&2
