@@ -177,7 +177,14 @@ d['last_outcome']='self-cleared'
 d['resolved_at']=datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 json.dump(d,open(sys.argv[1],'w'),indent=2)
 PY
-    [[ "${WATCHDOG_DETECT_ONLY:-0}" == "1" ]] || slack "✅ *rc9 watchdog* — \`$rclass\` recovered on its own · ${NOW_ET}" "good"
+    # NOTE: unlike the worker-spin decision, this notify has zero LLM cost —
+    # it's a plain curl to Slack. Reconcile always runs in the cheap detect-only
+    # cron pass (before OPEN is recomputed), so if this were gated on
+    # DETECT_ONLY, a symptom that self-clears between two probes gets marked
+    # resolved right here with no worker ever spun to report it — recovery
+    # goes silent while the original alert stands unresolved-looking in Slack
+    # (rodhat.com 2026-08-30 23:00-23:24 incident; fleet-wide fix 2026-08-31).
+    slack "✅ *rc9 watchdog* — \`$rclass\` recovered on its own · ${NOW_ET}" "good"
   else
     STILL_OPEN+=("$rec")
   fi
