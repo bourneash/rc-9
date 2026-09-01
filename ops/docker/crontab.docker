@@ -24,4 +24,4 @@
 # Promoter — Tue/Fri 8am. Writes evergreen spotlight items about the site
 # itself into ops/social/spotlight/*.md for tools/social-hub to draft from.
 # No deploy, no site/ writes.
-0 8 * * 2,5  bash ops/scripts/run-worker.sh promoter
+53 8 * * 2,5  bash ops/scripts/run-worker.sh promoter
