@@ -36,6 +36,14 @@ services:
       - site_node_modules:/work/site/node_modules
       # Claude Code auth — mount ONLY credentials, not the full ~/.claude.
       - ${HOME}/.claude/.credentials.json:/home/ops/.claude/.credentials.json
+      # Cross-container OAuth refresh mutex. Every site bind-mounts the SAME
+      # credentials file above, so a refresh in one container rotates the token
+      # out from under any other container holding a copy of it -- which the
+      # server reads as refresh-token reuse and answers by revoking the whole
+      # family (2026-09-01: 22 co-firing promoters + 2 bystanders, all 401).
+      # claude-tracked.sh flocks this file across the CLI startup window so only
+      # one container at a time reads-and-maybe-rotates the credential.
+      - ${HOME}/.claude/.credentials.lock:/home/ops/.claude/.credentials.lock
       - ${HOME}/.claude.json:/home/ops/.claude-host.json:ro
       # Minimal settings: no plugins, no hooks, no status line.
       - ./ops/docker/worker-claude-settings.json:/home/ops/.claude/settings.json:ro
