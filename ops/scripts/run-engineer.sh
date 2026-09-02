@@ -204,6 +204,21 @@ is more useful than a confident wrong diagnosis, and far less costly.
 If you are re-escalating something you have escalated before, say what is
 DIFFERENT this time; if nothing is, say that too."
 
+# Take the per-site build lock before the model pass, and hold it through the
+# authoritative build gate below. Both this pass and that gate run
+# `rm -rf dist && npm run build` against the SAME site/dist the deployer uploads
+# from, and the deployer fires every few minutes — on girlpain.com on 2026-09-02
+# that collision shipped manifests missing an arbitrary subset of pages, live,
+# minutes after a deploy had verified all of them as 200.
+#
+# Blocking with a timeout rather than skipping: the engineer has real work to do
+# and a deploy is short. The deployer's own lock is non-blocking, so it simply
+# skips this tick and retries in a few minutes with .deploy-needed still set.
+BUILD_LOCK="$REPO_ROOT/ops/.locks/deploy-build.lock"
+mkdir -p "$(dirname "$BUILD_LOCK")" 2>/dev/null || true
+exec 8>"$BUILD_LOCK"
+flock -w 900 8 || log "WARNING: build lock not acquired after 900s — proceeding, dist may race a deploy"
+
 log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # Revoke git-push capability for the model pass (the wrapper does the build-gated
 # push). GIT_SSH_COMMAND=/bin/false means a misbehaving model can't reach the remote
