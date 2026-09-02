@@ -183,6 +183,11 @@ Queued engineer tasks (in ops/tasks/backlog/, up to 3): ${QUEUE_LIST:-none}
 3. After edits, run \`cd site && npm run build\` — it MUST pass. If it fails, REVERT your
    change (don't leave the tree broken) and escalate it instead.
 4. Do NOT git commit or git push — the wrapper handles build-gating, commit, and push.
+4b. Do NOT deploy. Never run wrangler, npm run deploy, or ops/scripts/deploy.sh.
+   Publishing is the deployer role's job and it is the only path with a clean
+   build, an identity gate and post-deploy verification. If a deploy is needed,
+   run: touch .deploy-needed — that is your entire lever. Your Cloudflare
+   credentials are blanked for this pass, so a deploy attempt will just fail.
 5. Do NOT touch legal/disclosure pages, _headers CSP, or add runtime/third-party JS.
    Anything risky or unresolved → escalate via the output line below.
 6. Append a concise run block to ops/board/engineer-log.md.
@@ -196,8 +201,9 @@ ENGINEER_ESCALATE=<none, or one short line naming what needs the owner>
 State only what you VERIFIED this run, and say how you verified it. Do not
 assert an external cause (expired domain, registrar, DNS delegation, a third
 party's outage) unless you actually checked it and can name the check — on
-2026-09-02 this role told the owner seven times to "check domain registration
-renewal" for a domain that was registered, delegated and serving correctly;
+2026-09-02 this role told the owner seven times to go and check a domain
+registration renewal for a domain that was registered, delegated and serving
+correctly;
 the real cause was this site's own deploy script deleting its DNS record. If
 you do not know the cause, escalate the SYMPTOM plus what you ruled out. That
 is more useful than a confident wrong diagnosis, and far less costly.
@@ -224,7 +230,7 @@ log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # push). GIT_SSH_COMMAND=/bin/false means a misbehaving model can't reach the remote
 # despite --dangerously-skip-permissions + mounted SSH keys.
 set +e
-GIT_SSH_COMMAND='/bin/false' GIT_TERMINAL_PROMPT=0 \
+GIT_SSH_COMMAND='/bin/false' GIT_TERMINAL_PROMPT=0 CLOUDFLARE_API_TOKEN= CLOUDFLARE_ACCOUNT_ID= CF_API_TOKEN= \
 timeout "$WORK_TIMEOUT" "$CLAUDE_TRACKED" "$PROMPT" --output-format text --model "$MODEL" \
   --max-turns "$MAX_TURNS" --dangerously-skip-permissions > "$RESULT_FILE" 2>>"$LOG"
 CLAUDE_EXIT=$?
