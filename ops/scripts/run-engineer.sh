@@ -190,7 +190,19 @@ Queued engineer tasks (in ops/tasks/backlog/, up to 3): ${QUEUE_LIST:-none}
 ## Output — your LAST THREE LINES, exact format, nothing after:
 ENGINEER_CHANGED=<0 if you edited no shippable files, 1 if you did>
 ENGINEER_SUMMARY=<one short line for Slack>
-ENGINEER_ESCALATE=<none, or one short line naming what needs the owner>"
+ENGINEER_ESCALATE=<none, or one short line naming what needs the owner>
+
+## Rules for ENGINEER_ESCALATE
+State only what you VERIFIED this run, and say how you verified it. Do not
+assert an external cause (expired domain, registrar, DNS delegation, a third
+party's outage) unless you actually checked it and can name the check — on
+2026-09-02 this role told the owner seven times to "check domain registration
+renewal" for a domain that was registered, delegated and serving correctly;
+the real cause was this site's own deploy script deleting its DNS record. If
+you do not know the cause, escalate the SYMPTOM plus what you ruled out. That
+is more useful than a confident wrong diagnosis, and far less costly.
+If you are re-escalating something you have escalated before, say what is
+DIFFERENT this time; if nothing is, say that too."
 
 log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # Revoke git-push capability for the model pass (the wrapper does the build-gated
@@ -252,9 +264,200 @@ if [[ "$CHANGED" == "1" ]]; then
   fi
 fi
 
+# --- escalation de-duplication ------------------------------------------
+# An escalation that repeats unchanged is ONE piece of news, not one per tick.
+# girlpain.com posted the same "needs owner" line 7 times in 5 hours on
+# 2026-09-02 (01:38, 02:38, 03:08, 03:38, 05:08, 05:38, 06:38); every message
+# was identical and none of them said it was a repeat, so the fact that six
+# automated repairs in a row had failed to hold — the single most useful signal
+# available — never reached the channel.
+#
+# Same escalation text => same fingerprint => one record in
+# ops/health/escalations/. First sighting posts at once; repeats post on a
+# widening backoff and say how many times and for how long.
+ESC_DIR="$REPO_ROOT/ops/health/escalations"
+
+# Notify decision + message enrichment. Echoes the text to post, or nothing if
+# this repeat is inside its backoff window. Never fails the caller: a
+# bookkeeping problem must not swallow an escalation, so any error falls through
+# to "post it".
+escalation_message() {  # $1=escalate text  $2=summary text
+  local esc="$1" summary="$2"
+  mkdir -p "$ESC_DIR" 2>/dev/null || { printf '%s' "⚠️ *rc-9 engineer* — needs owner · ${NOW_ET}\nAsk: ${esc}\nTried: ${summary}"; return; }
+  python3 - "$ESC_DIR" "$esc" "$summary" "$NOW_ET" <<'PY' 2>/dev/null || printf '%s' "⚠️ *rc-9 engineer* — needs owner · ${NOW_ET}\nAsk: ${esc}\nTried: ${summary}"
+import hashlib, json, os, re, sys, time
+
+esc_dir, esc, summary, now_et = sys.argv[1:5]
+LABEL = "rc-9"
+
+# Matching escalations is a fuzzy problem, not an exact one: this text is
+# written fresh by a model every run, so the same standing problem arrives
+# reworded each time. On 2026-09-02 the same fault was escalated as
+# "ECR concurrent deploy keeps re-corrupting girlpain-com worker", then
+# "ECR deployer keeps overwriting girlpain-com worker every ~30min", then
+# "ECR deployer keeps overwriting girlpain-com Worker" — one problem, three
+# spellings. Hashing the normalised string treats those as three separate
+# first-sightings and the de-duplication does nothing.
+#
+# So: compare token sets against the open records and reuse the closest one
+# above a similarity floor. Numbers, hex ids and stopwords are dropped first,
+# since "(x9+)" vs "(x10+)" and "the/a/is" carry no signal about WHICH problem
+# this is.
+STOP = {"the", "a", "an", "is", "are", "was", "were", "and", "or", "but", "for",
+        "to", "of", "in", "on", "at", "by", "it", "its", "this", "that", "must",
+        "needs", "need", "owner", "jesse", "check", "fix", "keeps", "every",
+        "com", "not", "no", "be", "been", "has", "have", "with", "from"}
+# The site's own name appears in nearly every escalation it writes, so leaving
+# it in hands every pair of unrelated faults a free token of overlap and makes
+# the scores dishonest.
+STOP |= {w for w in re.split(r"[^a-z]+", LABEL.lower()) if w}
+
+
+def stem(w):
+    """Crudest possible stemmer, and deliberately so. It exists for exactly one
+    job: make "deploy"/"deployer"/"deploying" and "resolve"/"resolving" collide,
+    because the model rewords the same fault that way between runs. Anything
+    more ambitious would need a dependency this container does not have."""
+    for suf in ("ing", "ers", "er", "ed", "es", "s"):
+        if len(w) > len(suf) + 2 and w.endswith(suf):
+            return w[: -len(suf)]
+    return w
+
+
+def tokens(text):
+    t = re.sub(r"[0-9a-f]{6,}|\d+", " ", text.lower())
+    t = re.sub(r"[^a-z ]+", " ", t)
+    return {stem(w) for w in t.split() if len(w) >= 3 and w not in STOP}
+
+
+def overlap(new, vocab):
+    """What fraction of THIS escalation's words the record has already seen.
+
+    Deliberately not Jaccard. A record accumulates every wording of its fault,
+    so its vocabulary only grows; Jaccard would divide by that growing union and
+    make an established problem progressively HARDER to match — the exact
+    opposite of what is wanted. Dividing by the new escalation's own size keeps
+    the question stable: "is this mostly made of words this problem already
+    uses?"
+    """
+    if not new or not vocab:
+        return 0.0
+    return len(new & vocab) / len(new)
+
+
+mine = tokens(esc)
+rec_path = None
+best = 0.0
+for name in sorted(os.listdir(esc_dir)) if os.path.isdir(esc_dir) else []:
+    if not name.endswith(".json"):
+        continue
+    try:
+        with open(os.path.join(esc_dir, name)) as f:
+            other = json.load(f)
+    except Exception:
+        continue
+    vocab = set(other.get("vocab") or []) | tokens(other.get("escalation", ""))
+    shared = len(mine & vocab)
+    score = overlap(mine, vocab)
+    # 0.34 + at least two shared words, measured against the 2026-09-02 girlpain
+    # transcript: every rewording of the cross-bind fault scores 0.6+ against its
+    # record and every rewording of the DNS fault 0.4+, while the two faults score
+    # 0.2 against each other. The two-word floor stops a very short escalation
+    # from matching on a single incidental token.
+    if score > best and score >= 0.34 and (shared >= 2 or len(mine) < 3):
+        best, rec_path = score, os.path.join(esc_dir, name)
+
+if rec_path is None:
+    fp = hashlib.sha1(" ".join(sorted(mine)).encode()).hexdigest()[:12]
+    rec_path = os.path.join(esc_dir, fp + ".json")
+fp = os.path.basename(rec_path)[:-5]
+
+now = time.time()
+rec = {}
+if os.path.exists(rec_path):
+    try:
+        with open(rec_path) as f:
+            rec = json.load(f)
+    except Exception:
+        rec = {}
+
+first = rec.get("first_seen", now)
+count = int(rec.get("count", 0)) + 1
+last_notified = rec.get("last_notified", 0)
+
+# Widening backoff. The 2nd sighting posts immediately because "it came back"
+# is genuinely new information; after that the channel hears about it less and
+# less often, but never stops hearing about it.
+if count == 1 or count == 2:
+    due = True
+else:
+    hours = 1 if count <= 4 else (4 if count <= 8 else (12 if count <= 16 else 24))
+    due = (now - last_notified) >= hours * 3600
+
+rec.update({"fingerprint": fp, "first_seen": first, "count": count,
+            "escalation": esc, "last_seen": now,
+            # Accumulated vocabulary across every wording of this fault, so the
+            # next rewording still matches it.
+            "vocab": sorted(set(rec.get("vocab") or []) | mine)})
+if due:
+    rec["last_notified"] = now
+try:
+    tmp = rec_path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(rec, f, indent=2)
+    os.replace(tmp, rec_path)
+except Exception:
+    pass
+
+# Prune records untouched for a week so a fixed problem stops aging here.
+for p in os.listdir(esc_dir):
+    if not p.endswith(".json"):
+        continue
+    full = os.path.join(esc_dir, p)
+    try:
+        if now - os.path.getmtime(full) > 7 * 86400:
+            os.remove(full)
+    except Exception:
+        pass
+
+if not due:
+    sys.exit(0)  # inside the backoff window — say nothing
+
+age = now - first
+if age < 3600:
+    age_s = "%dm" % max(1, round(age / 60))
+elif age < 86400:
+    age_s = "%.0fh" % (age / 3600)
+else:
+    age_s = "%.0fd" % (age / 86400)
+
+ordinal = {1: "", 2: "2nd", 3: "3rd"}.get(count, "%dth" % count)
+if count == 1:
+    head = "⚠️ *%s engineer* — needs owner · %s" % (LABEL, now_et)
+else:
+    head = ("\U0001f501 *%s engineer* — needs owner, %s time in %s · %s"
+            % (LABEL, ordinal, age_s, now_et))
+
+lines = [head, "*Ask:* " + esc, "*Tried:* " + summary]
+if count > 1:
+    lines.append(
+        "*Note:* %d automated attempt%s ha%s already failed to make this stick. "
+        "The recurrence is the signal — treat the cause stated above as "
+        "UNCONFIRMED and check it before acting on it."
+        % (count - 1, "" if count - 1 == 1 else "s", "s" if count - 1 == 1 else "ve")
+    )
+print("\n".join(lines))
+PY
+}
+
 # ---- 5. Final Slack + board log ----
 if [[ "$ESCALATE" != "none" && -n "$ESCALATE" ]]; then
-  slack "⚠️ *rc-9 engineer* — needs owner · ${NOW_ET}\n${ESCALATE}\n(did: ${SUMMARY})" "warning"
+  ESC_MSG="$(escalation_message "$ESCALATE" "$SUMMARY")"
+  if [[ -n "$ESC_MSG" ]]; then
+    slack "$ESC_MSG" "warning"
+  else
+    log "escalation unchanged and inside its backoff window — not re-posting to Slack"
+  fi
   board_block "⚠️ **Escalation** — ${ESCALATE}" "Did: ${SUMMARY} · pushed=${PUSHED} · ${STATUS_LINE}"
 elif [[ "$PUSHED" == "1" ]]; then
   slack "🔧 *rc-9 engineer* — ${SUMMARY} · ${NOW_ET}" "good"
