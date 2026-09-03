@@ -18,10 +18,10 @@ variants_per_source: 2
 max_source_age_hours: 720
 
 cadence:
-  per_platform_per_day: 1
-  min_gap_minutes: 1440
+  per_platform_per_day: 2
+  min_gap_minutes: 300
   quiet_hours: [4, 11]
-  slots: ["20:25"]
+  slots: ["15:25", "20:25"]
 
 reply:
   enabled: true
