@@ -33,6 +33,9 @@ ops/logs/engineer-heartbeat-*.jsonl
 ops/health/
 ops/.watchdog-disabled
 
+# Principal engineer kill switch (machine state, not source)
+ops/.principal-engineer-disabled
+
 # >>> fleet-git managed block — edit tools/fleet-git/policy.json, not here >>>
 node_modules/
 dist/

@@ -25,3 +25,14 @@
 # itself into ops/social/spotlight/*.md for tools/social-hub to draft from.
 # No deploy, no site/ writes.
 53 8 * * 2,5  bash ops/scripts/run-worker.sh promoter
+
+# Principal Engineer — every 5 min (offset :01/:06/.../:56 to dodge the
+# deployer's */5 :00 tick, the scraper's */15 :00 tick, and watchdog's
+# :02/17/32/47). Cron-direct like watchdog: a zero-token scan of every Slack
+# error/warning since the last tick (ops/logs/slack-*.jsonl, written by
+# notify-slack.sh) only spins a worker when something distinct and real shows
+# up. Reacts to ANY role/script's failure that reaches Slack — investigates,
+# fixes, hardens, self-reviews, and (build-gated) commits+pushes; flags
+# fleet-wide rollout candidates as a human-triage task rather than acting on
+# them. Kill switch: touch ops/.principal-engineer-disabled.
+1,6,11,16,21,26,31,36,41,46,51,56 * * * *   bash ops/scripts/run-principal-engineer.sh
