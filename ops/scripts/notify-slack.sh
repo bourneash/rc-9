@@ -37,6 +37,14 @@ case "$COLOR" in
   *)       SEVERITY="info" ;;
 esac
 
+# Quiet by default: generic successful role/setup messages are intermediate
+# chatter. Dedicated article/social publishers send the final result directly.
+# Warnings and errors deliberately bypass this gate.
+case "${SLACK_VERBOSE:-}" in
+  1|true|TRUE|yes|YES|on|ON) ;;
+  *) [[ "$SEVERITY" == "info" ]] && exit 0 ;;
+esac
+
 log_to_disk() {
   local repo_root log_dir log_file
   repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)" || return 0
