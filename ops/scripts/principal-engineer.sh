@@ -42,6 +42,39 @@ CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
 log() { echo "[$(date -Iseconds)] principal-engineer: $*" | tee -a "$LOG"; }
 slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/null || true; }
 
+# scan.py sets status="investigating" the moment it dispatches this fp, and
+# only ever retries fingerprints with status in (open, None). Every exit
+# path below this point that bails BEFORE the normal mark_incident() call
+# (further down, after the Claude pass) must reset status back to "open" —
+# otherwise the incident is permanently stuck at "investigating" and can
+# never be retried, even once the underlying condition (dirty tree, dead
+# network) clears. Bit us for real 2026-09-10: weirdgirlstore fp
+# abdc88765e2d hit the uncommitted-edits refusal below and was orphaned.
+reopen_incident() {  # $1=note
+  python3 -c "
+import json, sys
+p = sys.argv[1]
+try:
+    rec = json.load(open(p))
+except Exception:
+    rec = {}
+rec['status'] = 'open'
+rec['last_outcome'] = sys.argv[2]
+json.dump(rec, open(p, 'w'), indent=2)
+" "$INCIDENT_FILE" "$1" 2>/dev/null || true
+}
+
+# Never let one failed/truncated pass leave edits that a later pass mistakes
+# for its own. The worker must start from a clean shippable scope; otherwise
+# stop and preserve the tree for human inspection.
+PREEXISTING_EDITS="$(git status --porcelain -- site/ ops/ .github/ 2>/dev/null || true)"
+if [[ -n "$PREEXISTING_EDITS" ]]; then
+  log "refusing to run: shippable scope already has edits"
+  slack "🔴 *rc-9 principal engineer* refused to start fp=${FP}: site/ops/.github already has uncommitted edits. Nothing was changed or shipped. · ${NOW_ET}" danger
+  reopen_incident "refused: uncommitted edits in shippable scope"
+  exit 1
+fi
+
 # INC_TEXT is untrusted: it's whatever text some role/script posted to Slack,
 # and any role's failure text can echo external content (scraped news,
 # affiliate landing pages, etc.) — so this is a real prompt-injection surface
@@ -56,6 +89,7 @@ INC_ATTEMPT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).g
 # network would otherwise burn a full timed-out claude call for nothing.
 if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthropic.com/" 2>/dev/null; then
   log "network preflight FAILED — skipping this dispatch (no Claude call made)"
+  reopen_incident "deferred: network preflight failed"
   exit 0
 fi
 
