@@ -53,7 +53,7 @@ function buildPageList() {
 
 const PAGES = buildPageList();
 
-const CURL_TRANSIENT_RE = /Could not resolve host|Couldn't resolve host|Connection reset|Connection refused|Operation timed out|Failed to connect/i;
+const CURL_TRANSIENT_RE = /Could not resolve host|Couldn't resolve host|Connection reset|Connection refused|Operation timed out|Connection timed out|curl: \(28\)|Failed to connect/i;
 
 function fetchRawOnce(url) {
   const out = execFileSync("curl", ["-sS", "-L", "--max-time", "20", "-w", "\\n__HTTP__%{http_code}", url],

@@ -86,3 +86,11 @@ render 0/2 pages · tree clean · main synced · CF DOWN · 0 task(s) · 10:18 E
 🔧 **Work done** — Resolved stale site-down incident 958faf2f7df1 (transient HTTP 000, self-cleared); watchdog re-armed; no site code changes
 
 render 2/2 pages · ⚠ 1 uncommitted src · main synced · CF live · 1 task(s) · 11:48 ET
+
+## Run — 2026-09-11 04:18 UTC
+
+🔧 **Check script patched** — sitemap curl: (28) connection timeout false-alarmed; `CURL_TRANSIENT_RE` in `engineer-render-check.mjs` didn't include "Connection timed out" so retry never fired · added `Connection timed out|curl: \(28\)` to transient pattern · build ✓ · 0 tasks · 00:18 ET
+
+- `/sitemap-index.xml` and `/sitemap-0.xml` files are valid and present in `site/public/`; Worker passes all paths to static assets; CF deploy ok
+- Root cause: transient TCP connect timeout during check (curl error 28); retry logic existed but regex gap prevented it firing
+- Fix: `ops/scripts/engineer-render-check.mjs` line 56 — added `Connection timed out|curl: \(28\)` to `CURL_TRANSIENT_RE`
