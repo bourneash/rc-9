@@ -94,3 +94,9 @@ render 2/2 pages · ⚠ 1 uncommitted src · main synced · CF live · 1 task(s)
 - `/sitemap-index.xml` and `/sitemap-0.xml` files are valid and present in `site/public/`; Worker passes all paths to static assets; CF deploy ok
 - Root cause: transient TCP connect timeout during check (curl error 28); retry logic existed but regex gap prevented it firing
 - Fix: `ops/scripts/engineer-render-check.mjs` line 56 — added `Connection timed out|curl: \(28\)` to `CURL_TRANSIENT_RE`
+
+## Run — 2026-09-11 04:20 UTC
+
+🔧 **Work done (deployed)** — patched CURL_TRANSIENT_RE in engineer-render-check.mjs to retry on curl:(28) connection timeout — sitemap files valid, check was false-alarming
+
+render 1/2 pages · tree clean · main synced · CF live · 0 task(s) · 00:18 ET
