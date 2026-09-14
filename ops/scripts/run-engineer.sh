@@ -14,7 +14,7 @@ source "$REPO_ROOT/.monorepo-tools/scripts/ai-usage-bootstrap.sh" 2>/dev/null ||
 LOG="${1:-/dev/stderr}"
 BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
 MODEL="claude-sonnet-4-6"
-MAX_TURNS=25
+MAX_TURNS=30
 WORK_TIMEOUT=2400
 # --- Concurrency + heartbeat tuning (added: split model + work-lock) ---
 # The cheap sweep runs every */30 tick (zero Claude). The Claude WORK PASS is
