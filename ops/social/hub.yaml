@@ -7,6 +7,17 @@
 enabled: true
 platforms: [bluesky, console]
 
+# Existing covers are used first; media-gen supplies image bytes for sources
+# that have no cover yet, before the social adapter publishes the post.
+media:
+  generate_missing: true
+  site: rc-9
+  backend: comfyui
+  profile: fast
+  width: 1216
+  height: 832
+  aspect_ratio: "3:2"
+
 sources:
   collections:
     - name: spotlight
