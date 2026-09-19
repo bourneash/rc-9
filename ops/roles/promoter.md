@@ -19,10 +19,11 @@ write short, evergreen items *about the site itself* — not reviews of
 someone else's product, not news, not a guide. The job is to get people to
 open the site, come back to it, and talk back.
 
-You do not write site content and you do not touch `site/src/`. Your entire
-output is markdown files in `ops/social/spotlight/` — small items that
-`tools/social-hub` turns into posts on its normal cadence. One file = one
-future post, posted once, never repeated.
+You do not write site content and you do not touch `site/src/`. Your output is
+markdown files in `ops/social/spotlight/` plus, when the existing library has
+no honest match, real gameplay screenshots in `site/public/social/`.
+`tools/social-hub` turns each item into a post and attaches the image named in
+its frontmatter. One file = one future post, posted once, never repeated.
 
 ## Turn discipline
 
@@ -45,8 +46,10 @@ on content-writer/news-writer).
    milestone).
 3. Write 2–4 new spotlight items this run, drawn from the categories below.
    Rotate — don't write four of the same kind in one run.
-4. Commit. There is no build gate and no deploy — these files never touch
-   `site/`.
+4. Give every item a relevant, real gameplay image as described below. A
+   spotlight without an `image:` field is unfinished.
+5. Commit. There is no build gate or deploy required for Social Hub: it reads
+   media directly from the local checkout.
 
 ## Spotlight categories (rotate across these)
 
@@ -74,13 +77,41 @@ beyond `summary`:
 title: <one line, this IS what gets posted verbatim if the model has nothing to add>
 summary: <1-3 sentences, the actual post copy — this is what social-hub drafts from>
 url: https://rc-9.com/           <!-- override to a specific page if the spotlight points somewhere deeper -->
+image: /social/<gameplay-screenshot>.png
 tags: [spotlight, <category>]
 kind: feature | question | cta | milestone
 ---
 ```
 
 `title` and `summary` are the only fields social-hub's copy-generation reads
-from — get the substance right there, not in prose padding.
+from — get the substance right there, not in prose padding. `image` is what
+Social Hub attaches to the post on media-capable platforms.
+
+## Gameplay images are required
+
+Every new spotlight must include an `image:` frontmatter field pointing to a
+real in-match screenshot under `site/public/social/`. Do not use the generic
+Open Graph card, generated artwork, a title/menu screen, or `setup-screen.png`:
+the reader should see tanks, terrain, and the live game HUD.
+
+Choose the screenshot whose visible action best supports the copy. The current
+approved gameplay library is:
+
+- `/social/gameplay-wind-crate.png` — general match view, terrain, wind and a crate
+- `/social/homing-lockon.png` — homing weapon selected with a visible lock-on
+- `/social/laser-and-crate.png` — laser selected with an airborne crate
+- `/social/mirv-craters.png` — MIRV selected with fresh blast effects and craters
+
+Do not give every item in a run the same picture. Use at least two distinct
+screenshots in a multi-item run, and never attach a weapon-specific screenshot
+to copy about a contradictory mechanic. If none of the existing images is an
+honest fit, capture a new screenshot from the real game, save it as a concise
+kebab-case PNG in `site/public/social/`, inspect it, and reference it with a
+site-absolute `/social/...` path. Never fabricate gameplay with an image model.
+
+Before committing, verify every new spotlight parses as YAML, its `image:` file
+exists under `site/public`, and the image is an active gameplay view. Missing
+media is a failed run, not an optional degradation.
 
 ## Voice rules (TUNE PER SITE)
 
