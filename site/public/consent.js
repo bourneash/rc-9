@@ -85,7 +85,9 @@
           localStorage.removeItem(STORAGE_KEY);
         } catch {}
         updateConsent('denied');
-        location.reload();
+        // Reopen the controls in place. Reloading made Cookie Prefs feel like a
+        // dead link, especially on the game shell where the banner is below the HUD.
+        wireBanner();
       });
     }
   }
