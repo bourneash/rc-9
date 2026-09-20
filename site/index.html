@@ -17,7 +17,11 @@
     <script src="/adsense.js" defer></script>
     <style>
       .rc9-footer-link { transition: opacity 0.2s; }
-      .rc9-footer-link:hover { opacity: 0.7 !important; }
+      .rc9-footer-link:hover, .rc9-footer-link:focus-visible { opacity: 1 !important; }
+      .rc9-site-links { align-items: center; background: rgba(10, 15, 8, 0.88); border: 1px solid rgba(80, 220, 130, 0.22); border-radius: 3px; display: flex; gap: 10px; padding: 5px 8px; }
+      .rc9-site-links .rc9-footer-link { color: #9ab09e !important; font-size: 10px; opacity: 0.72; }
+      .rc9-site-links .rc9-footer-link + .rc9-footer-link { border-left: 1px solid rgba(80, 220, 130, 0.2); padding-left: 10px; }
+      @media (max-width: 520px) { .rc9-site-links { bottom: 42px !important; gap: 6px; left: 6px !important; max-width: calc(100vw - 12px); overflow-x: auto; } .rc9-site-links .rc9-footer-link + .rc9-footer-link { padding-left: 6px; } }
     </style>
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -725,13 +729,14 @@
     <script type="module" src="/js/init.js"></script>
 
     <div id="version-display" style="position: fixed; bottom: 4px; right: 8px; font-size: 10px; opacity: 0.3; color: #888; pointer-events: none; z-index: 999; font-family: monospace;"></div>
-    <div style="position: fixed; bottom: 4px; left: 8px; z-index: 999; display: flex; gap: 10px;">
+    <nav class="rc9-site-links" aria-label="Site information" style="position: fixed; bottom: 4px; left: 8px; z-index: 999;">
+      <a href="/help" class="rc9-footer-link" style="font-family: monospace; text-decoration: none;">How to play</a>
       <a href="/privacy" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Privacy</a>
       <a href="/terms" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Terms</a>
       <a href="/about" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">About</a>
       <a href="/contact" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Contact</a>
       <a href="#" id="rc9-cookie-prefs" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Cookie prefs</a>
-    </div>
+    </nav>
 
     <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
 
