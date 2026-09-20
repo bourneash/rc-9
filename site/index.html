@@ -16,12 +16,6 @@
          are suppressed in /adsense.js so nothing ever covers the play surface. -->
     <script src="/adsense.js" defer></script>
     <style>
-      .rc9-footer-link { transition: opacity 0.2s; }
-      .rc9-footer-link:hover, .rc9-footer-link:focus-visible { opacity: 1 !important; }
-      .rc9-site-links { align-items: center; background: rgba(10, 15, 8, 0.88); border: 1px solid rgba(80, 220, 130, 0.22); border-radius: 3px; display: flex; gap: 10px; padding: 5px 8px; }
-      .rc9-site-links .rc9-footer-link { color: #9ab09e !important; font-size: 10px; opacity: 0.72; }
-      .rc9-site-links .rc9-footer-link + .rc9-footer-link { border-left: 1px solid rgba(80, 220, 130, 0.2); padding-left: 10px; }
-      @media (max-width: 520px) { .rc9-site-links { bottom: 42px !important; gap: 6px; left: 6px !important; max-width: calc(100vw - 12px); overflow-x: auto; } .rc9-site-links .rc9-footer-link + .rc9-footer-link { padding-left: 6px; } }
     </style>
 
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
@@ -135,15 +129,6 @@
   </nav>
 
   <div class="ts-ad" data-rc9-ad="title-screen" data-rc9-ad-format="horizontal" hidden></div>
-
-  <nav class="ts-site-nav" aria-label="Site information">
-    <span class="ts-site-nav-label">SITE</span>
-    <a href="/help">HOW TO PLAY</a>
-    <a href="/about">ABOUT</a>
-    <a href="/contact">CONTACT</a>
-    <a href="/privacy">PRIVACY</a>
-    <a href="/terms">TERMS</a>
-  </nav>
 
   <div class="ts-foot">
     <div class="group"><span class="key">↑↓</span> NAVIGATE</div>
@@ -286,6 +271,14 @@
                 <div id="log-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open game log"><span class="icon">≡</span><span class="label">LOG</span></div>
                 <div id="volume-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open volume controls"><span class="icon">♪</span><span class="label">AUDIO</span></div>
                 <div id="restart-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open restart options"><span class="icon">↻</span><span class="label">RESTART</span></div>
+                <nav aria-label="Site information">
+                    <a href="/help" class="edge-tab site-edge-tab" aria-label="How to play"><span class="icon">?</span><span class="label">HOW TO PLAY</span></a>
+                    <a href="/about" class="edge-tab site-edge-tab" aria-label="About Remote Command"><span class="icon">i</span><span class="label">ABOUT</span></a>
+                    <a href="/contact" class="edge-tab site-edge-tab" aria-label="Contact Remote Command"><span class="icon">@</span><span class="label">CONTACT</span></a>
+                    <a href="/privacy" class="edge-tab site-edge-tab" aria-label="Privacy policy"><span class="icon">§</span><span class="label">PRIVACY</span></a>
+                    <a href="/terms" class="edge-tab site-edge-tab" aria-label="Terms of service"><span class="icon">≡</span><span class="label">TERMS</span></a>
+                    <a href="#" id="rc9-cookie-prefs" class="edge-tab site-edge-tab" aria-label="Cookie preferences"><span class="icon">⚙</span><span class="label">COOKIE PREFS</span></a>
+                </nav>
                 <a href="/help" id="help-link" style="position:fixed; right:14px; bottom:14px; z-index:1100; text-decoration:none;">
                     <button title="Help / How to Play">Help</button>
                 </a>
@@ -729,14 +722,6 @@
     <script type="module" src="/js/init.js"></script>
 
     <div id="version-display" style="position: fixed; bottom: 4px; right: 8px; font-size: 10px; opacity: 0.3; color: #888; pointer-events: none; z-index: 999; font-family: monospace;"></div>
-    <nav class="rc9-site-links" aria-label="Site information" style="position: fixed; bottom: 42px; left: 8px; z-index: 1200;">
-      <a href="/help" class="rc9-footer-link" style="font-family: monospace; text-decoration: none;">How to play</a>
-      <a href="/privacy" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Privacy</a>
-      <a href="/terms" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Terms</a>
-      <a href="/about" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">About</a>
-      <a href="/contact" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Contact</a>
-      <a href="#" id="rc9-cookie-prefs" class="rc9-footer-link" style="font-size: 10px; opacity: 0.3; color: #888; font-family: monospace; text-decoration: none;">Cookie prefs</a>
-    </nav>
 
     <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "d76e9de989014f4d9e34e56682547f06"}'></script><!-- End Cloudflare Web Analytics -->
 

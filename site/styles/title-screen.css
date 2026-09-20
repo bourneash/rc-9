@@ -224,31 +224,6 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
-.ts-site-nav {
-  position: absolute;
-  right: clamp(24px, 6vw, 80px);
-  bottom: 52px;
-  z-index: 2;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px 14px;
-  font-size: 9px;
-  letter-spacing: 1px;
-}
-.ts-site-nav-label { color: var(--text-dim); }
-.ts-site-nav a { color: var(--accent-phosphor); text-decoration: none; }
-.ts-site-nav a:hover, .ts-site-nav a:focus-visible { color: var(--text-primary); text-decoration: underline; }
-
-@media (max-width: 760px) {
-  .ts-site-nav {
-    left: 24px;
-    right: 24px;
-    bottom: 44px;
-    justify-content: center;
-    gap: 8px 12px;
-  }
-}
 .ts-ad[hidden] { display: none; }
 
 @media (max-width: 760px), (max-height: 620px) {
