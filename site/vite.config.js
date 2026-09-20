@@ -34,8 +34,11 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, 'index.html'),
         help: resolve(__dirname, 'help.html'),
+        about: resolve(__dirname, 'about.html'),
+        contact: resolve(__dirname, 'contact.html'),
         privacy: resolve(__dirname, 'privacy.html'),
         terms: resolve(__dirname, 'terms.html'),
+        notFound: resolve(__dirname, '404.html'),
       },
       output: {
         manualChunks(id) {
