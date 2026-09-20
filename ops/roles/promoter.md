@@ -74,9 +74,9 @@ beyond `summary`:
 
 ```markdown
 ---
-title: <one line, this IS what gets posted verbatim if the model has nothing to add>
-summary: <1-3 sentences, the actual post copy — this is what social-hub drafts from>
-url: https://rc-9.com/           <!-- override to a specific page if the spotlight points somewhere deeper -->
+title: "<one line, this IS what gets posted verbatim if the model has nothing to add>"
+summary: "<1-3 sentences, the actual post copy — this is what social-hub drafts from>"
+url: https://rc-9.com/
 image: /social/<gameplay-screenshot>.png
 tags: [spotlight, <category>]
 kind: feature | question | cta | milestone
@@ -84,7 +84,9 @@ kind: feature | question | cta | milestone
 ```
 
 `title` and `summary` are the only fields social-hub's copy-generation reads
-from — get the substance right there, not in prose padding. `image` is what
+from — get the substance right there, not in prose padding. Always wrap both in
+double quotes (backslash-escape any inner `"`): an unquoted `title: Foo: bar` is
+invalid YAML. `image` is what
 Social Hub attaches to the post on media-capable platforms.
 
 ## Gameplay images are required
