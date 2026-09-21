@@ -267,7 +267,28 @@ if is_deploy_pipeline_class "$CLASS" && [[ -f "$BLOCKED_FILE" ]]; then
   clear_blocked_cache
 fi
 
+
+redact_guardrail_terms() {  # $1=untrusted text; fail closed on config errors
+  python3 - "$1" <<'PY' 2>/dev/null || printf '%s' '[redaction unavailable]'
+import json, re, sys
+text = sys.argv[1]
+for cfg_path in ("/work/.monorepo-tools/content-guardrails/config.json", "../../tools/content-guardrails/config.json"):
+    try:
+        cfg = json.load(open(cfg_path, encoding="utf-8"))
+        for term in (cfg.get("global") or {}).get("blocked", []):
+            text = re.sub(r"\b" + re.escape(str(term).strip()) + r"\b", "[redacted]", text, flags=re.I)
+        break
+    except Exception:
+        continue
+else:
+    raise SystemExit(1)
+print(text, end="")
+PY
+}
+
 set_field() {  # $1=key $2=value (string)
+  local safe_value
+  safe_value="$(redact_guardrail_terms "$2")"
   python3 - "$TARGET" "$1" "$2" <<'PY' 2>/dev/null || true
 import json,sys
 rec,k,v=sys.argv[1],sys.argv[2],sys.argv[3]
