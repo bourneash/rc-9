@@ -42,6 +42,27 @@ CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
 log() { echo "[$(date -Iseconds)] principal-engineer: $*" | tee -a "$LOG"; }
 slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/null || true; }
 
+redact_guardrail_terms() {  # $1=untrusted text; fail closed on config errors
+  python3 - "$1" <<'PY' 2>/dev/null || printf '%s' '[redaction unavailable]'
+import json, re, sys
+
+text = sys.argv[1]
+for cfg_path in ("/work/.monorepo-tools/content-guardrails/config.json",
+                 "../../tools/content-guardrails/config.json"):
+    try:
+        cfg = json.load(open(cfg_path, encoding="utf-8"))
+        for term in (cfg.get("global") or {}).get("blocked", []):
+            text = re.sub(r"\b" + re.escape(str(term).strip()) + r"\b",
+                          "[redacted]", text, flags=re.I)
+        break
+    except Exception:
+        continue
+else:
+    raise SystemExit(1)
+print(text, end="")
+PY
+}
+
 # scan.py sets status="investigating" the moment it dispatches this fp, and
 # only ever retries fingerprints with status in (open, None). Every exit
 # path below this point that bails BEFORE the normal mark_incident() call
@@ -51,6 +72,7 @@ slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/nu
 # network) clears. Bit us for real 2026-09-10: weirdgirlstore fp
 # abdc88765e2d hit the uncommitted-edits refusal below and was orphaned.
 reopen_incident() {  # $1=note
+  local safe_note; safe_note="$(redact_guardrail_terms "$1")"
   python3 -c "
 import json, sys
 p = sys.argv[1]
@@ -61,7 +83,7 @@ except Exception:
 rec['status'] = 'open'
 rec['last_outcome'] = sys.argv[2]
 json.dump(rec, open(p, 'w'), indent=2)
-" "$INCIDENT_FILE" "$1" 2>/dev/null || true
+" "$INCIDENT_FILE" "$safe_note" 2>/dev/null || true
 }
 
 # Never let one failed/truncated pass leave edits that a later pass mistakes
@@ -176,6 +198,7 @@ HARDENING=$(grep '^PE_HARDENING=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || tru
 ROLLOUT=$(grep '^PE_ROLLOUT_CANDIDATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- | tr -d ' \r\n' || true); ROLLOUT="${ROLLOUT:-no}"
 
 mark_incident() {  # $1=status
+  local safe_outcome; safe_outcome="$(redact_guardrail_terms "${PSTATUS}: ${ROOT_CAUSE}")"
   python3 -c "
 import json, sys
 p = sys.argv[1]
@@ -186,7 +209,7 @@ except Exception:
 rec['status'] = sys.argv[2]
 rec['last_outcome'] = sys.argv[3]
 json.dump(rec, open(p, 'w'), indent=2)
-" "$INCIDENT_FILE" "$1" "${PSTATUS}: ${ROOT_CAUSE}" 2>/dev/null || true
+" "$INCIDENT_FILE" "$1" "$safe_outcome" 2>/dev/null || true
 }
 
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
