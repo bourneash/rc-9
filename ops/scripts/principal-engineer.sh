@@ -223,9 +223,35 @@ json.dump(rec, open(p, 'w'), indent=2)
 " "$INCIDENT_FILE" "$1" "$safe_outcome" 2>/dev/null || true
 }
 
+retry_or_escalate() {  # $1=reason; cap/timeout failures get one delayed retry
+  local reason="$1"
+  python3 - "$INCIDENT_FILE" "$reason" <<'PY_RETRY'
+import json, sys
+from datetime import datetime, timedelta, timezone
+
+p, reason = sys.argv[1:]
+try:
+    rec = json.load(open(p, encoding="utf-8"))
+except Exception:
+    rec = {}
+attempts = int(rec.get("attempts", 0))
+if attempts >= 2:
+    # Leave the record open at the scanner's attempt ceiling so its normal
+    # escalation path creates the human-triage task and sends one alert.
+    rec["status"] = "open"
+    rec["attempts"] = 3
+    rec["cap_reason"] = reason
+else:
+    rec["status"] = "open"
+    rec["retry_after"] = (datetime.now(timezone.utc) + timedelta(seconds=40 * 60)).strftime("%Y-%m-%dT%H:%M:%SZ")
+rec["last_outcome"] = reason
+json.dump(rec, open(p, "w", encoding="utf-8"), indent=2)
+PY_RETRY
+}
+
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
   log "pass TIMED OUT after ${WORK_TIMEOUT}s"
-  mark_incident open
+  retry_or_escalate "pass TIMED OUT after ${WORK_TIMEOUT}s"
   slack "🔴 *rc9 principal engineer* timed out investigating fp=${FP} · ${NOW_ET}" danger
   exit 1
 fi
