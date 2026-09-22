@@ -127,3 +127,9 @@ render 1/2 pages · tree clean · main synced · CF live · 0 task(s) · 00:18 E
 **Functional safety:** title-screen.js uses optional chaining on all globalThis calls from main.js; dialog elements are hidden by native `<dialog>` semantics if modals.css momentarily races; restore-session path shows empty canvas then restores when main.js loads (same net delay as before).
 
 Measure after deploy with same mobile lab methodology; roll back `site/js/init.js` and `site/index.html` if any metric worsens.
+
+## Run — 2026-09-22 10:31 UTC
+
+🔧 **Work done (deployed)** — Perf task: moved main.js (pixi.js 968KB) to dynamic import so title screen renders before game engine loads — expected LCP 4092ms→~400ms, build passes
+
+render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 06:18 ET
