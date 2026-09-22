@@ -87,12 +87,23 @@ json.dump(rec, open(p, 'w'), indent=2)
 }
 
 # Never let one failed/truncated pass leave edits that a later pass mistakes
-# for its own. The worker must start from a clean shippable scope; otherwise
-# stop and preserve the tree for human inspection.
-PREEXISTING_EDITS="$(git status --porcelain -- site/ ops/ .github/ 2>/dev/null || true)"
+# for its own. Runtime state is intentionally excluded: cron updates these
+# paths on every tick and fleet-git policy ignores them. Only shippable edits
+# must block a worker.
+RUNTIME_PATHSPECS=(
+  ':(exclude,glob)ops/logs/**'
+  ':(exclude,glob)ops/health/**'
+  ':(exclude,glob)ops/.locks/**'
+  ':(exclude,glob)ops/facts.yaml'
+)
+PREEXISTING_EDITS="$(git status --porcelain --untracked-files=all -- . "${RUNTIME_PATHSPECS[@]}" 2>/dev/null || true)"
 if [[ -n "$PREEXISTING_EDITS" ]]; then
-  log "refusing to run: shippable scope already has edits"
-  slack "🔴 *rc-9 principal engineer* refused to start fp=${FP}: site/ops/.github already has uncommitted edits. Nothing was changed or shipped. · ${NOW_ET}" danger
+  DIRTY_PATHS="$(printf '%s\n' "$PREEXISTING_EDITS" | head -10)"
+  log "refusing to run: shippable scope already has edits: $(printf '%s' "$DIRTY_PATHS" | tr '\n' ' ')"
+  slack "🔴 *greatamericanlakes principal engineer* refused to start fp=${FP}: shippable scope already has uncommitted edits. Nothing was changed or shipped. · ${NOW_ET}
+\`\`\`
+${DIRTY_PATHS}
+\`\`\`" danger
   reopen_incident "refused: uncommitted edits in shippable scope"
   exit 1
 fi
@@ -221,7 +232,7 @@ fi
 
 PUSHED=0
 CHANGED_SOMETHING=0
-if ! git diff --quiet || ! git diff --cached --quiet; then
+if [[ -n "$(git status --porcelain --untracked-files=all -- . "${RUNTIME_PATHSPECS[@]}" 2>/dev/null || true)" ]]; then
   CHANGED_SOMETHING=1
 fi
 
