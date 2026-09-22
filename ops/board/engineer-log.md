@@ -104,3 +104,26 @@ render 1/2 pages · tree clean · main synced · CF live · 0 task(s) · 00:18 E
 ## Run — 2026-09-11 04:30 UTC
 
 ✅ **Deploy successful** — vite build ✓ · wrangler deploy ✓ · smoke test HTTP 200 ✓ · cf-ray header ✓ · tree clean · main synced · 0 task(s) · 00:30 ET
+
+## Run — 2026-09-22 06:18 ET
+
+**Task:** Improve rc-9.com mobile performance budgets (cdf3c685)
+
+**Baseline (2026-09-21 mobile lab):** Performance 73 · LCP 4092ms · TBT 226ms
+
+**Root cause:** `init.js` had a static `import './main.js'` which pulled the entire pixi.js module graph (~968KB vendor-pixi + 320KB main) into the critical render path. The title screen could not appear until all of that parsed and evaluated — causing ~4000ms LCP on mobile.
+
+**Changes made:**
+- `site/js/init.js` line 22: `import './main.js'` → `void import('./main.js')` — removes game engine from the synchronous module graph; title screen now shows as soon as the 4.1KB entry bundle (init + title-screen) executes
+- `site/index.html`: removed empty `<style></style>` tag
+
+**Build:** `npm run build` ✓ (8.89s) — chunk sizes unchanged, no new bundle budget violations
+
+**Expected after deploy (lab measurement required to confirm):**
+- LCP: ~4092ms → ~300–500ms (pixi.js no longer blocks title screen render; vendor-pixi still modulepreloaded so download begins immediately)
+- TBT: expected improvement as JS evaluation is spread across time after FCP
+- Performance score: expected rise from 73 to ~90+
+
+**Functional safety:** title-screen.js uses optional chaining on all globalThis calls from main.js; dialog elements are hidden by native `<dialog>` semantics if modals.css momentarily races; restore-session path shows empty canvas then restores when main.js loads (same net delay as before).
+
+Measure after deploy with same mobile lab methodology; roll back `site/js/init.js` and `site/index.html` if any metric worsens.

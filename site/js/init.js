@@ -18,8 +18,8 @@ void import('./ads.js');
 // Load sidebar (vanilla JS, no React needed) asynchronously
 void import('./sidebar.js');
 
-// Finally load main game after all dependencies are ready
-import './main.js';
+// Load main game asynchronously so title screen renders before pixi.js downloads
+void import('./main.js');
 
 // Mount title screen after DOM is ready
 if (document.readyState === 'loading') {
