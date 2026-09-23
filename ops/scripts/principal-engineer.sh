@@ -256,6 +256,22 @@ if [[ "$CLAUDE_EXIT" == "124" ]]; then
   exit 1
 fi
 
+# A max-turns/error exit can still leave a buildable worktree. Before this
+# gate existed, a capped/failed pass fell straight through to the git-status
+# check below with PSTATUS defaulted to "escalated" and ROOT_CAUSE "unknown
+# (pass did not report)" — meaning a truncated run's partial edits could still
+# be committed and pushed, and every cap failure escalated to Jesse on the
+# first occurrence with zero diagnostic content instead of getting the same
+# one-retry grace the timeout path above gets. 2026-09-23 fleet rollout of the
+# fix already applied to blackmarketapparel.com (ai-optimizer ticket
+# 2026-09-22-principal-engineer-sh-capped-failed-runs-escalate-immediatel).
+if [[ "$CLAUDE_EXIT" != "0" ]]; then
+  REASON="pass FAILED (rc=${CLAUDE_EXIT}) before a complete result"
+  log "$REASON"
+  retry_or_escalate "$REASON"
+  exit 1
+fi
+
 PUSHED=0
 CHANGED_SOMETHING=0
 if [[ -n "$(git status --porcelain --untracked-files=all -- . "${RUNTIME_PATHSPECS[@]}" 2>/dev/null || true)" ]]; then
