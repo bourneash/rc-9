@@ -317,13 +317,13 @@ case "$PSTATUS" in
 _Flagged as a fleet-wide rollout candidate — see ops/tasks/backlog/ (human-triage, not auto-rolled-out)._"
     if [[ "$PSTATUS" == "resolved-noise" ]]; then
       slack "✅ *rc9 principal engineer* — checked fp=${FP}, not a real issue · ${NOW_ET}
-${ROOT_CAUSE}" good
+${ROOT_CAUSE}" good resolved
     else
       slack "✅ *rc9 principal engineer* — resolved fp=${FP} · ${NOW_ET}
 *Root cause:* ${ROOT_CAUSE}
 *Fix:* ${FIX}
 *Hardening:* ${HARDENING}
-pushed=${PUSHED}${ROLLOUT_NOTE}" good
+pushed=${PUSHED}${ROLLOUT_NOTE}" good resolved
     fi
     ;;
   *)
