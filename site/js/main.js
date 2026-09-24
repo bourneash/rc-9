@@ -1,3 +1,9 @@
+// Non-critical CSS: loads with this dynamic chunk, not blocking LCP
+import '../styles/hud.css';
+import '../styles/modals.css';
+import '../styles/canvas-overlays.css';
+import '../styles.css';
+
 // ============================================================================
 // GLOBAL ERROR HANDLING & RECOVERY
 // ============================================================================

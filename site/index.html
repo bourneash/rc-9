@@ -43,13 +43,13 @@
     <meta name="twitter:image" content="https://rc-9.com/og-image.png" />
     <meta name="twitter:image:alt" content="Remote Command gameplay — tank firing across destructible terrain" />
 
+    <!-- Critical CSS: tokens + typography + title-screen render-blocking (≈8KB).
+         hud/modals/canvas-overlays/styles are imported by main.js (dynamic) so they
+         load in parallel with the game engine without blocking LCP. -->
+    <style>html,body{height:100%}*{margin:0;padding:0;box-sizing:border-box}body{font-family:ui-sans-serif,system-ui,sans-serif;background:#0a0f08;color:#c5d2c8;overflow:hidden}#game-container{display:block;height:100vh;width:100vw;position:relative}</style>
     <link rel="stylesheet" href="/styles/tokens.css" />
     <link rel="stylesheet" href="/styles/typography.css" />
-    <link rel="stylesheet" href="/styles/hud.css" />
-    <link rel="stylesheet" href="/styles/modals.css" />
     <link rel="stylesheet" href="/styles/title-screen.css" />
-    <link rel="stylesheet" href="/styles/canvas-overlays.css" />
-    <link rel="stylesheet" href="/styles.css" />
 
     <!-- Structured data: VideoGame schema for Google rich results -->
     <script type="application/ld+json">

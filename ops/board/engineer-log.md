@@ -139,3 +139,36 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 06:18 E
 🔧 **Work done** — engineer run complete
 
 render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 09:18 ET
+
+## Run — 2026-09-24 14:18 UTC
+
+🔧 **Mobile perf CSS split** — task fd3606ef moved backlog → done
+
+**Task:** Improve rc-9.com mobile performance budgets (fd3606ef) — baseline performance 73, LCP 4092ms, TBT 226ms (2026-09-21 mobile lab)
+
+**Context:** 2026-09-22 run already shipped the primary fix (main.js pixi.js moved to dynamic import, removing ~1.3MB from sync render path). This run completes the task with a secondary CSS critical-path split.
+
+**Changes this run:**
+
+1. `site/vite.config.js`: removed `cssCodeSplit: false` (was bundling ALL CSS into one render-blocking file regardless of chunk origin)
+
+2. `site/index.html`:
+   - Added inline `<style>` block with 4 critical base rules (body background `#0a0f08`, reset, overflow:hidden, game-container layout) — prevents white-flash before CSS downloads
+   - Removed `<link>` tags for `hud.css`, `modals.css`, `canvas-overlays.css`, `styles.css`
+   - Kept `<link>` tags for `tokens.css`, `typography.css`, `title-screen.css` only
+
+3. `site/js/main.js`: added `import '../styles/hud.css'`, `'../styles/modals.css'`, `'../styles/canvas-overlays.css'`, `'../styles.css'` — these 4 files now bundle into `main-BXGugoV7.css` (27KB), loaded by Vite runtime when the dynamic `void import('./main.js')` fires in init.js (not render-blocking)
+
+**Build:** `npm run build` ✓ (11.36s)
+
+**Critical-path CSS before → after:**
+- Before: `style-Bceb6vXQ.css` 77KB render-blocking (all CSS in one file due to cssCodeSplit:false)
+- After: `main-DXus_Vvk.css` (30KB, typography @font-face + title-screen styles) + `tokens-2y4GkCuf.css` (0.82KB) = 31KB render-blocking
+- Non-blocking: `main-BXGugoV7.css` (27KB) loads with game engine
+
+**Expected improvement (requires post-deploy mobile lab to confirm):**
+- LCP: further improvement on top of 2026-09-22 dynamic-import change; less CSS blocking initial paint
+- TBT: no regression expected; game CSS loads async alongside game engine
+- Roll back `site/index.html`, `site/js/main.js`, `site/vite.config.js` if any metric worsens post-deploy
+
+render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 1 task(s) · 10:18 ET

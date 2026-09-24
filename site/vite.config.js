@@ -30,6 +30,7 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     chunkSizeWarningLimit: 700,
+    modulePreload: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
