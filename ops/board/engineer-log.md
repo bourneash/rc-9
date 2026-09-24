@@ -172,3 +172,9 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 09:18 E
 - Roll back `site/index.html`, `site/js/main.js`, `site/vite.config.js` if any metric worsens post-deploy
 
 render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 1 task(s) · 10:18 ET
+
+## Run — 2026-09-24 14:27 UTC
+
+🔧 **Work done (deployed)** — CSS critical-path split: moved hud/modals/canvas-overlays/styles.css to dynamic main.js import; render-blocking CSS 77KB→31KB; build ✓; task fd3606ef moved to done
+
+render 2/2 pages · ⚠ 1 uncommitted src · main synced · CF live · 1 task(s) · 10:18 ET
