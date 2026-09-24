@@ -46,6 +46,7 @@ dist/
 .deploy-needed
 .deploy-attempts
 .deploy-needed.failed
+.deploy-needed.audit-blocked
 .wrangler/
 .astro/
 site/.astro/
