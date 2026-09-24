@@ -230,3 +230,9 @@ render 2/2 pages · ⚠ 2 uncommitted src · main synced · CF live · 1 task(s)
 **Rollback:** revert `site/index.html` (remove preload line), revert `site/styles/typography.css` (remove @font-face override), remove `site/public/fonts/`
 
 render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 1 task(s) · 12:48 ET
+
+## Run — 2026-09-24 16:55 UTC
+
+🔧 **Work done (deployed)** — Font preload for LCP: added <link rel=preload> for Saira Condensed 700 latin (LCP element font) at fixed URL /fonts/sc-700.woff2 to eliminate ~5s late-swap repaint; build ✓; task b2cfa747 done
+
+render 2/2 pages · ⚠ 2 uncommitted src · main +2 unpushed · CF live · 1 task(s) · 12:48 ET
