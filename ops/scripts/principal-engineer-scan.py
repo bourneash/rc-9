@@ -44,6 +44,18 @@ SELF_SIGNATURE = "principal engineer"
 TEST_PREFIXES = ("test ", "[test]", "test:")
 SYNTHETIC_MARKER = "synthetic failure"
 
+# claude-tracked explicitly delegates these shared-account outages to the
+# fleet auth monitor.  A role can emit two Slack errors for one failed turn:
+# its short, role-specific failure and run-role.sh's detailed failure.  Keep a
+# small correlation window so neither half wakes a principal engineer that
+# would immediately fail on the same unavailable credentials.
+FLEET_AUTH_MARKERS = (
+    "class=authentication_failed",
+    "class=account_usage_exhausted",
+    "fleet auth monitor owns the outage/recovery alert",
+)
+AUTH_COMPANION_WINDOW_SECS = 15
+
 STOP = {"the", "a", "an", "is", "are", "was", "were", "and", "or", "but", "for",
         "to", "of", "in", "on", "at", "by", "it", "its", "this", "that", "must",
         "needs", "need", "owner", "jesse", "check", "fix", "keeps", "every",
@@ -127,7 +139,34 @@ def read_slack_lines(since_dt):
                     lines.append(rec)
         except Exception:
             continue
-    return lines
+
+    auth_failures = []
+    for rec in lines:
+        text = rec.get("text", "").lower()
+        if not any(marker in text for marker in FLEET_AUTH_MARKERS):
+            continue
+        role_match = re.search(r"\brole=([a-z0-9_-]+)", text)
+        auth_failures.append((
+            rec.get("channel", ""),
+            parse_ts(rec.get("ts", "")),
+            role_match.group(1) if role_match else None,
+        ))
+
+    def owned_by_auth_monitor(rec):
+        text = rec.get("text", "").lower()
+        if any(marker in text for marker in FLEET_AUTH_MARKERS):
+            return True
+        ts = parse_ts(rec.get("ts", ""))
+        if ts is None or "failed" not in text or not re.search(r"\bexit\s*[= ]\s*\d+", text):
+            return False
+        for channel, auth_ts, role in auth_failures:
+            if channel != rec.get("channel", "") or auth_ts is None or not role:
+                continue
+            if role in text and abs((ts - auth_ts).total_seconds()) <= AUTH_COMPANION_WINDOW_SECS:
+                return True
+        return False
+
+    return [rec for rec in lines if not owned_by_auth_monitor(rec)]
 
 
 def load_incidents():
@@ -200,11 +239,16 @@ def main():
         incidents[fp] = inc
         touched[fp] = inc
 
-    # Decide at most ONE incident to act on this tick: prefer a touched
-    # (freshly-seen) fingerprint that is open, under the attempt cap, and
-    # past cooldown since its last dispatch.
+    # Decide at most ONE incident to act on this tick. Prefer a touched
+    # (freshly-seen) fingerprint, then retry older open incidents after their
+    # cooldown. Early worker exits deliberately reopen incidents (dirty tree,
+    # network outage, push failure); limiting selection to `touched` strands
+    # those records forever once the Slack cursor has advanced.
     action_fp = None
-    for fp, inc in touched.items():
+    candidates = list(touched)
+    candidates.extend(fp for fp in incidents if fp not in touched)
+    for fp in candidates:
+        inc = incidents[fp]
         if inc.get("status") not in ("open", None):
             continue
         if int(inc.get("attempts", 0)) >= MAX_ATTEMPTS:
@@ -235,6 +279,27 @@ def main():
             "attempt": inc["attempts"],
             "channel": inc.get("channel") or "",
         }
+    else:
+        # A third real worker attempt that reopens is no longer eligible for
+        # auto-repair. Emit one explicit escalation action instead of silently
+        # leaving an open-but-undispatchable JSON record forever.
+        for fp, inc in incidents.items():
+            if inc.get("status") not in ("open", None):
+                continue
+            if int(inc.get("attempts", 0)) < MAX_ATTEMPTS or inc.get("cap_notified"):
+                continue
+            inc["status"] = "escalated"
+            inc["cap_notified"] = now_s
+            result = {
+                "action": "escalate",
+                "fp": fp,
+                "summary": inc.get("last_text", "")[:200],
+                "text": inc.get("last_text", ""),
+                "occurrence": inc.get("occurrences", 1),
+                "attempt": inc.get("attempts", MAX_ATTEMPTS),
+                "channel": inc.get("channel") or "",
+            }
+            break
 
     for fp, inc in incidents.items():
         save_incident(fp, inc)
