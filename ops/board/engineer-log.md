@@ -182,3 +182,17 @@ render 2/2 pages · ⚠ 1 uncommitted src · main synced · CF live · 1 task(s)
 ## Deploy — 2026-09-24 10:30 ET
 
 ✅ **Live** — wrangler deploy succeeded · smoke test HTTP 200 + cf-ray header · version 76f90b8e
+
+## Run — 2026-09-24 15:18 UTC
+
+♻️ **Duplicate tasks closed** — tasks a2faca00 and 4a0c39a0 both carry change-request b095dec9, already fully implemented in the last two runs (2026-09-22 dynamic import, 2026-09-24 CSS split). No new code changes. Both tasks moved backlog → done.
+
+**Status:** All performance work for change-request b095dec9 is shipped. Post-deploy mobile lab measurements (LCP, TBT, Performance score) are outstanding and require the owner to run Lighthouse/PSI against the live site — results should be compared against the 2026-09-21 baseline (Performance 73, LCP 4092ms, TBT 226ms).
+
+render 2/2 pages · tree clean · main synced · CF live · 2 task(s) closed · 11:18 ET
+
+## Run — 2026-09-24 15:21 UTC
+
+⚠️ **Escalation** — Post-deploy mobile lab measurements not yet taken — owner needs to run Lighthouse/PSI against live rc-9.com and compare LCP/TBT/Performance to 2026-09-21 baseline (73/4092ms/226ms); both optimizations (dynamic main.js import, CSS split) are live as of 2026-09-24 10:30 ET deploy
+
+Did: Closed 2 duplicate mobile-perf tasks (change-request b095dec9 already fully shipped in prior 2 runs); no new code changes; post-deploy mobile lab measurements outstanding · pushed=0 · render 2/2 pages · tree clean · main synced · CF live · 2 task(s) · 11:18 ET
