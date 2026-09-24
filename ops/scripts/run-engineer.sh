@@ -32,12 +32,22 @@ PULSE_LOG="$REPO_ROOT/ops/logs/engineer-heartbeat-$(date -u +%Y-%m-%d).jsonl"  #
 [[ -f "$REPO_ROOT/.env.shared" ]] && { set -a; . "$REPO_ROOT/.env.shared"; set +a; }
 NOTIFY="$REPO_ROOT/ops/scripts/notify-slack.sh"
 CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
+ENGINEER_RECOVERY_STATE_FILE="$REPO_ROOT/ops/.locks/engineer-recovery-alert"
+SITE_LABEL="${ENGINEER_SITE_LABEL:-${BASE_URL#https://}}"
+SITE_LABEL="${SITE_LABEL%/}"
 NOW_ET="$(TZ=America/New_York date +'%H:%M ET')"
 TODAY="$(date -u +%Y-%m-%d)"
 BOARD_LOG="$REPO_ROOT/ops/board/engineer-log.md"
 
 log() { echo "[$(date -Iseconds)] run-engineer: $*" | tee -a "$LOG"; }
-slack() { [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$1" "${2:-good}" 2>/dev/null || true; }
+slack() {
+  local message="${1:-}" severity="${2:-good}"
+  if [[ "$severity" == "warning" || "$severity" == "danger" ]]; then
+    mkdir -p "$(dirname "$ENGINEER_RECOVERY_STATE_FILE")"
+    printf "%s\n" "$message" > "$ENGINEER_RECOVERY_STATE_FILE"
+  fi
+  [[ -x "$NOTIFY" ]] && "$NOTIFY" "$CHANNEL" "$message" "$severity" 2>/dev/null || true
+}
 
 # Time-based per-site work lock (atomic mkdir). A lock older than LOCK_STALE_SECS
 # is reclaimed — the guard against a crashed work pass wedging the site forever.
@@ -127,6 +137,10 @@ heartbeat_touch "$ENGINEER_STATUS"
 # Success posts NOTHING to Slack. The pulse files written above are the success
 # record; audit health via tools/engineer-fleet. Only failures/work/escalations Slack.
 if [[ "$ENGINEER_STATUS" == "green" ]]; then
+  if [[ -f "$ENGINEER_RECOVERY_STATE_FILE" ]]; then
+    slack ":white_check_mark: *${SITE_LABEL} engineer* — previous alert cleared; health checks are green · ${NOW_ET}" "good"
+    rm -f "$ENGINEER_RECOVERY_STATE_FILE"
+  fi
   log "green — pulse logged, success is silent (no Slack), no Claude turns used"
   exit 0
 fi
