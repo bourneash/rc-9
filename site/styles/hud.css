@@ -208,7 +208,7 @@
 
 /* FIRE button — the climax */
 #bottom-controls #fire-button.primary {
-  background: var(--accent-hot);
+  background: #b83d32;
   border: var(--border-hot);
   color: #fff;
   font-family: var(--font-display);

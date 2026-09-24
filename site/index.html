@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Remote Command — Free Online Artillery Tank Game with Destructible Terrain</title>
 
     <!-- Security headers are now set via CloudFlare Pages _headers file -->
@@ -46,7 +46,7 @@
     <!-- Critical CSS: tokens + typography + title-screen render-blocking (≈8KB).
          hud/modals/canvas-overlays/styles are imported by main.js (dynamic) so they
          load in parallel with the game engine without blocking LCP. -->
-    <style>html,body{height:100%}*{margin:0;padding:0;box-sizing:border-box}body{font-family:ui-sans-serif,system-ui,sans-serif;background:#0a0f08;color:#c5d2c8;overflow:hidden}#game-container{display:block;height:100vh;width:100vw;position:relative}</style>
+    <style>html,body{height:100%}*{margin:0;padding:0;box-sizing:border-box}body{position:fixed;width:100%;font-family:ui-sans-serif,system-ui,sans-serif;background:#0a0f08;color:#c5d2c8;overflow:hidden;overscroll-behavior:none;touch-action:none}#game-container{display:block;height:100vh;width:100vw;position:relative}</style>
     <link rel="stylesheet" href="/styles/tokens.css" />
     <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/title-screen.css" />
@@ -242,7 +242,7 @@
                         <button id="drive-toggle" class="secondary">Drive Mode: OFF</button>
                         <fieldset class="weapon-chooser" aria-label="Select Weapon" style="border: none; padding: 0; margin: 0;">
                             <legend class="sr-only">Weapon</legend>
-                            <button id="weapon-grid-toggle" class="weapon-grid-toggle" aria-haspopup="true" aria-expanded="false" aria-label="Select weapon" title="Select weapon">
+                            <button id="weapon-grid-toggle" class="weapon-grid-toggle" aria-haspopup="true" aria-expanded="false" title="Select weapon">
                                 <span id="weapon-current-icon" class="weapon-current-icon" aria-hidden="true">🛰️</span>
                                 <span id="weapon-current-name" class="weapon-current-name">Missile</span>
                                 <span class="caret" aria-hidden="true">⌄</span>
@@ -254,7 +254,7 @@
                     <!-- Weapon menu - positioned fixed relative to viewport, outside of bottom-controls -->
                     <div id="weapon-menu" class="weapon-menu hidden" role="menu" aria-label="Weapon menu"></div>
                     <!-- Left joystick for touch drive mode (hidden on desktop) -->
-                    <div id="joystick" aria-label="Move joystick">
+                    <div id="joystick" role="group" aria-label="Move joystick">
                         <div class="stick"></div>
                     </div>
                     <!-- Floating FIRE button for touch on the right -->
@@ -263,18 +263,18 @@
                 <!-- Hidden staging container (holds content that modals move into place) -->
                 <div id="ui-staging" style="display:none" aria-hidden="true"></div>
                 <!-- Left edge tabs: Game Options, Debug, Game Log, Volume, Restart -->
-                <div id="new-game-tab" class="edge-tab" role="button" tabindex="0" aria-label="Start a new game"><span class="icon">＋</span><span class="label">NEW GAME</span></div>
-                <div id="debug-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open debug and cheats"><span class="icon">▣</span><span class="label">DEBUG</span></div>
-                <div id="log-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open game log"><span class="icon">≡</span><span class="label">LOG</span></div>
-                <div id="volume-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open volume controls"><span class="icon">♪</span><span class="label">AUDIO</span></div>
-                <div id="restart-tab" class="edge-tab" role="button" tabindex="0" aria-label="Open restart options"><span class="icon">↻</span><span class="label">RESTART</span></div>
+                <div id="new-game-tab" class="edge-tab" role="button" tabindex="0"><span class="icon">＋</span><span class="label">NEW GAME</span></div>
+                <div id="debug-tab" class="edge-tab" role="button" tabindex="0"><span class="icon">▣</span><span class="label">DEBUG</span></div>
+                <div id="log-tab" class="edge-tab" role="button" tabindex="0"><span class="icon">≡</span><span class="label">LOG</span></div>
+                <div id="volume-tab" class="edge-tab" role="button" tabindex="0"><span class="icon">♪</span><span class="label">AUDIO</span></div>
+                <div id="restart-tab" class="edge-tab" role="button" tabindex="0"><span class="icon">↻</span><span class="label">RESTART</span></div>
                 <nav aria-label="Site information">
-                    <a href="/help" class="edge-tab site-edge-tab" aria-label="How to play"><span class="icon">?</span><span class="label">HOW TO PLAY</span></a>
-                    <a href="/about" class="edge-tab site-edge-tab" aria-label="About Remote Command"><span class="icon">i</span><span class="label">ABOUT</span></a>
-                    <a href="/contact" class="edge-tab site-edge-tab" aria-label="Contact Remote Command"><span class="icon">@</span><span class="label">CONTACT</span></a>
-                    <a href="/privacy" class="edge-tab site-edge-tab" aria-label="Privacy policy"><span class="icon">§</span><span class="label">PRIVACY</span></a>
-                    <a href="/terms" class="edge-tab site-edge-tab" aria-label="Terms of service"><span class="icon">≡</span><span class="label">TERMS</span></a>
-                    <a href="#" id="rc9-cookie-prefs" class="edge-tab site-edge-tab" aria-label="Cookie preferences"><span class="icon">⚙</span><span class="label">COOKIE PREFS</span></a>
+                    <a href="/help" class="edge-tab site-edge-tab"><span class="icon">?</span><span class="label">HOW TO PLAY</span></a>
+                    <a href="/about" class="edge-tab site-edge-tab"><span class="icon">i</span><span class="label">ABOUT</span></a>
+                    <a href="/contact" class="edge-tab site-edge-tab"><span class="icon">@</span><span class="label">CONTACT</span></a>
+                    <a href="/privacy" class="edge-tab site-edge-tab"><span class="icon">§</span><span class="label">PRIVACY</span></a>
+                    <a href="/terms" class="edge-tab site-edge-tab"><span class="icon">≡</span><span class="label">TERMS</span></a>
+                    <a href="#" id="rc9-cookie-prefs" class="edge-tab site-edge-tab"><span class="icon">⚙</span><span class="label">COOKIE PREFS</span></a>
                 </nav>
                 <a href="/help" id="help-link" style="position:fixed; right:14px; bottom:14px; z-index:1100; text-decoration:none;">
                     <button title="Help / How to Play">Help</button>

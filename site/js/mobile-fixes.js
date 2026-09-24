@@ -144,8 +144,7 @@ export class MobileFixes {
     // Update viewport meta tag for better control
     let viewport = document.querySelector('meta[name="viewport"]');
     if (viewport) {
-      viewport.content =
-        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
+      viewport.content = 'width=device-width, initial-scale=1.0, viewport-fit=cover';
     }
 
     // Ensure full screen usage on mobile

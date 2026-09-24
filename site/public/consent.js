@@ -131,7 +131,7 @@
         'cursor:pointer;text-transform:uppercase;' +
         (primary
           ? 'background:#50dc82;border:1px solid #50dc82;color:#0a0f08;'
-          : 'background:none;border:1px solid rgba(80,220,130,0.3);color:#777;');
+          : 'background:none;border:1px solid rgba(80,220,130,0.3);color:#a8b5ac;');
       return b;
     }
     btns.appendChild(mkBtn('rc9-cookie-decline', 'Decline', false));
