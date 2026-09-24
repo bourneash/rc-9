@@ -20,12 +20,11 @@ INCIDENT_FILE="ops/health/principal-incidents/${FP}.json"
 [[ -f "$INCIDENT_FILE" ]] || { echo "no incident record for $FP" >&2; exit 0; }
 
 MODEL="claude-sonnet-4-6"
-# 2026-09-07 ai-usage audit + fleet rollout: 3/14 fleet principal-engineer
-# calls hit the 30-turn cap that day, and every one truncated mid-
-# investigation with NO final PE_STATUS/PE_ROOT_CAUSE lines emitted -- the
-# wrapper's "unknown (pass did not report)" fallback fired, so the incident
-# escalated to Jesse with zero diagnostic content despite a full billed
-# session (americastrikes.com fp b1f3961640cc, totaljerks.com fp
+# 2026-09-07 ai-usage audit: 3/14 fleet principal-engineer calls that day hit
+# the 30-turn cap, and every one truncated mid-investigation with NO final
+# PE_STATUS/PE_ROOT_CAUSE lines emitted — the wrapper's "unknown (pass did
+# not report)" fallback fired, so the incident escalated to Jesse with zero
+# diagnostic content despite a full billed session (see totaljerks.com fp
 # 4ec888966bb0, shoppinkflamingo.com fp 95afbfa545d5). Raised for headroom;
 # paired with the turn-budget checkpoint in PROMPT below so a run that's
 # still going to run long reports its best-available finding instead of
@@ -35,7 +34,11 @@ WORK_TIMEOUT=2400
 LOG="ops/logs/principal-engineer-$(date -u +%Y%m%d).log"
 NOW_ET="$(TZ=America/New_York date +'%H:%M ET')"
 TODAY="$(date -u +%Y-%m-%d)"
-[[ -f "$REPO_ROOT/.env.shared" ]] && { set -a; . "$REPO_ROOT/.env.shared"; set +a; }
+if [[ -f "$REPO_ROOT/.env.shared" ]]; then
+  set +u
+  set -a; . "$REPO_ROOT/.env.shared"; set +a
+  set -u
+fi
 NOTIFY="$REPO_ROOT/ops/scripts/notify-slack.sh"
 CHANNEL="${SLACK_CHANNEL_RC9:-domain-rc-9-com}"
 
@@ -86,27 +89,147 @@ json.dump(rec, open(p, 'w'), indent=2)
 " "$INCIDENT_FILE" "$safe_note" 2>/dev/null || true
 }
 
+# Deferrals before Claude starts are not repair attempts. Put the incident back
+# in the queue and undo scan.py's dispatch increment so lock contention, dirty
+# trees, or network outages cannot consume the three real investigation tries.
+defer_incident() {  # $1=note
+  local safe_note; safe_note="$(redact_guardrail_terms "$1")"
+  python3 -c "
+import json, sys
+p = sys.argv[1]
+try:
+    rec = json.load(open(p))
+except Exception:
+    rec = {}
+rec['status'] = 'open'
+rec['attempts'] = max(0, int(rec.get('attempts', 1)) - 1)
+rec['last_outcome'] = sys.argv[2]
+json.dump(rec, open(p, 'w'), indent=2)
+" "$INCIDENT_FILE" "$safe_note" 2>/dev/null || true
+}
+
+# A role can legitimately leave a local commit while the push is in flight (or
+# while fleet-git is finishing a batch). Keep the hard safety gate, but do not
+# page on the first few retryable mismatches. The state lives with the incident
+# so each cron tick contributes one consecutive observation.
+SYNC_ALERT_AFTER="${PRINCIPAL_SYNC_ALERT_AFTER:-3}"
+record_sync_defer() {  # $1=kind $2=behind $3=ahead
+  local kind="$1" behind="$2" ahead="$3" result
+  result="$(python3 - "$INCIDENT_FILE" "$kind" "$behind" "$ahead" "$SYNC_ALERT_AFTER" <<'PY'
+import json, sys
+
+p, kind, behind, ahead, threshold = sys.argv[1:]
+try:
+    rec = json.load(open(p, encoding="utf-8"))
+except Exception:
+    rec = {}
+try:
+    threshold = max(1, int(threshold))
+except ValueError:
+    threshold = 3
+previous = rec.get("sync_defer_kind")
+count = int(rec.get("sync_defer_count", 0) or 0) + 1 if previous == kind else 1
+rec["sync_defer_kind"] = kind
+rec["sync_defer_count"] = count
+rec["sync_defer_behind"] = int(behind)
+rec["sync_defer_ahead"] = int(ahead)
+rec["last_outcome"] = f"deferred: checkout not synchronized ({kind}, behind={behind}, ahead={ahead})"
+json.dump(rec, open(p, "w", encoding="utf-8"), indent=2)
+print(("alert" if count >= threshold else "quiet") + ":" + str(count))
+PY
+  )"
+  printf '%s' "$result"
+}
+
+clear_sync_defer() {
+  python3 - "$INCIDENT_FILE" <<'PY' 2>/dev/null || true
+import json, sys
+p = sys.argv[1]
+try:
+    rec = json.load(open(p, encoding="utf-8"))
+except Exception:
+    raise SystemExit
+for key in ("sync_defer_kind", "sync_defer_count", "sync_defer_behind", "sync_defer_ahead"):
+    rec.pop(key, None)
+json.dump(rec, open(p, "w", encoding="utf-8"), indent=2)
+PY
+}
+
+MUTATION_LOCK_HELPER="$REPO_ROOT/.monorepo-tools/cron-roles/repo-mutation-lock.sh"
+[[ -f "$MUTATION_LOCK_HELPER" ]] || MUTATION_LOCK_HELPER="$REPO_ROOT/../../tools/cron-roles/repo-mutation-lock.sh"
+# shellcheck source=/dev/null
+. "$MUTATION_LOCK_HELPER"
+if ! repo_mutation_lock_acquire "$REPO_ROOT" principal-engineer 300; then
+  log "deferring: repository mutation lock stayed busy for 300s"
+  defer_incident "deferred: repository mutation lock busy"
+  exit 0
+fi
+trap repo_mutation_lock_release EXIT
+
+# Start only from the exact pushed main commit. A clean worktree with an
+# unpushed or behind HEAD is still unsafe: a later push could ship another
+# role's commit or fail non-fast-forward after doing paid repair work.
+if ! git fetch --quiet --no-tags origin main 2>>"$LOG"; then
+  log "deferring: cannot refresh origin/main"
+  defer_incident "deferred: git fetch failed"
+  exit 0
+fi
+BRANCH="$(git branch --show-current 2>/dev/null || true)"
+LOCAL_HEAD="$(git rev-parse HEAD 2>/dev/null || true)"
+REMOTE_HEAD="$(git rev-parse origin/main 2>/dev/null || true)"
+if [[ "$BRANCH" != "main" || -z "$LOCAL_HEAD" || "$LOCAL_HEAD" != "$REMOTE_HEAD" ]]; then
+  BEHIND=0; AHEAD=0; SYNC_KIND="invalid-checkout"
+  if [[ -n "$LOCAL_HEAD" && -n "$REMOTE_HEAD" ]]; then
+    read -r BEHIND AHEAD < <(git rev-list --left-right --count "$REMOTE_HEAD...$LOCAL_HEAD" 2>/dev/null || echo '0 0')
+    if [[ "$BEHIND" == 0 && "$AHEAD" -gt 0 ]]; then
+      SYNC_KIND="local-ahead"
+    elif [[ "$BEHIND" -gt 0 && "$AHEAD" == 0 ]]; then
+      SYNC_KIND="remote-ahead"
+    elif [[ "$BEHIND" -gt 0 && "$AHEAD" -gt 0 ]]; then
+      SYNC_KIND="diverged"
+    fi
+  fi
+  SYNC_RESULT="$(record_sync_defer "$SYNC_KIND" "$BEHIND" "$AHEAD")"
+  ALERT="${SYNC_RESULT%%:*}"; SYNC_COUNT="${SYNC_RESULT#*:}"
+  log "deferring: checkout not synchronized (kind=$SYNC_KIND branch=${BRANCH:-detached} behind=$BEHIND ahead=$AHEAD consecutive=$SYNC_COUNT)"
+  if [[ "$ALERT" == "alert" || "$SYNC_KIND" == "invalid-checkout" ]]; then
+    slack "⚠️ *rc9 principal engineer* still deferred fp=${FP}: checkout is not synced to \`origin/main\` (kind=${SYNC_KIND}, branch=${BRANCH:-detached}, behind=${BEHIND}, ahead=${AHEAD}; repeated checks). Nothing was changed or shipped. · ${NOW_ET}" warning
+  fi
+  defer_incident "deferred: checkout not synchronized (${SYNC_KIND}, behind=${BEHIND}, ahead=${AHEAD})"
+  exit 0
+fi
+clear_sync_defer
+
 # Never let one failed/truncated pass leave edits that a later pass mistakes
 # for its own. Runtime state is intentionally excluded: cron updates these
 # paths on every tick and fleet-git policy ignores them. Only shippable edits
-# must block a worker.
+# must block a worker; otherwise the role deadlocks on its own bookkeeping.
 RUNTIME_PATHSPECS=(
   ':(exclude,glob)ops/logs/**'
   ':(exclude,glob)ops/health/**'
   ':(exclude,glob)ops/.locks/**'
   ':(exclude,glob)ops/facts.yaml'
+  # These are operational bookkeeping written by cron roles, not shippable
+  # site changes. A live social post and a watchdog task must not deadlock
+  # the principal engineer from investigating an unrelated incident.
+  ':(exclude,glob)ops/tasks/**'
+  ':(exclude,glob)ops/social/post-log.jsonl'
+  ':(exclude,glob)ops/social/queue.jsonl'
+  ':(exclude,glob)ops/board/engineer-log.md'
+  ':(exclude,glob).deploy-needed.audit-blocked'
 )
 PREEXISTING_EDITS="$(git status --porcelain --untracked-files=all -- . "${RUNTIME_PATHSPECS[@]}" 2>/dev/null || true)"
 if [[ -n "$PREEXISTING_EDITS" ]]; then
   DIRTY_PATHS="$(printf '%s\n' "$PREEXISTING_EDITS" | head -10)"
   log "refusing to run: shippable scope already has edits: $(printf '%s' "$DIRTY_PATHS" | tr '\n' ' ')"
-  slack "🔴 *greatamericanlakes principal engineer* refused to start fp=${FP}: shippable scope already has uncommitted edits. Nothing was changed or shipped. · ${NOW_ET}
+  slack "🔴 *rc9 principal engineer* deferred fp=${FP}: checkout already has uncommitted edits. Nothing was changed or shipped. · ${NOW_ET}
 \`\`\`
 ${DIRTY_PATHS}
 \`\`\`" danger
-  reopen_incident "refused: uncommitted edits in shippable scope"
-  exit 1
+  defer_incident "deferred: uncommitted edits in shippable scope"
+  exit 0
 fi
+BASE_HEAD="$LOCAL_HEAD"
 
 # INC_TEXT is untrusted: it's whatever text some role/script posted to Slack,
 # and any role's failure text can echo external content (scraped news,
@@ -122,12 +245,59 @@ INC_ATTEMPT="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1])).g
 # network would otherwise burn a full timed-out claude call for nothing.
 if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthropic.com/" 2>/dev/null; then
   log "network preflight FAILED — skipping this dispatch (no Claude call made)"
-  reopen_incident "deferred: network preflight failed"
+  defer_incident "deferred: network preflight failed"
   exit 0
 fi
 
 RESULT_FILE="$(mktemp)"
-trap 'rm -f "$RESULT_FILE"' EXIT
+PASS_ERR="$(mktemp)"
+cleanup() { rm -f "$RESULT_FILE" "$PASS_ERR" 2>/dev/null || true; repo_mutation_lock_release; }
+trap cleanup EXIT
+
+validate_result_contract() {
+  local result_file="$1"
+  grep -Eq '^PE_STATUS=(resolved-real|resolved-noise|escalated)$' "$result_file" \
+    && grep -q '^PE_ROOT_CAUSE=.' "$result_file" \
+    && grep -q '^PE_FIX=.' "$result_file" \
+    && grep -q '^PE_HARDENING=.' "$result_file" \
+    && grep -Eq '^PE_ROLLOUT_CANDIDATE=(yes|no)$' "$result_file"
+}
+
+classify_pass_result() {
+  local result_file="$1" pass_err="$2" exit_code="$3"
+  RESULT_ROOT_CAUSE="unknown (pass did not report)"
+  RESULT_FIX="none"
+  RESULT_HARDENING="none"
+  if grep -Eqi 'account_usage_exhausted|out of usage|hit your limit' "$pass_err"; then
+    RESULT_ROOT_CAUSE="Claude pass did not run: shared Claude account usage limit exhausted (exit ${exit_code})"
+    RESULT_FIX="none — no model work ran"
+    RESULT_HARDENING="fleet auth monitor owns account recovery; wrapper reports the CLI failure explicitly"
+  elif [[ "$exit_code" != "0" ]]; then
+    RESULT_ROOT_CAUSE="Claude pass failed before its final report (exit ${exit_code}); see the principal-engineer log"
+    RESULT_FIX="none — pass did not complete"
+    RESULT_HARDENING="wrapper preserves stderr and reports non-zero CLI failures explicitly"
+  elif [[ -s "$result_file" ]]; then
+    RESULT_ROOT_CAUSE="Claude pass exited successfully but omitted its required PE report block"
+    RESULT_FIX="pass output was captured; wrapper will archive the partial result and restore the checkout"
+    RESULT_HARDENING="wrapper distinguishes a successful unstructured pass from a pass that never ran"
+  else
+    RESULT_ROOT_CAUSE="Claude pass exited successfully without output or its required PE report block"
+    RESULT_FIX="none — no actionable pass output was produced"
+    RESULT_HARDENING="wrapper reports empty successful passes explicitly"
+  fi
+}
+
+archive_and_restore() {  # $1=short reason
+  local artifact_base="ops/health/principal-incidents/${FP}-$(date -u +%Y%m%dT%H%M%SZ)"
+  mkdir -p "$(dirname "$artifact_base")"
+  cp "$RESULT_FILE" "${artifact_base}.partial.txt" 2>/dev/null || true
+  git diff --binary HEAD -- . > "${artifact_base}.patch" 2>/dev/null || true
+  git ls-files --others --exclude-standard -z -- . \
+    | tar --null -czf "${artifact_base}.untracked.tgz" -T - 2>/dev/null || rm -f "${artifact_base}.untracked.tgz"
+  git restore --staged --worktree --source="$BASE_HEAD" -- . 2>>"$LOG" || true
+  git clean -fd -- . >>"$LOG" 2>&1 || true
+  log "$1 — partial result/diff archived at ${artifact_base}.* and worktree restored"
+}
 
 PROMPT="You are the Remote Command Principal Engineer. Today is ${TODAY} (${NOW_ET}).
 Working directory: ${REPO_ROOT}. You were woken because a Slack error/warning
@@ -136,11 +306,11 @@ time(s) total, this is dispatch attempt ${INC_ATTEMPT}/3 on this fingerprint).
 Your full role contract is in ops/roles/principal-engineer.md — follow it.
 You have ${MAX_TURNS} turns; be efficient.
 
-**Turn-budget checkpoint (2026-09-07 fix -- a truncated run used to escalate
+**Turn-budget checkpoint (2026-09-07 fix — a truncated run used to escalate
 with zero findings and burn the full session for nothing): keep a rough count
 of your own turns.** If you are past turn 25 and have not yet output your
 final report block, STOP investigating/fixing/hardening right now and output
-that block immediately with your best-available findings -- a real
+that block immediately with your best-available findings — a real
 PE_ROOT_CAUSE from a partial investigation (even `PE_STATUS=escalated` with
 what you found so far and what you'd try next) is worth far more to Jesse
 than a truncated session that reports nothing. A smaller real finding beats a
@@ -172,7 +342,7 @@ ${INC_TEXT}
    the fleet, do NOT roll it out yourself — write
    ops/tasks/backlog/fleet-rollout-<short-slug>.md with frontmatter
    'assigned_role: human-triage' describing the pattern and proposed fix.
-5. If you changed shippable files, run \`cd site && npm run security:audit:prod && npm run build\`
+5. If you changed shippable files, run \`cd site && rm -rf dist && npm run security:audit:prod && npm run build\`
    yourself to sanity-check before finishing (the wrapper re-runs this
    authoritatively and will not ship anything that fails it).
 6. Do NOT git commit or git push — the wrapper handles the build-gated commit+push.
@@ -197,9 +367,10 @@ timeout "$WORK_TIMEOUT" "$CLAUDE_TRACKED" "$PROMPT" \
   --model "$MODEL" \
   --max-turns "$MAX_TURNS" \
   --dangerously-skip-permissions \
-  > "$RESULT_FILE" 2>>"$LOG"
+  > "$RESULT_FILE" 2>"$PASS_ERR"
 CLAUDE_EXIT=$?
 set -e
+[[ ! -s "$PASS_ERR" ]] || cat "$PASS_ERR" >> "$LOG"
 tee -a "$LOG" < "$RESULT_FILE" > /dev/null
 
 PSTATUS=$(grep '^PE_STATUS=' "$RESULT_FILE" | tail -1 | cut -d= -f2- | tr -d ' \r\n' || true); PSTATUS="${PSTATUS:-escalated}"
@@ -207,6 +378,16 @@ ROOT_CAUSE=$(grep '^PE_ROOT_CAUSE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || t
 FIX=$(grep '^PE_FIX=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); FIX="${FIX:-none}"
 HARDENING=$(grep '^PE_HARDENING=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); HARDENING="${HARDENING:-none}"
 ROLLOUT=$(grep '^PE_ROLLOUT_CANDIDATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- | tr -d ' \r\n' || true); ROLLOUT="${ROLLOUT:-no}"
+
+# A failed Claude CLI call writes its useful diagnostic to stderr, not the
+# structured stdout report. Keep the raw result contract gate below, but make
+# the retained evidence and retry reason explain the actual failure.
+if [[ "$ROOT_CAUSE" == "unknown (pass did not report)" ]]; then
+  classify_pass_result "$RESULT_FILE" "$PASS_ERR" "$CLAUDE_EXIT"
+  ROOT_CAUSE="$RESULT_ROOT_CAUSE"
+  FIX="$RESULT_FIX"
+  HARDENING="$RESULT_HARDENING"
+fi
 
 mark_incident() {  # $1=status
   local safe_outcome; safe_outcome="$(redact_guardrail_terms "${PSTATUS}: ${ROOT_CAUSE}")"
@@ -224,8 +405,8 @@ json.dump(rec, open(p, 'w'), indent=2)
 }
 
 retry_or_escalate() {  # $1=reason; cap/timeout failures get one delayed retry
-  local reason="$1"
-  python3 - "$INCIDENT_FILE" "$reason" <<'PY_RETRY'
+  local reason="$1" outcome
+  outcome="$(python3 - "$INCIDENT_FILE" "$reason" <<'PY'
 import json, sys
 from datetime import datetime, timedelta, timezone
 
@@ -241,34 +422,49 @@ if attempts >= 2:
     rec["status"] = "open"
     rec["attempts"] = 3
     rec["cap_reason"] = reason
+    result = "exhausted"
 else:
     rec["status"] = "open"
     rec["retry_after"] = (datetime.now(timezone.utc) + timedelta(seconds=40 * 60)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    result = "retry"
 rec["last_outcome"] = reason
 json.dump(rec, open(p, "w", encoding="utf-8"), indent=2)
-PY_RETRY
+print(result)
+PY
+  )"
+  if [[ "$outcome" == "exhausted" ]]; then
+    slack "🚨 *rc9 principal engineer* exhausted the capped-run retry for fp=${FP}; the scanner will create the human-triage task · ${NOW_ET}" danger
+  else
+    slack "⚠️ *rc9 principal engineer* ${reason}; one retry scheduled after 40 minutes for fp=${FP} · ${NOW_ET}" warning
+  fi
 }
 
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
-  log "pass TIMED OUT after ${WORK_TIMEOUT}s"
-  retry_or_escalate "pass TIMED OUT after ${WORK_TIMEOUT}s"
-  slack "🔴 *rc9 principal engineer* timed out investigating fp=${FP} · ${NOW_ET}" danger
+  REASON="pass TIMED OUT after ${WORK_TIMEOUT}s"
+  archive_and_restore "$REASON"
+  retry_or_escalate "$REASON"
   exit 1
 fi
 
 # A max-turns/error exit can still leave a buildable worktree. Before this
-# gate existed, a capped/failed pass fell straight through to the git-status
-# check below with PSTATUS defaulted to "escalated" and ROOT_CAUSE "unknown
-# (pass did not report)" — meaning a truncated run's partial edits could still
-# be committed and pushed, and every cap failure escalated to Jesse on the
-# first occurrence with zero diagnostic content instead of getting the same
-# one-retry grace the timeout path above gets. 2026-09-23 fleet rollout of the
-# fix already applied to blackmarketapparel.com (ai-optimizer ticket
-# 2026-09-22-principal-engineer-sh-capped-failed-runs-escalate-immediatel).
+# gate existed, that partial tree was committed and pushed with fallback
+# metadata (`principal-engineer: none`), then the incident claimed "unknown".
+# Buildability is not a substitute for a completed worker result contract.
 if [[ "$CLAUDE_EXIT" != "0" ]]; then
   REASON="pass FAILED (rc=${CLAUDE_EXIT}) before a complete result"
-  log "$REASON"
+  archive_and_restore "$REASON"
   retry_or_escalate "$REASON"
+  exit 1
+fi
+if ! grep -Eq '^PE_STATUS=(resolved-real|resolved-noise|escalated)$' "$RESULT_FILE" \
+  || ! grep -q '^PE_ROOT_CAUSE=.' "$RESULT_FILE" \
+  || ! grep -q '^PE_FIX=.' "$RESULT_FILE" \
+  || ! grep -q '^PE_HARDENING=.' "$RESULT_FILE" \
+  || ! grep -Eq '^PE_ROLLOUT_CANDIDATE=(yes|no)$' "$RESULT_FILE"; then
+  archive_and_restore "pass returned rc=0 without the complete result contract"
+  REASON="pass returned rc=0 without the complete result contract"
+  retry_or_escalate "$REASON"
+  slack "🔴 *rc9 principal engineer* returned no complete result for fp=${FP}. Partial result/diff were archived and the checkout restored; nothing shipped. · ${NOW_ET}" danger
   exit 1
 fi
 
@@ -283,8 +479,13 @@ if [[ "$CHANGED_SOMETHING" == "1" ]]; then
   _BUILD_LOCK="$REPO_ROOT/ops/.locks/deploy-build.lock"
   mkdir -p "$(dirname "$_BUILD_LOCK")" 2>/dev/null || true
   exec 8>"$_BUILD_LOCK"
-  flock -w 900 8 || log "WARNING: build lock not acquired after 900s — proceeding, dist may race a deploy"
-  if ( cd site && rm -rf dist && npm run security:audit:prod && npm run build ) >>"$LOG" 2>&1; then
+  if ! flock -w 900 8; then
+    archive_and_restore "build lock not acquired after 900s"
+    mark_incident open
+    slack "🔴 *rc9 principal engineer* could not acquire the build lock for fp=${FP}; changes archived and restored, nothing shipped. · ${NOW_ET}" danger
+    exit 1
+  fi
+  if ( cd site && rm -rf dist && rm -rf dist && npm run security:audit:prod && npm run build ) >>"$LOG" 2>&1; then
     log "build OK — committing + pushing"
     if [ -d "${HOME:-/root}/.ssh" ]; then
       mkdir -p /tmp/ssh
@@ -297,27 +498,34 @@ if [[ "$CHANGED_SOMETHING" == "1" ]]; then
     git config --global user.name  "${GIT_USER_NAME:-Remote Command Bot}"
     git config --global user.email "${GIT_USER_EMAIL:-bot@rc-9.com}"
     git config --global --add safe.directory "$REPO_ROOT" 2>/dev/null || true
-    git add -A -- site/ ops/ .github/ 2>/dev/null || true
+    # Stage each shippable directory independently. A missing or ignored
+    # path must not make git abort staging the valid parts of the fix.
+    for p in site/src site/public ops; do
+      git add "$p" >>"$LOG" 2>&1 || true
+    done
     if git diff --cached --quiet; then
       log "nothing staged after all — skipping commit"
     else
-      git -c commit.gpgsign=false commit -m "principal-engineer: ${FIX} — ${TODAY} ${NOW_ET}" >>"$LOG" 2>&1 || true
+      if ! git -c commit.gpgsign=false commit -m "principal-engineer: ${FIX} — ${TODAY} ${NOW_ET}" >>"$LOG" 2>&1; then
+        archive_and_restore "git commit failed"
+        mark_incident open
+        slack "🔴 *rc9 principal engineer* could not commit its fix for fp=${FP}; changes archived and restored, nothing shipped. · ${NOW_ET}" danger
+        exit 1
+      fi
       if git_push_retry >>"$LOG" 2>&1; then
         touch .deploy-needed
         PUSHED=1
         log "pushed to main — CF Workers Builds will deploy"
       else
         log "FAIL: git push failed"
-        mark_incident open
+        mark_incident escalated
         slack "🔴 *rc9 principal engineer* — fix built but git push FAILED (fp=${FP}) · ${NOW_ET}
 ${ROOT_CAUSE}" danger
         exit 1
       fi
     fi
   else
-    log "FAIL: build gate failed — reverting worker edits, not shipping"
-    git checkout -- . 2>>"$LOG" || true
-    git clean -fd site/ 2>>"$LOG" || true
+    archive_and_restore "FAIL: build gate failed"
     mark_incident open
     slack "🔴 *rc9 principal engineer* — build gate FAILED on fp=${FP}, reverted, not shipped · ${NOW_ET}
 Root cause found: ${ROOT_CAUSE}" danger
@@ -331,6 +539,9 @@ case "$PSTATUS" in
     ROLLOUT_NOTE=""
     [[ "$ROLLOUT" == "yes" ]] && ROLLOUT_NOTE="
 _Flagged as a fleet-wide rollout candidate — see ops/tasks/backlog/ (human-triage, not auto-rolled-out)._"
+    # Resolution is the reply half of an alert already shown to the owner.
+    # Force delivery through notify-slack.sh's quiet gate instead of treating
+    # this good-colored message as routine informational chatter.
     if [[ "$PSTATUS" == "resolved-noise" ]]; then
       slack "✅ *rc9 principal engineer* — checked fp=${FP}, not a real issue · ${NOW_ET}
 ${ROOT_CAUSE}" good resolved
