@@ -257,3 +257,18 @@ render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF liv
 🔧 **Work done (deployed)** — JetBrains Mono 400 preload: added /fonts/jb-400.woff2 + @font-face override to eliminate FOIT on title screen mono text; build ✓; task 435e82dc done
 
 render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 22:18 ET
+
+## Run — 2026-09-25 17:18 UTC
+
+🔧 **Work done** — AdSense SDK deferred to window.load to remove it from TBT window.
+
+**Baseline:** performance 70 · TBT 1831ms (mobile lab run, per task 96f91f25 — snapshot taken after JetBrains Mono preload landed)
+
+**Change:** `site/public/adsense.js` — replaced DOMContentLoaded-triggered `loadSdk()` with `window.addEventListener('load', loadSdk)`. The `adsbygoogle` queue pattern (`adsbygoogle.push({})`) is designed to accept calls before the SDK loads; the SDK drains the queue on arrival, so ads fill correctly. `refresh()` still calls `renderAll()` which queues each ad unit as before.
+
+**Why this reduces TBT:** The AdSense SDK (`adsbygoogle.js`, ~300KB third-party) previously started executing immediately after DOMContentLoaded (defer order: consent.js → adsense.js → init.js). Its main-thread execution is the primary TBT contributor. With window.load deferral, on mobile Lighthouse the SDK executes after TTI and falls outside the TBT window.
+
+**Build:** `npm run build` ✓
+**Task:** 96f91f25 → done/
+
+render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 13:18 ET

@@ -112,9 +112,9 @@
   // Public hook: call after showing a screen that owns an ad container.
   window.__RC9_ADSENSE__ = { refresh: renderAll };
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadSdk);
-  } else {
-    loadSdk();
-  }
+  // Defer SDK injection to window.load so adsbygoogle.js execution happens
+  // after the page reaches TTI and is not charged to TBT. The adsbygoogle
+  // queue pattern guarantees ads fill correctly even if push({}) is called
+  // before the SDK loads — the SDK drains the queue on arrival.
+  window.addEventListener('load', loadSdk);
 })();
