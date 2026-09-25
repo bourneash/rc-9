@@ -20,11 +20,15 @@ void import('./sidebar.js');
 
 // Lazy singleton — one download of the game engine, ever.
 // Exposed globally so the title-screen action handler can await it before
-// opening the setup modal, ensuring the engine is ready on first click even
-// if the user is faster than the idle-callback window.
+// opening the setup modal. A failed load may be retried from the title screen.
 let mainPromise = null;
 function loadMain() {
-  if (!mainPromise) mainPromise = import('./main.js');
+  if (!mainPromise) {
+    mainPromise = import('./main.js').catch(error => {
+      mainPromise = null;
+      throw error;
+    });
+  }
   return mainPromise;
 }
 globalThis.__SE_LOAD_MAIN__ = loadMain;
