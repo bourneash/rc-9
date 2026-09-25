@@ -272,3 +272,9 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 22:18 E
 **Task:** 96f91f25 → done/
 
 render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 13:18 ET
+
+## Run — 2026-09-25 21:28 UTC
+
+🔧 **Work done (deployed)** — AdSense SDK deferred to window.load: removes adsbygoogle.js execution from TBT window; build ✓; task 96f91f25 done
+
+render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 17:18 ET
