@@ -46,6 +46,10 @@
     <!-- Preload Saira Condensed 700 (LCP element font) so font-display:swap
          resolves before CSS parses — eliminates ~5s late-swap LCP on mobile. -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/sc-700.woff2" crossorigin="anonymous" />
+    <!-- Preload JetBrains Mono 400 latin (title screen boot/menu/footer font)
+         so the mono font is available at first paint — eliminates FOIT for
+         the boot sequence, menu items, and keyboard shortcut hints. -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/jb-400.woff2" crossorigin="anonymous" />
     <!-- Critical CSS: tokens + typography + title-screen render-blocking (≈8KB).
          hud/modals/canvas-overlays/styles are imported by main.js (dynamic) so they
          load in parallel with the game engine without blocking LCP. -->

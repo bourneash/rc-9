@@ -240,3 +240,14 @@ render 2/2 pages · ⚠ 2 uncommitted src · main +2 unpushed · CF live · 1 ta
 ## Run — 2026-09-25 01:31 UTC
 
 ⚠️ **Truncated** — pass exited 1 (max-turns or crash). Task stays in backlog for retry. render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 21:18 ET
+
+## Run — 2026-09-25 02:18 UTC (recovery)
+
+🔧 **Work done** — JetBrains Mono 400 preload: resumed interrupted pass (20260925T020315Z). Added `<link rel=preload>` for `/fonts/jb-400.woff2` in `index.html`, added `@font-face` override in `typography.css` to give the preload a fixed-URL target matching the CSS reference, and added `site/public/fonts/jb-400.woff2` (21KB, copied from `@fontsource/jetbrains-mono`). Eliminates FOIT on title screen boot sequence / menu / footer mono text.
+
+**Baseline:** performance 48 · LCP 4977ms · TBT 1513ms (mobile lab run, per task 435e82dc)
+**Build:** `npm run build` ✓ (9.78s)
+**Expected:** reduced FOIT improves perceived LCP; TBT unchanged (pixi.js is the TBT driver)
+**Task:** 435e82dc → done/
+
+render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 22:18 ET
