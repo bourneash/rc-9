@@ -35,17 +35,10 @@ function onReady() {
     // Returning user with a saved session: the engine is needed immediately
     // to restore game state, so load it now without deferral.
     void loadMain();
-  } else {
-    // New visit: let the title screen paint and LCP fire before the game engine
-    // blocks the main thread. requestIdleCallback fires after the browser is
-    // idle (post-paint); the 3 s timeout ensures the engine is ready well before
-    // a typical user clicks "NEW ENGAGEMENT".
-    if ('requestIdleCallback' in globalThis) {
-      globalThis.requestIdleCallback(() => void loadMain(), { timeout: 3000 });
-    } else {
-      globalThis.setTimeout(() => void loadMain(), 1000);
-    }
   }
+  // A first-time visitor is still on a full-screen title menu. Loading and
+  // starting the canvas game here keeps the main thread busy even though none
+  // of the work is visible. The New Engagement action loads it on demand.
 }
 
 // Mount title screen after DOM is ready

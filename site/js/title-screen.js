@@ -84,9 +84,28 @@ async function handleAction(action) {
   switch (action) {
     case 'new': {
       // Ensure the game engine is loaded before opening the setup modal.
-      // For users who click before the idle-callback fires, this await provides
-      // a safe loading gate instead of opening a half-initialised modal.
-      await globalThis.__SE_LOAD_MAIN__?.();
+      // First visits load on demand; saved sessions are already loading it.
+      const button = document.querySelector('#title-screen .ts-item[data-action="new"]');
+      const label = button?.querySelector('.ts-item-label');
+      if (button?.disabled) return;
+      if (button) {
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+      }
+      if (label) label.textContent = 'LOADING ENGAGEMENT…';
+      try {
+        await globalThis.__SE_LOAD_MAIN__?.();
+      } catch (error) {
+        console.error('[title-screen] game engine failed to load', error);
+        if (label) label.textContent = 'LOAD FAILED — RETRY';
+        return;
+      } finally {
+        if (button) {
+          button.disabled = false;
+          button.removeAttribute('aria-busy');
+        }
+      }
+      if (label) label.textContent = 'NEW ENGAGEMENT';
       hide();
       // Go through the full setup-modal init path so slots render, tiles sync,
       // and the .hidden class is removed. Calling dlg.showModal() alone skips
