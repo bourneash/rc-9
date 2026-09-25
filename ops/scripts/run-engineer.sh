@@ -252,7 +252,10 @@ DIFFERENT this time; if nothing is, say that too."
 BUILD_LOCK="$REPO_ROOT/ops/.locks/deploy-build.lock"
 mkdir -p "$(dirname "$BUILD_LOCK")" 2>/dev/null || true
 exec 8>"$BUILD_LOCK"
-flock -w 900 8 || log "WARNING: build lock not acquired after 900s — proceeding, dist may race a deploy"
+if ! flock -w 900 8; then
+  log "deferring engineer pass: deploy/build lock stayed busy for 900s"
+  exit 0
+fi
 
 log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # Revoke git-push capability for the model pass (the wrapper does the build-gated

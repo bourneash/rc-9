@@ -352,6 +352,16 @@ if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthrop
   exit 0
 fi
 
+# The model may build while repairing. Hold the deployer's build lock through
+# the model pass and authoritative gate; a busy lock defers without an attempt.
+_BUILD_LOCK="$REPO_ROOT/ops/.locks/deploy-build.lock"
+mkdir -p "$(dirname "$_BUILD_LOCK")" 2>/dev/null || true
+exec 8>"$_BUILD_LOCK"
+if ! flock -w 900 8; then
+  log "repair deferred — deploy/build lock stayed busy for 900s (no attempt spent)"
+  exit 0
+fi
+
 # ================= 5. Repair pass =================
 NEW_ATTEMPTS=$(( ATTEMPTS + 1 ))
 set_field attempts "$NEW_ATTEMPTS"
@@ -439,14 +449,7 @@ fi
 
 # ---- Authoritative gate (bash, independent of the model's claim) ----
 log "model reports a fix — running authoritative audit+build gate..."
-# Per-site build lock. This `rm -rf dist` would otherwise delete the tree a
-# concurrent `wrangler deploy` is uploading from, publishing a manifest with
-# pages missing — see deploy.sh for the 2026-09-02 incident that produced hard
-# 404s on a shifting subset of live pages minutes after a clean deploy.
-_BUILD_LOCK="${REPO_ROOT:-$ROOT}/ops/.locks/deploy-build.lock"
-mkdir -p "$(dirname "$_BUILD_LOCK")" 2>/dev/null || true
-exec 8>"$_BUILD_LOCK"
-flock -w 900 8 || log "WARNING: build lock not acquired after 900s — proceeding, dist may race a deploy"
+# The deploy/build lock was acquired before the model pass and remains held.
 if ! ( cd site && rm -rf dist && npm run security:audit:prod && npm run build ) >>"$LOG" 2>&1; then
   log "FAIL: authoritative gate failed — not pushing; reverting model edits"
   git checkout -- . 2>>"$LOG" || true
