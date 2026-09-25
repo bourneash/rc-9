@@ -236,3 +236,7 @@ render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF liv
 🔧 **Work done (deployed)** — Font preload for LCP: added <link rel=preload> for Saira Condensed 700 latin (LCP element font) at fixed URL /fonts/sc-700.woff2 to eliminate ~5s late-swap repaint; build ✓; task b2cfa747 done
 
 render 2/2 pages · ⚠ 2 uncommitted src · main +2 unpushed · CF live · 1 task(s) · 12:48 ET
+
+## Run — 2026-09-25 01:31 UTC
+
+⚠️ **Truncated** — pass exited 1 (max-turns or crash). Task stays in backlog for retry. render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 21:18 ET

@@ -80,9 +80,13 @@ function actionFor(menuItem) {
   return menuItem?.dataset?.action;
 }
 
-function handleAction(action) {
+async function handleAction(action) {
   switch (action) {
     case 'new': {
+      // Ensure the game engine is loaded before opening the setup modal.
+      // For users who click before the idle-callback fires, this await provides
+      // a safe loading gate instead of opening a half-initialised modal.
+      await globalThis.__SE_LOAD_MAIN__?.();
       hide();
       // Go through the full setup-modal init path so slots render, tiles sync,
       // and the .hidden class is removed. Calling dlg.showModal() alone skips
@@ -165,7 +169,8 @@ export function mount() {
     // Still kick the empty-state CTA so if no game ends up active we
     // show the centered "no engagement" panel.
     globalThis.refreshEmptyStateCTA?.();
-    return;
+    return true;
   }
   show();
+  return false;
 }

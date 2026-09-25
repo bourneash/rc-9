@@ -18,12 +18,39 @@ void import('./ads.js');
 // Load sidebar (vanilla JS, no React needed) asynchronously
 void import('./sidebar.js');
 
-// Load main game asynchronously so title screen renders before pixi.js downloads
-void import('./main.js');
+// Lazy singleton — one download of the game engine, ever.
+// Exposed globally so the title-screen action handler can await it before
+// opening the setup modal, ensuring the engine is ready on first click even
+// if the user is faster than the idle-callback window.
+let mainPromise = null;
+function loadMain() {
+  if (!mainPromise) mainPromise = import('./main.js');
+  return mainPromise;
+}
+globalThis.__SE_LOAD_MAIN__ = loadMain;
+
+function onReady() {
+  const isRestoreSession = TitleScreen.mount();
+  if (isRestoreSession) {
+    // Returning user with a saved session: the engine is needed immediately
+    // to restore game state, so load it now without deferral.
+    void loadMain();
+  } else {
+    // New visit: let the title screen paint and LCP fire before the game engine
+    // blocks the main thread. requestIdleCallback fires after the browser is
+    // idle (post-paint); the 3 s timeout ensures the engine is ready well before
+    // a typical user clicks "NEW ENGAGEMENT".
+    if ('requestIdleCallback' in globalThis) {
+      globalThis.requestIdleCallback(() => void loadMain(), { timeout: 3000 });
+    } else {
+      globalThis.setTimeout(() => void loadMain(), 1000);
+    }
+  }
+}
 
 // Mount title screen after DOM is ready
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => TitleScreen.mount());
+  document.addEventListener('DOMContentLoaded', onReady);
 } else {
-  TitleScreen.mount();
+  onReady();
 }

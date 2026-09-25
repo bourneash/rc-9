@@ -14,7 +14,11 @@ source "$REPO_ROOT/.monorepo-tools/scripts/ai-usage-bootstrap.sh" 2>/dev/null ||
 LOG="${1:-/dev/stderr}"
 BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
 MODEL="claude-sonnet-4-6"
-MAX_TURNS=30
+# Keep this generated wrapper aligned with the engineer archetype. The prior
+# hard-coded 30-turn cap truncated this site's performance task at 31/30 turns
+# even though the task's estimated_turns and the fleet template allow headroom.
+DEFAULT_MAX_TURNS=34
+MAX_TURNS="$DEFAULT_MAX_TURNS"
 WORK_TIMEOUT=2400
 # --- Concurrency + heartbeat tuning (added: split model + work-lock) ---
 # The cheap sweep runs every */30 tick (zero Claude). The Claude WORK PASS is
@@ -176,6 +180,14 @@ if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthrop
 fi
 
 RESULT_FILE="$(mktemp)"
+ENGINEER_FAILURE_DIR="$REPO_ROOT/ops/health/engineer-failures"
+PREPASS_SHIPPABLE_DIRTY="$(git status --porcelain --untracked-files=all -- site ops/scripts ops/roles 2>/dev/null || true)"
+LATEST_ENGINEER_PARTIAL="$(find "$ENGINEER_FAILURE_DIR" -type f -name '*.partial.txt' -print 2>/dev/null | sort | tail -1 || true)"
+RESUME_CONTEXT=""
+if [[ -n "$LATEST_ENGINEER_PARTIAL" ]]; then
+  RESUME_CONTEXT="A previous engineer pass was interrupted. Resume from its archived evidence at ${LATEST_ENGINEER_PARTIAL%.partial.txt}.*; inspect the partial output and patch before repeating investigation."
+fi
+log "engineer turn budget: max=${MAX_TURNS} queued_tasks=${QUEUE_LIST:-none}"
 
 PROMPT="You are the rc-9.com autonomous Engineer. Today is ${TODAY} (${NOW_ET}).
 Working directory: ${REPO_ROOT}. You run on a 4-hour cron and were woken because the
@@ -190,6 +202,9 @@ Deploy flag: pending=${DEPLOY_PENDING} stale=${DEPLOY_STALE}
 Issues (severity-tagged — [warn]=you fix it, [block]=needs the owner):
 ${ISSUES_TEXT}
 Queued engineer tasks (in ops/tasks/backlog/, up to 3): ${QUEUE_LIST:-none}
+
+## Recovery context
+${RESUME_CONTEXT:-No prior interrupted-pass artifact was found.}
 
 ## Your job this run
 1. Fix every [warn] issue you can safely fix, at the source.
@@ -251,11 +266,34 @@ CLAUDE_EXIT=$?
 set -e
 tee -a "$LOG" < "$RESULT_FILE" > /dev/null
 
+archive_failed_pass() {
+  local reason="$1" stamp artifact_base
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  artifact_base="$ENGINEER_FAILURE_DIR/${stamp}"
+  mkdir -p "$ENGINEER_FAILURE_DIR"
+  cp "$RESULT_FILE" "${artifact_base}.partial.txt" 2>/dev/null || true
+  git diff --binary HEAD -- site ops/scripts ops/roles ops/tasks ops/board/engineer-log.md \
+    > "${artifact_base}.patch" 2>/dev/null || true
+  git ls-files --others --exclude-standard -z -- site ops/scripts ops/roles ops/tasks \
+    | tar --null -czf "${artifact_base}.untracked.tgz" -T - 2>/dev/null \
+    || rm -f "${artifact_base}.untracked.tgz"
+  printf 'reason=%s\nprepass_shippable_dirty=%s\n' "$reason" "$([[ -n "$PREPASS_SHIPPABLE_DIRTY" ]] && echo 1 || echo 0)" \
+    > "${artifact_base}.meta"
+  if [[ -z "$PREPASS_SHIPPABLE_DIRTY" ]]; then
+    git restore --staged --worktree --source=HEAD -- site ops/scripts ops/roles ops/tasks ops/board/engineer-log.md 2>>"$LOG" || true
+    git clean -fd -- site ops/scripts ops/roles ops/tasks 2>>"$LOG" || true
+    log "archived failed pass at ${artifact_base}.* and restored clean shippable tree"
+  else
+    log "archived failed pass at ${artifact_base}.*; preserved pre-existing shippable edits"
+  fi
+}
+
 CHANGED=$(grep '^ENGINEER_CHANGED=' "$RESULT_FILE" | tail -1 | cut -d= -f2 | tr -d ' \r\n' || true); CHANGED="${CHANGED:-0}"
 SUMMARY=$(grep '^ENGINEER_SUMMARY=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); SUMMARY="${SUMMARY:-engineer run complete}"
 ESCALATE=$(grep '^ENGINEER_ESCALATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- || true); ESCALATE="${ESCALATE:-none}"
 
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
+  archive_failed_pass "timeout after ${WORK_TIMEOUT}s"
   log "engineer pass TIMED OUT after ${WORK_TIMEOUT}s"
   slack "🔴 *rc-9 engineer* timed out after ${WORK_TIMEOUT}s · ${NOW_ET}" "danger"
   board_block "🔴 **Timeout** — claude-sonnet-4-6 pass exceeded ${WORK_TIMEOUT}s. ${STATUS_LINE}"
@@ -271,6 +309,7 @@ fi
 # cost with no record of the prior attempt. Guard it explicitly (mirrors
 # principal-engineer.sh's non-zero-exit handling).
 if [[ "$CLAUDE_EXIT" != "0" ]]; then
+  archive_failed_pass "claude exit ${CLAUDE_EXIT}"
   log "engineer pass FAILED (exit=${CLAUDE_EXIT}) — task remains in backlog, will retry next tick"
   slack "🔴 *rc-9 engineer* pass failed (exit=${CLAUDE_EXIT}, likely max-turns) — task stays queued for retry · ${NOW_ET}" "danger"
   board_block "⚠️ **Truncated** — pass exited ${CLAUDE_EXIT} (max-turns or crash). Task stays in backlog for retry. ${STATUS_LINE}"
