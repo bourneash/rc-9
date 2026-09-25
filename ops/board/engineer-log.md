@@ -251,3 +251,9 @@ render 2/2 pages · ⚠ 2 uncommitted src · main +2 unpushed · CF live · 1 ta
 **Task:** 435e82dc → done/
 
 render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 22:18 ET
+
+## Run — 2026-09-25 02:20 UTC
+
+🔧 **Work done (deployed)** — JetBrains Mono 400 preload: added /fonts/jb-400.woff2 + @font-face override to eliminate FOIT on title screen mono text; build ✓; task 435e82dc done
+
+render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 22:18 ET
