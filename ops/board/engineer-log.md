@@ -294,3 +294,7 @@ render 2/2 pages · tree clean · main synced · CF live · 2 task(s) closed · 
 🔧 **Work done (deployed)** — LCP/a11y/TBT fixes: removed title-screen `hidden` attr (LCP ~5s→~1-2s), added prefers-reduced-motion CSS, deferred sidebar.js to idle callback
 
 render 2/2 pages · tree clean · main synced · CF live · 2 task(s) · 08:18 ET
+
+## Deploy — 2026-09-26 12:30 ET
+
+✅ **Live** — wrangler deploy succeeded · smoke test HTTP 200 + cf-ray header · version c668e9d
