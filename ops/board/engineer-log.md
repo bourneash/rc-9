@@ -282,3 +282,9 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 17:18 E
 ## Run — 2026-09-26 12:00 UTC
 
 ⚠️ **Truncated** — pass exited 1 (max-turns or crash). Task stays in backlog for retry. render 2/2 pages · tree clean · main +2 unpushed · CF live · 2 task(s) · 07:48 ET
+
+## Run — 2026-09-26 12:18 UTC
+
+🔧 **Work done** — 3 perf/a11y fixes: (1) `prefers-reduced-motion` CSS added to title-screen.css (ACCESSIBILITY); (2) removed `hidden` attr from `#title-screen` so title renders at CSS-load time without waiting for JS — estimated LCP improvement from ~5s to ~1–2s on mobile (LCP element font is preloaded); (3) sidebar.js import deferred to `requestIdleCallback` in init.js to move DOM manipulation off the TBT critical path. `mount()` updated to call `hide()` for restore-session users. Build ✓. Tasks bcd5ef14 + 3655811b done.
+
+render 2/2 pages · tree clean · main synced · CF live · 2 task(s) closed · 08:18 ET

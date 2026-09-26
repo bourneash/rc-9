@@ -185,8 +185,10 @@ export function mount() {
   } catch {}
   if (restore && hasSave) {
     // Skip title — let existing app boot continue into saved state.
+    // hide() immediately because the title screen is visible by default in HTML.
     // Still kick the empty-state CTA so if no game ends up active we
     // show the centered "no engagement" panel.
+    hide();
     globalThis.refreshEmptyStateCTA?.();
     return true;
   }

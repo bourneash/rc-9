@@ -229,3 +229,9 @@
 @media (max-width: 760px), (max-height: 620px) {
   .ts-ad { display: none; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .ts-sweep { animation: none; }
+  .ts-cursor { animation: none; opacity: 1; }
+  .ts-uplink .live::before { animation: none; }
+}
