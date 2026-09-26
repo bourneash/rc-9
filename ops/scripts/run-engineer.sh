@@ -14,9 +14,10 @@ source "$REPO_ROOT/.monorepo-tools/scripts/ai-usage-bootstrap.sh" 2>/dev/null ||
 LOG="${1:-/dev/stderr}"
 BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
 MODEL="claude-sonnet-4-6"
-# Keep this generated wrapper aligned with the engineer archetype. The prior
-# hard-coded 30-turn cap truncated this site's performance task at 31/30 turns
-# even though the task's estimated_turns and the fleet template allow headroom.
+# Keep this generated wrapper aligned with the engineer archetype. One queued
+# implementation task per pass keeps the task estimate plus recovery buffer
+# below the cap; batching two 12-turn tasks caused a 35/34 max-turns failure on
+# 2026-09-26 before the model could print its completion contract.
 DEFAULT_MAX_TURNS=34
 MAX_TURNS="$DEFAULT_MAX_TURNS"
 WORK_TIMEOUT=2400
@@ -201,7 +202,7 @@ CF deploy: ok=${CF_OK} mode=${CF_MODE}
 Deploy flag: pending=${DEPLOY_PENDING} stale=${DEPLOY_STALE}
 Issues (severity-tagged — [warn]=you fix it, [block]=needs the owner):
 ${ISSUES_TEXT}
-Queued engineer tasks (in ops/tasks/backlog/, up to 3): ${QUEUE_LIST:-none}
+Queued engineer tasks (in ops/tasks/backlog/, up to 1 by default): ${QUEUE_LIST:-none}
 
 ## Recovery context
 ${RESUME_CONTEXT:-No prior interrupted-pass artifact was found.}
