@@ -222,6 +222,16 @@ ${RESUME_CONTEXT:-No prior interrupted-pass artifact was found.}
    Anything risky or unresolved → escalate via the output line below.
 6. Append a concise run block to ops/board/engineer-log.md.
 
+**Turn-budget checkpoint (added 2026-09-26 — this role had no self-check and
+was burning full \$MAX_TURNS passes with zero output on over-scoped tasks):
+keep a rough count of your own turns.** If you are past turn 24 (of
+${MAX_TURNS}) and have not yet output your final report block, STOP right
+now — do not start another investigation or edit — and output the three
+ENGINEER_* lines below immediately with your best-available status. If you
+have not finished a task, that is what ENGINEER_ESCALATE is for; a partial
+report with a real escalation beats a truncated session that reports
+nothing.
+
 ## Output — your LAST THREE LINES, exact format, nothing after:
 ENGINEER_CHANGED=<0 if you edited no shippable files, 1 if you did>
 ENGINEER_SUMMARY=<one short line for Slack>

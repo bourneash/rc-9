@@ -409,6 +409,15 @@ ${INCIDENT_JSON}
 4. Do NOT git commit or git push — the wrapper handles the build-gated push.
 5. Do NOT touch: legal/disclosure pages, _headers CSP (no loosening), runtime third-party JS.
 
+**Turn-budget checkpoint (added 2026-09-26 — this role had no self-check and
+was burning full \$MAX_TURNS passes with zero output on incidents it couldn't
+finish): keep a rough count of your own turns.** If you are past turn 21 (of
+${MAX_TURNS}) and have not yet output your final report block, STOP right
+now — do not start another investigation or edit — and output the three
+WATCHDOG_* lines below immediately with WATCHDOG_FIXED=0 and your
+best-available diagnosis in WATCHDOG_DETAIL. A partial diagnosis beats a
+truncated session that reports nothing.
+
 ## Output — your LAST THREE LINES, exact format, nothing after:
 WATCHDOG_FIXED=<0 if you could not safely fix it, 1 if you applied a fix that builds>
 WATCHDOG_SUMMARY=<one short line for Slack, e.g. 'npm audit fix bumped wrangler; build+audit green'>
