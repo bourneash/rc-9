@@ -151,6 +151,7 @@ if [[ "$ENGINEER_STATUS" == "green" ]]; then
 fi
 
 # ---- 3. Work pass (claude-sonnet-4-6) ----
+CHECKPOINT_TURN=$((MAX_TURNS - 8))
 ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
 QUEUE_LIST="${QUEUE_TASKS:-}"
 # Defensive invariant: engineer-check.sh must select at most one task. Refuse
@@ -234,7 +235,7 @@ ${RESUME_CONTEXT:-No prior interrupted-pass artifact was found.}
 
 **Turn-budget checkpoint (2026-09-26 fix -- a truncated run used to escalate
 with zero findings and burn the full session for nothing): keep a rough count
-of your own turns.** If you are past turn $((MAX_TURNS - 8)) and have not yet
+of your own turns.** If you are past turn ${CHECKPOINT_TURN} and have not yet
 output your final report block, STOP investigating/fixing right now and output
 that block immediately with your best-available status -- ENGINEER_ESCALATE
 with what you found and what's unresolved is worth far more than a truncated
