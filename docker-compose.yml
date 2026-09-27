@@ -60,8 +60,12 @@ services:
       CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID:-}
       GIT_USER_NAME: "Remote Command Bot"
       GIT_USER_EMAIL: "bot@rc-9.com"
-      # Engineer role throttle (tasks worked per run). Default 3.
-      ENGINEER_MAX_TASKS: ${ENGINEER_MAX_TASKS:-3}
+      # Engineer role throttle (tasks worked per run). Keep the safe
+      # one-task default aligned with engineer-check.sh. Batching multiple
+      # estimated-turn tasks can exhaust the Claude turn cap before the
+      # completion contract is emitted; operators can still opt in explicitly
+      # with ENGINEER_MAX_TASKS when they have verified the combined budget.
+      ENGINEER_MAX_TASKS: ${ENGINEER_MAX_TASKS:-1}
       GIT_SSH_COMMAND: "ssh -i /home/ops/.ssh/github-bourneash -o StrictHostKeyChecking=accept-new"
     networks: [ops]
 
