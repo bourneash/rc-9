@@ -115,8 +115,13 @@ rlog "deploy: pending=$DEPLOY_PENDING stale=$DEPLOY_STALE"
 # budgeted with a recovery buffer by run-engineer.sh; batching several tasks
 # makes the pass hit the global cap before it can print its completion contract
 # (rc-9 hit 35/34 while processing two 12-turn performance tasks on 2026-09-26).
-# Operators can deliberately batch via ENGINEER_MAX_TASKS when needed.
-MAX_TASKS="${ENGINEER_MAX_TASKS:-1}"
+# This is an invariant, not an operator-tunable throttle: the wrapper's fixed
+# cap is not sized for a batch, and an environment override previously bypassed
+# the safe default supplied by this script.
+MAX_TASKS=1
+if [[ -n "${ENGINEER_MAX_TASKS:-}" && "${ENGINEER_MAX_TASKS}" != "1" ]]; then
+  rlog "queue: ignoring unsafe ENGINEER_MAX_TASKS=${ENGINEER_MAX_TASKS}; rc-9 permits exactly one task per Claude pass"
+fi
 ENG_ELIGIBLE=$(grep -rl 'assigned_role: *engineer' "$REPO_ROOT/ops/tasks/backlog/" 2>/dev/null \
   | grep -viE '/HOLD[-_]' | sort || true)
 QUEUE_COUNT=$(printf '%s\n' "$ENG_ELIGIBLE" | grep -c . || true); QUEUE_COUNT=${QUEUE_COUNT:-0}

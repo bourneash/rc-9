@@ -153,6 +153,16 @@ fi
 # ---- 3. Work pass (claude-sonnet-4-6) ----
 ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
 QUEUE_LIST="${QUEUE_TASKS:-}"
+# Defensive invariant: engineer-check.sh must select at most one task. Refuse
+# to invoke Claude if a stale/generated checker or malformed output ever tries
+# to bypass that limit; leaving the tasks queued is safer than spending a full
+# capped pass that cannot emit its completion contract.
+if [[ "$QUEUE_LIST" == *,* ]]; then
+  log "refusing engineer pass — checker returned multiple queued tasks; one task per pass is mandatory"
+  board_block "🛑 **Refused** — multiple queued tasks reached the engineer wrapper; no Claude pass was started. ${STATUS_LINE}"
+  slack "🔴 *${SITE_LABEL} engineer* refused a multi-task pass — tasks remain queued; wrapper hardening requires one task per pass · ${NOW_ET}" "danger"
+  exit 1
+fi
 # ---- Concurrency guard — only ONE work pass per site at a time ----
 # The cheap sweep above already ran. The Claude work pass is serialized: if a
 # prior fire is still working THIS site, defer rather than run a second engineer.
