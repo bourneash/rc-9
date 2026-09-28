@@ -5,6 +5,7 @@ priority: 3
 type: engineering
 estimated_turns: 4
 created: 2026-09-28
+completed_at: 2026-09-28T20:05:03.581Z
 assigned_role: engineer
 source: fleet-dashboard
 source_id: 91383c85-1d4b-453f-b771-0fe996ba6d17
