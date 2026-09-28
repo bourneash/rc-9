@@ -2,6 +2,7 @@
 import '../styles/hud.css';
 import '../styles/modals.css';
 import '../styles/canvas-overlays.css';
+import '../styles/typography.css';
 import '../styles.css';
 
 // ============================================================================

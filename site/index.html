@@ -53,9 +53,12 @@
     <!-- Critical CSS: tokens + typography + title-screen render-blocking (≈8KB).
          hud/modals/canvas-overlays/styles are imported by main.js (dynamic) so they
          load in parallel with the game engine without blocking LCP. -->
-    <style>html,body{height:100%}*{margin:0;padding:0;box-sizing:border-box}body{position:fixed;width:100%;font-family:ui-sans-serif,system-ui,sans-serif;background:#0a0f08;color:#c5d2c8;overflow:hidden;overscroll-behavior:none;touch-action:none}#game-container{display:block;height:100vh;width:100vw;position:relative}</style>
+    <style>
+      html,body{height:100%}*{margin:0;padding:0;box-sizing:border-box}body{position:fixed;width:100%;font-family:ui-sans-serif,system-ui,sans-serif;background:#0a0f08;color:#c5d2c8;overflow:hidden;overscroll-behavior:none;touch-action:none}#game-container{display:block;height:100vh;width:100vw;position:relative}
+      @font-face{font-family:'Saira Condensed';font-style:normal;font-display:swap;font-weight:700;src:url('/fonts/sc-700.woff2') format('woff2');}
+      @font-face{font-family:'JetBrains Mono';font-style:normal;font-display:swap;font-weight:400;src:url('/fonts/jb-400.woff2') format('woff2');}
+    </style>
     <link rel="stylesheet" href="/styles/tokens.css" />
-    <link rel="stylesheet" href="/styles/typography.css" />
     <link rel="stylesheet" href="/styles/title-screen.css" />
 
     <!-- Structured data: VideoGame schema for Google rich results -->
