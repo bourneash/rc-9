@@ -298,3 +298,7 @@ render 2/2 pages · tree clean · main synced · CF live · 2 task(s) · 08:18 E
 ## Deploy — 2026-09-26 12:30 ET
 
 ✅ **Live** — wrangler deploy succeeded · smoke test HTTP 200 + cf-ray header · version c668e9d
+
+## Run — 2026-09-30 06:18 ET
+
+🔧 **Work done** — created `site/scripts/indexnow-ping.mjs` (reads sitemap-0.xml, POSTs to IndexNow, manages key verification file); added ContactPage JSON-LD to `site/contact.html`; build ✅ · 2 tasks → done
