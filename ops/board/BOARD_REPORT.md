@@ -1,5 +1,19 @@
 # Board Report
 
+## 2026-09-30 — SEO Analysis
+
+**GSC unavailable** — `DATAHUB_API` not set in container environment; keyword-gap and CTR analysis blocked until provisioned.
+
+**Schema audit:** `/contact` emits no JSON-LD structured data — all other indexable pages have schema. Engineering task filed.
+
+**IndexNow:** No `site/scripts/indexnow-ping.mjs` found; Bing receives no proactive pings after deploys. Engineering task filed.
+
+**Internal linking:** Footer nav on `privacy.html` and `terms.html` is missing `/help` link present on all other pages. Content task filed.
+
+**Sitemap health:** 4 pages in sitemap-0.xml; single redirect entry valid; canonical tags present on all indexable pages.
+
+Tasks filed: `2026-09-30-add-indexnow-ping-script`, `2026-09-30-contact-page-schema-json-ld`, `2026-09-30-fix-footer-nav-privacy-terms`. See `ops/board/seo-2026-09-30.md` for full report.
+
 ## 2026-09-25 — Deploy (21:30 ET)
 
 ✅ **Deploy succeeded** — AdSense SDK deferred to window.load: removes adsbygoogle.js execution from TBT window. Built, tested, and deployed to rc-9 Worker. Smoke test passed (HTTP 200, cf-ray: a40d221b9b5e8c7b-EWR).
