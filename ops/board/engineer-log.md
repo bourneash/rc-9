@@ -322,3 +322,9 @@ render 2/2 pages · tree clean · main synced · CF live · 2 task(s) · 06:18 E
 **Rollback:** revert init.js to restore eager `void import('./ads.js')`.
 
 render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 14:18 ET
+
+## Run — 2026-10-01 18:19 UTC
+
+🔧 **Work done (deployed)** — Re-applied ads.js idle-defer fix (truncated run recovery): deferred import('./ads.js') behind _scheduleIdle() in init.js to reduce TBT; build ✓; task 42ea821c → done
+
+render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 14:18 ET
