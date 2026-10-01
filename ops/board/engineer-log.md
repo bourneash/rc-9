@@ -312,3 +312,13 @@ render 2/2 pages · tree clean · main synced · CF live · 2 task(s) · 06:18 E
 ## Run — 2026-10-01 17:57 UTC
 
 ⚠️ **Truncated** — pass exited 1 (max-turns or crash). Task stays in backlog for retry. render 2/2 pages · tree clean · main +1 unpushed · CF live · 1 task(s) · 13:48 ET
+
+## Run — 2026-10-01 18:18 UTC (recovery)
+
+🔧 **Work done** — Re-applied ads.js idle-defer fix from truncated run 20261001T175725Z. Changed `site/js/init.js`: moved `void import('./ads.js')` from eager top-level into `_scheduleIdle()` callback (same pattern as sidebar.js). Keeps ads SDK off TBT critical path for rc-9.com.
+
+**Build:** `npm run build` ✓
+**Task:** 42ea821c → done/
+**Rollback:** revert init.js to restore eager `void import('./ads.js')`.
+
+render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF live · 0 tasks queued · 14:18 ET

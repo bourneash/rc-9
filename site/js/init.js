@@ -12,17 +12,23 @@ if (document.fonts && document.fonts.load) {
 
 import * as TitleScreen from './title-screen.js';
 
-// Portal ads SDK (GameDistribution) — only active in portal/production context
-void import('./ads.js');
-
 // Load sidebar (vanilla JS, no React needed) — deferred to idle so DOM
 // manipulation doesn't land in the TBT window. main.js has DOMContentLoaded
 // retries + window.load fallbacks, so sidebar elements are ready long before
 // the user can open any modal.
-const _scheduleIdle = typeof requestIdleCallback === 'function'
-  ? cb => requestIdleCallback(cb, { timeout: 2000 })
-  : cb => setTimeout(cb, 0);
-_scheduleIdle(() => { void import('./sidebar.js'); });
+const _scheduleIdle =
+  typeof requestIdleCallback === 'function'
+    ? cb => requestIdleCallback(cb, { timeout: 2000 })
+    : cb => setTimeout(cb, 0);
+
+// Portal ads SDK — only active in portal/opt-in contexts. Keep its module
+// evaluation off the title-screen startup path on rc-9.com.
+_scheduleIdle(() => {
+  void import('./ads.js');
+});
+_scheduleIdle(() => {
+  void import('./sidebar.js');
+});
 
 // Lazy singleton — one download of the game engine, ever.
 // Exposed globally so the title-screen action handler can await it before

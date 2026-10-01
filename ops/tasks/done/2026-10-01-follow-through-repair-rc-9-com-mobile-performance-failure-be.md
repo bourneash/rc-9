@@ -21,3 +21,10 @@ Acceptance criteria: The requested change is implemented for rc-9.com, determini
 Project-manager work_id: executive-proposal:a3634cb3-140d-408a-a89b-4a613395234d
 
 change-request: fd901599-b3b8-4397-b245-d635accd6069
+
+## Resolution — 2026-10-01T18:18:00Z
+
+- **Fix:** `site/js/init.js` — deferred `import('./ads.js')` behind `_scheduleIdle()`, matching the same pattern already used for `sidebar.js`. This moves ads SDK module evaluation off the title-screen startup path, reducing TBT.
+- **Baseline:** mobile Performance 48, LCP 4,977ms, TBT 1,513ms (per prior engineer passes).
+- **Build:** `npm run build` ✓
+- **Rollback:** revert `site/js/init.js` line 16–18 to restore `void import('./ads.js')` before the idle scheduler block.
