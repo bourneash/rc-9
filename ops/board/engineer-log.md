@@ -328,3 +328,7 @@ render 2/2 pages · tree clean (pending wrapper commit) · main synced · CF liv
 🔧 **Work done (deployed)** — Re-applied ads.js idle-defer fix (truncated run recovery): deferred import('./ads.js') behind _scheduleIdle() in init.js to reduce TBT; build ✓; task 42ea821c → done
 
 render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 14:18 ET
+
+## Deploy — 2026-10-01 14:30 ET
+
+✅ **Live** — wrangler deploy succeeded · smoke test HTTP 200 + cf-ray header · version 55088e9
