@@ -6,7 +6,6 @@ type: engineering
 estimated_turns: 20
 created: 2026-10-01
 started_at: 2026-10-01T18:19:24.843Z
-completed_at: 2026-10-01T18:23:07.903Z
 assigned_role: engineer
 source: fleet-dashboard
 source_id: fd901599-b3b8-4397-b245-d635accd6069
