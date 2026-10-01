@@ -1,7 +1,7 @@
 # Bing Webmaster backlink capture — rc-9.com
 
 - source: Bing Webmaster JSON API (Link Details)
-- captured_at: 2026-10-01T10:45:04.502Z
+- captured_at: 2026-10-01T16:38:53.008Z
 - site: https://rc-9.com/
 - status: measured
 - backlinks: 0 (sum of reported target-page counts)
