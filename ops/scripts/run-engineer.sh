@@ -169,7 +169,8 @@ fi
 # prior fire is still working THIS site, defer rather than run a second engineer.
 # The lock auto-reclaims after LOCK_STALE_SECS so a crashed pass cannot wedge it.
 RESULT_FILE=""
-trap 'rm -f "${RESULT_FILE:-}" 2>/dev/null; release_work_lock' EXIT
+CLAUDE_STDERR_FILE=""
+trap 'rm -f "${RESULT_FILE:-}" "${CLAUDE_STDERR_FILE:-}" 2>/dev/null; release_work_lock' EXIT
 if ! acquire_work_lock; then
   HELD_TS=$(cat "$WORK_LOCK_DIR/ts" 2>/dev/null || date +%s)
   HELD_AGE=$(( $(date +%s) - ${HELD_TS:-0} ))
@@ -192,6 +193,7 @@ if ! curl -sS --connect-timeout 3 --max-time 5 -o /dev/null "https://api.anthrop
 fi
 
 RESULT_FILE="$(mktemp)"
+CLAUDE_STDERR_FILE="$(mktemp)"
 ENGINEER_FAILURE_DIR="$REPO_ROOT/ops/health/engineer-failures"
 PREPASS_SHIPPABLE_DIRTY="$(git status --porcelain --untracked-files=all -- site ops/scripts ops/roles 2>/dev/null || true)"
 LATEST_ENGINEER_PARTIAL="$(find "$ENGINEER_FAILURE_DIR" -type f -name '*.partial.txt' -print 2>/dev/null | sort | tail -1 || true)"
@@ -281,33 +283,64 @@ log "invoking claude-sonnet-4-6 engineer pass (max ${MAX_TURNS} turns)..."
 # Revoke git-push capability for the model pass (the wrapper does the build-gated
 # push). GIT_SSH_COMMAND=/bin/false means a misbehaving model can't reach the remote
 # despite --dangerously-skip-permissions + mounted SSH keys.
+CLAUDE_STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+CLAUDE_STARTED_EPOCH="$(date +%s)"
 set +e
 GIT_SSH_COMMAND='/bin/false' GIT_TERMINAL_PROMPT=0 CLOUDFLARE_API_TOKEN= CLOUDFLARE_ACCOUNT_ID= CF_API_TOKEN= \
 timeout "$WORK_TIMEOUT" "$CLAUDE_TRACKED" "$PROMPT" --output-format text --model "$MODEL" \
-  --max-turns "$MAX_TURNS" --dangerously-skip-permissions > "$RESULT_FILE" 2>>"$LOG"
+  --max-turns "$MAX_TURNS" --dangerously-skip-permissions > "$RESULT_FILE" 2>"$CLAUDE_STDERR_FILE"
 CLAUDE_EXIT=$?
 set -e
+CLAUDE_FINISHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+CLAUDE_ELAPSED_SECONDS=$(( $(date +%s) - CLAUDE_STARTED_EPOCH ))
 tee -a "$LOG" < "$RESULT_FILE" > /dev/null
+tee -a "$LOG" < "$CLAUDE_STDERR_FILE" > /dev/null
+
+classify_claude_failure() {
+  case "$CLAUDE_EXIT" in
+    124) printf 'timeout\n' ;;
+    137) printf 'terminated_or_oom\n' ;;
+    *)
+      if grep -Eiq 'error_max_turns|max[- ]?turns|turn limit' "$RESULT_FILE" "$CLAUDE_STDERR_FILE" 2>/dev/null; then
+        printf 'turn_limit\n'
+      else
+        printf 'unknown_nonzero\n'
+      fi
+      ;;
+  esac
+}
 
 archive_failed_pass() {
   local reason="$1" stamp artifact_base
   stamp="$(date -u +%Y%m%dT%H%M%SZ)"
   artifact_base="$ENGINEER_FAILURE_DIR/${stamp}"
   mkdir -p "$ENGINEER_FAILURE_DIR"
+  CLAUDE_FAILURE_CLASS="$(classify_claude_failure)"
+  FAILED_ARTIFACT_BASE="$artifact_base"
   cp "$RESULT_FILE" "${artifact_base}.partial.txt" 2>/dev/null || true
+  cp "$CLAUDE_STDERR_FILE" "${artifact_base}.stderr.txt" 2>/dev/null || true
   git diff --binary HEAD -- site ops/scripts ops/roles ops/tasks ops/board/engineer-log.md \
     > "${artifact_base}.patch" 2>/dev/null || true
   git ls-files --others --exclude-standard -z -- site ops/scripts ops/roles ops/tasks \
     | tar --null -czf "${artifact_base}.untracked.tgz" -T - 2>/dev/null \
     || rm -f "${artifact_base}.untracked.tgz"
-  printf 'reason=%s\nprepass_shippable_dirty=%s\n' "$reason" "$([[ -n "$PREPASS_SHIPPABLE_DIRTY" ]] && echo 1 || echo 0)" \
-    > "${artifact_base}.meta"
+  {
+    printf 'format_version=2\nreason=%s\nfailure_class=%s\nclaude_exit=%s\n' \
+      "$reason" "$CLAUDE_FAILURE_CLASS" "$CLAUDE_EXIT"
+    printf 'max_turns=%s\nwork_timeout_seconds=%s\nelapsed_seconds=%s\n' \
+      "$MAX_TURNS" "$WORK_TIMEOUT" "$CLAUDE_ELAPSED_SECONDS"
+    printf 'started_at_utc=%s\nfinished_at_utc=%s\n' "$CLAUDE_STARTED_AT" "$CLAUDE_FINISHED_AT"
+    printf 'queued_tasks=%q\n' "$QUEUE_LIST"
+    printf 'stdout_bytes=%s\nstderr_bytes=%s\nprepass_shippable_dirty=%s\n' \
+      "$(wc -c < "$RESULT_FILE")" "$(wc -c < "$CLAUDE_STDERR_FILE")" \
+      "$( [[ -n "$PREPASS_SHIPPABLE_DIRTY" ]] && echo 1 || echo 0)"
+  } > "${artifact_base}.meta"
   if [[ -z "$PREPASS_SHIPPABLE_DIRTY" ]]; then
     git restore --staged --worktree --source=HEAD -- site ops/scripts ops/roles ops/tasks ops/board/engineer-log.md 2>>"$LOG" || true
     git clean -fd -- site ops/scripts ops/roles ops/tasks 2>>"$LOG" || true
-    log "archived failed pass at ${artifact_base}.* and restored clean shippable tree"
+    log "archived failed pass at ${artifact_base}.* (class=${CLAUDE_FAILURE_CLASS} exit=${CLAUDE_EXIT} elapsed=${CLAUDE_ELAPSED_SECONDS}s max_turns=${MAX_TURNS}) and restored clean shippable tree"
   else
-    log "archived failed pass at ${artifact_base}.*; preserved pre-existing shippable edits"
+    log "archived failed pass at ${artifact_base}.* (class=${CLAUDE_FAILURE_CLASS} exit=${CLAUDE_EXIT} elapsed=${CLAUDE_ELAPSED_SECONDS}s max_turns=${MAX_TURNS}); preserved pre-existing shippable edits"
   fi
 }
 
@@ -318,8 +351,8 @@ ESCALATE=$(grep '^ENGINEER_ESCALATE=' "$RESULT_FILE" | tail -1 | cut -d= -f2- ||
 if [[ "$CLAUDE_EXIT" == "124" ]]; then
   archive_failed_pass "timeout after ${WORK_TIMEOUT}s"
   log "engineer pass TIMED OUT after ${WORK_TIMEOUT}s"
-  slack "🔴 *rc-9 engineer* timed out after ${WORK_TIMEOUT}s · ${NOW_ET}" "danger"
-  board_block "🔴 **Timeout** — claude-sonnet-4-6 pass exceeded ${WORK_TIMEOUT}s. ${STATUS_LINE}"
+  slack "🔴 *rc-9 engineer* timed out after ${WORK_TIMEOUT}s — diagnostics: ${FAILED_ARTIFACT_BASE}.* · ${NOW_ET}" "danger"
+  board_block "🔴 **Timeout** — claude-sonnet-4-6 pass exceeded ${WORK_TIMEOUT}s; diagnostics archived at ${FAILED_ARTIFACT_BASE}.*. ${STATUS_LINE}"
   exit 1
 fi
 
@@ -333,9 +366,9 @@ fi
 # principal-engineer.sh's non-zero-exit handling).
 if [[ "$CLAUDE_EXIT" != "0" ]]; then
   archive_failed_pass "claude exit ${CLAUDE_EXIT}"
-  log "engineer pass FAILED (exit=${CLAUDE_EXIT}) — task remains in backlog, will retry next tick"
-  slack "🔴 *rc-9 engineer* pass failed (exit=${CLAUDE_EXIT}, likely max-turns) — task stays queued for retry · ${NOW_ET}" "danger"
-  board_block "⚠️ **Truncated** — pass exited ${CLAUDE_EXIT} (max-turns or crash). Task stays in backlog for retry. ${STATUS_LINE}"
+  log "engineer pass FAILED (class=${CLAUDE_FAILURE_CLASS} exit=${CLAUDE_EXIT} elapsed=${CLAUDE_ELAPSED_SECONDS}s) — task remains in backlog, will retry next tick"
+  slack "🔴 *rc-9 engineer* pass failed (class=${CLAUDE_FAILURE_CLASS}, exit=${CLAUDE_EXIT}) — diagnostics: ${FAILED_ARTIFACT_BASE}.* · task stays queued for retry · ${NOW_ET}" "danger"
+  board_block "⚠️ **Engineer pass failed** — class=${CLAUDE_FAILURE_CLASS}, exit=${CLAUDE_EXIT}; diagnostics archived at ${FAILED_ARTIFACT_BASE}.*. Task stays in backlog for retry. ${STATUS_LINE}"
   exit 1
 fi
 
