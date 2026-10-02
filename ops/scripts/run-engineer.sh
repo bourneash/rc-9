@@ -151,7 +151,7 @@ if [[ "$ENGINEER_STATUS" == "green" ]]; then
 fi
 
 # ---- 3. Work pass (claude-sonnet-4-6) ----
-CHECKPOINT_TURN=$((MAX_TURNS - 8))
+CHECKPOINT_TURN=$((MAX_TURNS - 12))
 ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
 QUEUE_LIST="${QUEUE_TASKS:-}"
 # Defensive invariant: engineer-check.sh must select at most one task. Refuse
