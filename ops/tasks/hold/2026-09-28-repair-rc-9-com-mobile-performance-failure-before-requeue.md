@@ -12,6 +12,7 @@ correlation_id: change-request:528b1e8e-d51d-467e-8331-3a73fbb26221
 hold_condition: >-
   Review diagnosis 91383c85-1d4b-453f-b771-0fe996ba6d17 and explicitly release the corrected
   implementation.
+gate_revision: 3a45d383b5b33d662a320ee0344eb1a2
 ---
 
 ## Human request
