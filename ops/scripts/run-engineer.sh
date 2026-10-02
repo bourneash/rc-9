@@ -14,11 +14,11 @@ source "$REPO_ROOT/.monorepo-tools/scripts/ai-usage-bootstrap.sh" 2>/dev/null ||
 LOG="${1:-/dev/stderr}"
 BASE_URL="${ENGINEER_BASE_URL:-https://rc-9.com}"
 MODEL="claude-sonnet-4-6"
-# Keep this generated wrapper aligned with the engineer archetype. One queued
-# implementation task per pass keeps the task estimate plus recovery buffer
-# below the cap; batching two 12-turn tasks caused a 35/34 max-turns failure on
-# 2026-09-26 before the model could print its completion contract.
-DEFAULT_MAX_TURNS=34
+# This site has repeatedly hit the 34-turn ceiling while completing a single
+# queued task (most recently the 2026-10-01 mobile-performance repair). Keep an
+# eight-turn reporting margin, but give the implementation pass enough room to
+# finish without losing its edits before it can emit the completion contract.
+DEFAULT_MAX_TURNS=40
 MAX_TURNS="$DEFAULT_MAX_TURNS"
 WORK_TIMEOUT=2400
 # --- Concurrency + heartbeat tuning (added: split model + work-lock) ---
@@ -151,7 +151,7 @@ if [[ "$ENGINEER_STATUS" == "green" ]]; then
 fi
 
 # ---- 3. Work pass (claude-sonnet-4-6) ----
-CHECKPOINT_TURN=$((MAX_TURNS - 12))
+CHECKPOINT_TURN=$((MAX_TURNS - 8))
 ISSUES_TEXT="(none)"; [[ -s "${ISSUES_FILE:-/dev/null}" ]] && ISSUES_TEXT="$(cat "$ISSUES_FILE")"
 QUEUE_LIST="${QUEUE_TASKS:-}"
 # Defensive invariant: engineer-check.sh must select at most one task. Refuse
