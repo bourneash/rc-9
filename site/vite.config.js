@@ -6,6 +6,19 @@ import compression from 'vite-plugin-compression';
 
 const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
+const CLOUDFLARE_BEACON =
+  '<script defer src=\'https://static.cloudflareinsights.com/beacon.min.js\' data-cf-beacon=\'{"token": "d76e9de989014f4d9e34e56682547f06"}\'></script>';
+
+function developmentCloudflareBeaconGuard() {
+  return {
+    name: 'development-cloudflare-beacon-guard',
+    apply: 'serve',
+    transformIndexHtml(html) {
+      return html.replace(CLOUDFLARE_BEACON, '');
+    },
+  };
+}
+
 let gitHash = 'unknown';
 try {
   gitHash = execSync('git rev-parse --short HEAD').toString().trim();
@@ -25,6 +38,7 @@ export default defineConfig({
   plugins: [
     compression({ algorithm: 'gzip', ext: '.gz' }),
     compression({ algorithm: 'brotliCompress', ext: '.br' }),
+    developmentCloudflareBeaconGuard(),
   ],
   build: {
     outDir: 'dist',

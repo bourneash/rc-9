@@ -17,6 +17,10 @@
 (function () {
   'use strict';
 
+  // AdSense must not contact Google from local previews, review deployments,
+  // or other non-production origins. Keep production configuration unchanged.
+  if (window.location.hostname !== 'rc-9.com') return;
+
   var CLIENT = 'ca-pub-9826966557108061';
 
   // Ad unit slot IDs, keyed by the data-rc9-ad value on the container.
