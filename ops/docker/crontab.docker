@@ -8,13 +8,13 @@
 
 # Engineer — every 6h. Bash-driven: render health-check (live site), npm-run-build
 # gate, sweeps engineering tasks, posts a Slack 👍 heartbeat when healthy+idle.
-18,48 * * * *  bash ops/scripts/run-worker.sh engineer
+# 18,48 * * * *  bash ops/scripts/run-worker.sh engineer
 # Deployer — every 15 min if .deploy-needed flag exists.
 # NOTE: rc-9 deploys via `npx wrangler deploy` (Vite SPA), not git push.
-*/15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer
+# */15 * * * *  [ ! -f .deploy-needed ] || bash ops/scripts/run-worker.sh deployer
 
 # Watchdog — self-healing incident loop every 15 min (offset off scraper/deployer).
-2,17,32,47 * * * *   bash ops/scripts/run-watchdog.sh
+# 2,17,32,47 * * * *   bash ops/scripts/run-watchdog.sh
 
 # Reaper — moved fleet-wide (tools/scripts/reap-stuck-workers-fleet.sh, host
 # crontab, same 7,22,37,52 cadence). See that script's header for why: 16
@@ -24,7 +24,7 @@
 # Promoter — Tue/Fri 8am. Writes evergreen spotlight items about the site
 # itself into ops/social/spotlight/*.md for tools/social-hub to draft from.
 # No deploy, no site/ writes.
-53 8 * * 2,5  bash ops/scripts/run-worker.sh promoter
+# 53 8 * * 2,5  bash ops/scripts/run-worker.sh promoter
 
 # Principal Engineer — every 5 min (offset :01/:06/.../:56 to dodge the
 # deployer's */5 :00 tick, the scraper's */15 :00 tick, and watchdog's
@@ -35,8 +35,8 @@
 # fixes, hardens, self-reviews, and (build-gated) commits+pushes; flags
 # fleet-wide rollout candidates as a human-triage task rather than acting on
 # them. Kill switch: touch ops/.principal-engineer-disabled.
-1,6,11,16,21,26,31,36,41,46,51,56 * * * *   bash ops/scripts/run-principal-engineer.sh
+# 1,6,11,16,21,26,31,36,41,46,51,56 * * * *   bash ops/scripts/run-principal-engineer.sh
 
 # SEO Analyst — Wednesday 6am ET. Diagnose search demand, crawl health, schema,
 # and internal linking; file bounded handoff tasks without editing site source.
-0 6 * * 3     bash ops/scripts/run-worker.sh seo-analyst
+# 0 6 * * 3     bash ops/scripts/run-worker.sh seo-analyst
