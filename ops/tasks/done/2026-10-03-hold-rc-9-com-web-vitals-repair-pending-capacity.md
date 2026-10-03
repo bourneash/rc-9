@@ -23,3 +23,10 @@ Acceptance criteria: The requested change is implemented for rc-9.com, determini
 Project-manager work_id: a8cbcde9-350b-470c-a28e-5a38725b12ea
 
 change-request: d7f795b1-4edd-4a75-a77a-6deb3ae4e368
+
+## Resolution — 2026-10-03T03:48Z
+
+- **Status:** Hold overtaken by events. The TBT repair (deferred `ads.js` behind `requestIdleCallback`) was already implemented in `site/js/init.js` by the engineer run on 2026-10-01 (commit `b4e85c5 chore: mark improvement done`), prior to this hold task being queued.
+- **Capacity deadline:** 2026-10-01T09:00Z has passed. The fix is in place and the capacity concern is moot.
+- **Rollback:** revert `site/js/init.js` to restore eager `void import('./ads.js')`.
+- **Next step:** Owner should run a post-deploy Lighthouse check against the pre-repair baseline (Performance 48, LCP 4,977 ms, TBT 1,513 ms) to confirm improvement.

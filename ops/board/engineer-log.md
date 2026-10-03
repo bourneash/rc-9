@@ -332,3 +332,7 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 14:18 E
 ## Deploy — 2026-10-01 14:30 ET
 
 ✅ **Live** — wrangler deploy succeeded · smoke test HTTP 200 + cf-ray header · version 55088e9
+
+## Run — 2026-10-03 03:48 ET
+
+✅ **Hold task closed** — `2026-10-03-hold-rc-9-com-web-vitals-repair-pending-capacity` → done. Hold was overtaken by events: TBT repair (ads.js idle-defer) already in `site/js/init.js` since 2026-10-01 (commit b4e85c5), capacity deadline 2026-10-01T09:00Z has passed. Build ✓ · 1 task(s) closed · render 2/2 · CF live · 03:48 ET. Owner action needed: post-deploy Lighthouse run against pre-repair baseline.
