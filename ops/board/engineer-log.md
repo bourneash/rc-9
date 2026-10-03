@@ -336,3 +336,9 @@ render 2/2 pages · tree clean · main synced · CF live · 1 task(s) · 14:18 E
 ## Run — 2026-10-03 03:48 ET
 
 ✅ **Hold task closed** — `2026-10-03-hold-rc-9-com-web-vitals-repair-pending-capacity` → done. Hold was overtaken by events: TBT repair (ads.js idle-defer) already in `site/js/init.js` since 2026-10-01 (commit b4e85c5), capacity deadline 2026-10-01T09:00Z has passed. Build ✓ · 1 task(s) closed · render 2/2 · CF live · 03:48 ET. Owner action needed: post-deploy Lighthouse run against pre-repair baseline.
+
+## Run — 2026-10-03 07:51 UTC
+
+⚠️ **Escalation** — Owner should run a post-deploy Lighthouse check against the pre-repair baseline (Performance 48, LCP 4,977 ms, TBT 1,513 ms) to confirm the ads.js idle-defer fix (commit b4e85c5) improved web vitals — this run verified the fix is present in init.js but no lab measurement was taken.
+
+Did: Hold task closed — TBT repair already in place since 2026-10-01; capacity deadline passed; build ✓ · pushed=1 · render 2/2 pages · tree clean · main +1 unpushed · CF live · 1 task(s) · 03:48 ET

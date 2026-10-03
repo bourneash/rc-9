@@ -10,7 +10,10 @@ source: fleet-dashboard
 source_id: d7f795b1-4edd-4a75-a77a-6deb3ae4e368
 delivery_mode: direct
 correlation_id: change-request:d7f795b1-4edd-4a75-a77a-6deb3ae4e368
-gate_revision: 0f809004-c6aa-4a1b-9399-ef3c680a49d4
+gate_revision: 874b509b-5e45-4617-bfb1-e359d9d4028c
+hold_condition: >-
+  Review diagnosis bc6194c2-10f5-440d-8580-e1370a292d3e and explicitly release the corrected
+  implementation.
 ---
 
 ## Human request
