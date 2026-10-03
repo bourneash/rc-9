@@ -1,5 +1,9 @@
 # Board Report
 
+## 2026-10-03 — Deploy
+
+✅ **Deploy succeeded** — Board updates + task state reordering (hold → capacity deadline passed). Built, tested, and deployed to rc-9 Worker. Smoke test passed (HTTP 200, cf-ray: a44a6a871cde7206-EWR).
+
 ## 2026-09-30 — Deploy (10:30 UTC)
 
 ✅ **Deploy succeeded** — Created IndexNow ping script + added ContactPage JSON-LD structured data. Built, tested, and deployed to rc-9 Worker. Smoke test passed (HTTP 200, cf-ray: a4328e1448ba42ac-EWR).
